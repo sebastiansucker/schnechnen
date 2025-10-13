@@ -50,7 +50,7 @@ h1 {
 
 .level-btn {
     padding: 15px;
-    font-size: 1.1em;
+    font-size: 1em;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
@@ -58,6 +58,8 @@ h1 {
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
     width: 100%;
+    text-align: center;
+    line-height: 1.4;
 }
 
 .level-btn:hover {
@@ -67,6 +69,14 @@ h1 {
 
 .level-btn:active {
     transform: translateY(0);
+}
+
+/* Responsive adjustments for level buttons */
+@media (max-width: 600px) {
+    .level-btn {
+        font-size: 0.9em;
+        padding: 12px;
+    }
 }
 
 .game-header {
@@ -143,6 +153,25 @@ h1 {
 
 .submit-btn:hover {
     transform: scale(1.05);
+}
+
+.back-btn {
+    padding: 12px 20px;
+    font-size: 1em;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 15px;
+    width: 100%;
+    max-width: 250px;
+}
+
+.back-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
 }
 
 .result-content {

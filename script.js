@@ -24,6 +24,7 @@ class MathGame {
         this.answerInput = document.getElementById('answer');
         this.submitBtn = document.getElementById('submit-btn');
         this.restartBtn = document.getElementById('restart-btn');
+        this.backBtn = document.getElementById('back-btn');
         
         this.currentLevelElement = document.getElementById('current-level');
         this.timerElement = document.getElementById('timer');
@@ -56,6 +57,11 @@ class MathGame {
         
         // Neues Spiel
         this.restartBtn.addEventListener('click', () => {
+            this.showScreen('level-selection');
+        });
+        
+        // Zurück zur Level-Auswahl
+        this.backBtn.addEventListener('click', () => {
             this.showScreen('level-selection');
         });
     }
