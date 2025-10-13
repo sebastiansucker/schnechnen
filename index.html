@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schnechnen</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Schnechnen - Mathe Spiel</h1>
+        
+        <!-- Level Auswahl -->
+        <div id="level-selection" class="screen">
+            <h2>Level auswählen</h2>
+            <div class="level-buttons">
+                <button class="level-btn" data-level="1">Level 1: Addition & Subtraktion bis 10</button>
+                <button class="level-btn" data-level="2">Level 2: Addition & Subtraktion bis 100</button>
+                <button class="level-btn" data-level="3">Level 3: Multiplikation bis 100</button>
+                <button class="level-btn" data-level="4">Level 4: Multiplikation & Division bis 100</button>
+            </div>
+        </div>
+
+        <!-- Spielanzeige -->
+        <div id="game-screen" class="screen hidden">
+            <div class="game-header">
+                <div class="level-info">Level <span id="current-level">0</span></div>
+                <div class="timer">Zeit: <span id="timer">0</span>s</div>
+                <div class="score">Richtig: <span id="score">0</span>/10</div>
+            </div>
+            <div class="problem-container">
+                <div id="problem" class="problem"></div>
+                <input type="number" id="answer" class="answer-input" placeholder="Ergebnis eingeben">
+                <button id="submit-btn" class="submit-btn">Antwort überprüfen</button>
+            </div>
+        </div>
+
+        <!-- Ergebnisanzeige -->
+        <div id="result-screen" class="screen hidden">
+            <h2>Ergebnis</h2>
+            <div class="result-content">
+                <p>Level: <span id="result-level">0</span></p>
+                <p>Richtige Antworten: <span id="result-correct">0</span>/10</p>
+                <p>Benötigte Zeit: <span id="result-time">0</span>s</p>
+                <p id="result-message"></p>
+            </div>
+            <button id="restart-btn" class="restart-btn">Neues Spiel starten</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
