@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node test.js",
     "test:browser": "open test.html",
-    "start": "open index.html"
+    "start": "open index.html",
+    "test:e2e": "playwright test"
   },
   "keywords": [
     "math",
@@ -17,6 +18,7 @@
   "author": "Sebastian Sucker",
   "license": "MIT",
   "devDependencies": {
-    "jest": "^29.0.0"
+    "jest": "^29.0.0",
+    "playwright": "^1.40.0"
   }
 }
