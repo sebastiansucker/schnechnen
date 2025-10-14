@@ -1,0 +1,81 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Optional dependencies
+/node_modules/*/*/node_modules
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build artifacts
+/dist
+/build
+*.bundle.js
+*.min.js
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*~
+
+# System
+*.tmp
+*.temp
+
+# Coverage
+/coverage
+
+# Nuxt.js
+.nuxt
+.nuxt/
+.nuxt-static
+
+# Next.js
+.next
+.next/
+
+# WebStorm
+/.idea/
+
+# IntelliJ
+.idea/
+
+# Vim
+*.swp
+*.swo
+
+# Visual Studio Code
+.vscode/
+
+# Node.js
+.nyc_output
+.nyc_output/
+.nyc_output/*
+.nyc_output/**/*
+
+# Package manager
+yarn-debug.log
+yarn-error.log
+
+# Other
+*.orig
+*.rej
+*.bak
+*.old
+*.save
+TODO

@@ -1,0 +1,22 @@
+{
+  "name": "schnechnen-math-game",
+  "version": "1.0.0",
+  "description": "Ein interaktives Mathe-Spiel zum Üben von Addition, Subtraktion, Multiplikation und Division für Kinder.",
+  "main": "script.js",
+  "scripts": {
+    "test": "node test.js",
+    "test:browser": "open test.html",
+    "start": "open index.html"
+  },
+  "keywords": [
+    "math",
+    "game",
+    "kids",
+    "education"
+  ],
+  "author": "Sebastian Sucker",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}
