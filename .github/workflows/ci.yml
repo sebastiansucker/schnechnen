@@ -36,8 +36,24 @@ jobs:
           done
           exit 1
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright and browsers (action)
+        uses: microsoft/playwright-github-action@v1
 
       - name: Run Playwright tests
         run: npx playwright test --reporter=list
