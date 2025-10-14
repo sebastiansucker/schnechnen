@@ -135,12 +135,9 @@ test.describe('Schnechnen Spiel Tests', () => {
     const dialButtons = page.locator('.dial-btn[data-value]');
     await expect(dialButtons).toHaveCount(10); // 0-9
     
-  // Prüfe, dass die Clear-Taste sichtbar ist
-    await expect(page.locator('#clear-btn')).toBeVisible();
+  // Prüfe, dass die Backspace-Taste sichtbar ist
+  await expect(page.locator('#backspace-btn')).toBeVisible();
     
-    // Prüfe, dass die Backspace-Taste sichtbar ist
-    await expect(page.locator('#backspace-btn')).toBeVisible();
-
   // Prüfe, dass die Submit-Taste sichtbar ist
   await expect(page.locator('#submit-btn')).toBeVisible();
     

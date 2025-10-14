@@ -54,7 +54,6 @@ const elements = {
     dialPad: document.getElementById('dial-pad'),
     // Only select numeric dial buttons that provide a data-value attribute
     dialButtons: document.querySelectorAll('.dial-btn[data-value]'),
-    clearButton: document.getElementById('clear-btn'),
     backspaceButton: document.getElementById('backspace-btn'),
     submitButton: document.getElementById('submit-btn'),
     resultLevel: document.getElementById('result-level'),
@@ -87,9 +86,6 @@ function initEventListeners() {
             handleDialPadClick(button.dataset.value);
         });
     });
-
-    // Clear-Button
-    elements.clearButton.addEventListener('click', clearInput);
 
     // Backspace-Button
     elements.backspaceButton.addEventListener('click', backspaceInput);
