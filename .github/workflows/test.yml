@@ -21,7 +21,7 @@ jobs:
         cache: 'npm'
     
     - name: Install dependencies
-      run: npm install --no-audit --no-fund
+      run: npm ci
     
     - name: Install Playwright browsers
       run: npx playwright install --with-deps
@@ -31,3 +31,5 @@ jobs:
     
     - name: Run Playwright tests
       run: npx playwright test
+      env:
+        CI: '1'
