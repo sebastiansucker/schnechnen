@@ -101,29 +101,21 @@ class MathGame {
         
         switch (this.currentLevel) {
             case 1: // Addition und Subtraktion bis 10
-                num1 = Math.floor(Math.random() * 10) + 1;
-                num2 = Math.floor(Math.random() * 10) + 1;
-                operator = Math.random() > 0.5 ? '+' : '-';
-                answer = operator === '+' ? num1 + num2 : num1 - num2;
-                // Ensure result is greater than 0 for levels 1 and 2
-                if (answer <= 0) {
-                    // If result is not greater than 0, regenerate until it is
-                    this.generateProblem();
-                    return;
-                }
+                // Use weighted selection for level 1 problems
+                const weightedProblem1 = this.getWeightedProblem(10, 10);
+                num1 = weightedProblem1.num1;
+                num2 = weightedProblem1.num2;
+                operator = weightedProblem1.operator;
+                answer = weightedProblem1.answer;
                 break;
                 
             case 2: // Addition und Subtraktion bis 100
-                num1 = Math.floor(Math.random() * 100) + 1;
-                num2 = Math.floor(Math.random() * 100) + 1;
-                operator = Math.random() > 0.5 ? '+' : '-';
-                answer = operator === '+' ? num1 + num2 : num1 - num2;
-                // Ensure result is greater than 0 for levels 1 and 2
-                if (answer <= 0) {
-                    // If result is not greater than 0, regenerate until it is
-                    this.generateProblem();
-                    return;
-                }
+                // Use weighted selection for level 2 problems
+                const weightedProblem2 = this.getWeightedProblem(100, 100);
+                num1 = weightedProblem2.num1;
+                num2 = weightedProblem2.num2;
+                operator = weightedProblem2.operator;
+                answer = weightedProblem2.answer;
                 break;
                 
             case 3: // Multiplikation bis 100
@@ -160,6 +152,64 @@ class MathGame {
         this.problemElement.textContent = `${num1} ${operator} ${num2} = ?`;
         this.answerInput.value = '';
         this.answerInput.focus();
+    }
+    
+    getWeightedProblem(maxNum1, maxNum2) {
+        // Create a list of all possible problems for this level
+        const problems = [];
+        
+        // Generate all possible problems for this level
+        for (let i = 1; i <= maxNum1; i++) {
+            for (let j = 1; j <= maxNum2; j++) {
+                // Addition
+                problems.push({
+                    num1: i,
+                    num2: j,
+                    operator: '+',
+                    answer: i + j,
+                    rating: this.problemRatings[`${i}+${j}`] || 0
+                });
+                
+                // Subtraction (ensuring result > 0)
+                if (i > j) {
+                    problems.push({
+                        num1: i,
+                        num2: j,
+                        operator: '-',
+                        answer: i - j,
+                        rating: this.problemRatings[`${i}-${j}`] || 0
+                    });
+                }
+            }
+        }
+        
+        // Filter out problems that have already been solved (if we want to avoid repetition)
+        // For now, we'll include all problems but weight them by rating
+        
+        // Sort problems by rating in descending order (higher rating = more frequently wrong)
+        problems.sort((a, b) => b.rating - a.rating);
+        
+        // Select a problem based on weighted probability
+        // Higher rated problems have higher chance of being selected
+        const totalRating = problems.reduce((sum, problem) => sum + problem.rating, 0);
+        
+        if (totalRating === 0) {
+            // If no problems have ratings, pick randomly
+            const randomIndex = Math.floor(Math.random() * problems.length);
+            return problems[randomIndex];
+        }
+        
+        // Use weighted selection
+        let random = Math.random() * totalRating;
+        for (let problem of problems) {
+            random -= problem.rating;
+            if (random <= 0) {
+                return problem;
+            }
+        }
+        
+        // Fallback
+        return problems[problems.length - 1];
     }
     
     checkAnswer() {
