@@ -102,6 +102,12 @@ class MathGame {
                 num2 = Math.floor(Math.random() * 10) + 1;
                 operator = Math.random() > 0.5 ? '+' : '-';
                 answer = operator === '+' ? num1 + num2 : num1 - num2;
+                // Ensure result is greater than 0 for levels 1 and 2
+                if (answer <= 0) {
+                    // If result is not greater than 0, regenerate until it is
+                    this.generateProblem();
+                    return;
+                }
                 break;
                 
             case 2: // Addition und Subtraktion bis 100
@@ -109,6 +115,12 @@ class MathGame {
                 num2 = Math.floor(Math.random() * 100) + 1;
                 operator = Math.random() > 0.5 ? '+' : '-';
                 answer = operator === '+' ? num1 + num2 : num1 - num2;
+                // Ensure result is greater than 0 for levels 1 and 2
+                if (answer <= 0) {
+                    // If result is not greater than 0, regenerate until it is
+                    this.generateProblem();
+                    return;
+                }
                 break;
                 
             case 3: // Multiplikation bis 100
