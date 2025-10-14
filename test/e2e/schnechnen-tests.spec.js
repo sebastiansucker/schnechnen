@@ -78,12 +78,14 @@ test.describe('Schnechnen Spiel Tests', () => {
       solution = parseInt(parts[0]) - parseInt(parts[1].split(' = ?')[0]);
     }
     
-    // Gib die Lösung ein
-    await page.fill('#answer-input', solution.toString());
-    
-  // Klicke die Submit-Taste auf dem Dial-Pad
-  await expect(page.locator('#submit-btn')).toBeVisible();
-  await page.click('#submit-btn');
+    // Gib die Lösung über das Dial-Pad ein (klick die Zifferntasten)
+    const digits = solution.toString().split('');
+    for (const d of digits) {
+      await page.click(`.dial-btn[data-value="${d}"]`);
+    }
+    // Klicke die Submit-Taste auf dem Dial-Pad
+    await expect(page.locator('#submit-btn')).toBeVisible();
+    await page.click('#submit-btn');
     
     // Warte kurz, damit das nächste Problem geladen wird
     await page.waitForTimeout(1000);
