@@ -1,81 +1,46 @@
-# Dependencies
-/node_modules
-/.pnp
-.pnp.js
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Optional dependencies
-/node_modules/*/*/node_modules
+# Playwright
+playwright-report/
+test-results/
+.playwright/
 
 # Logs
+logs
 *.log
+npm-debug.log*
 
-# OS
+# Runtime data
+pids
+*.pid
+*.seed
+
+# OS generated
 .DS_Store
+Icon\r
 Thumbs.db
 
-# IDE
+# Editor directories and files
 .vscode/
 .idea/
-*.swp
-*.swo
+*.sublime-workspace
+*.sublime-project
 
-# Build artifacts
-/dist
-/build
-*.bundle.js
-*.min.js
-
-# Environment variables
+# Environment
 .env
 .env.local
 .env.*.local
 
-# Temporary files
-*~
+# Temporary
+dist/
+build/
+.cache/
+coverage/
 
-# System
-*.tmp
-*.temp
-
-# Coverage
-/coverage
-
-# Nuxt.js
-.nuxt
-.nuxt/
-.nuxt-static
-
-# Next.js
-.next
-.next/
-
-# WebStorm
-/.idea/
-
-# IntelliJ
-.idea/
-
-# Vim
-*.swp
-*.swo
-
-# Visual Studio Code
-.vscode/
-
-# Node.js
-.nyc_output
-.nyc_output/
-.nyc_output/*
-.nyc_output/**/*
-
-# Package manager
-yarn-debug.log
-yarn-error.log
-
-# Other
-*.orig
-*.rej
-*.bak
-*.old
-*.save
-TODO
+# Mac specific
+.Spotlight-V100
+.Trashes

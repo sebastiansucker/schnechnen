@@ -3,64 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Schnechnen</title>
+    <title>Schnechnen - Mathe Spiel</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>SCHNell rECHNEN</h1>
-        
-        <!-- Level Auswahl -->
-        <div id="level-selection" class="screen">
-            <h2>Level auswählen</h2>
-            <div class="level-buttons">
-                <button class="level-btn" data-level="1">Level 1: Addition & Subtraktion bis 10</button>
-                <button class="level-btn" data-level="2">Level 2: Addition & Subtraktion bis 100</button>
-                <button class="level-btn" data-level="3">Level 3: Multiplikation bis 100</button>
-                <button class="level-btn" data-level="4">Level 4: Multiplikation & Division bis 100</button>
+        <div id="start-screen" class="screen">
+            <h1>Schnechnen</h1>
+            <p>Mathe Spiel zum Lernen</p>
+            <div class="level-selection">
+                <h2>Level auswählen:</h2>
+                <div class="level-buttons">
+                    <button class="level-btn" data-level="1">Level 1: Addition & Subtraktion bis 10</button>
+                    <button class="level-btn" data-level="2">Level 2: Addition & Subtraktion bis 100</button>
+                    <button class="level-btn" data-level="3">Level 3: Multiplikation bis 100</button>
+                    <button class="level-btn" data-level="4">Level 4: Multiplikation & Division bis 100</button>
+                </div>
             </div>
         </div>
 
-        <!-- Spielanzeige -->
         <div id="game-screen" class="screen hidden">
             <div class="game-header">
-                <div class="level-info">Level <span id="current-level">0</span></div>
-                <div class="timer">Zeit: <span id="timer">0</span>s</div>
-                <div class="score">Richtig: <span id="score">0</span>/10</div>
+                <div class="timer">Zeit: <span id="time">60</span>s</div>
+                <div class="level-indicator">Level: <span id="current-level">1</span></div>
+                <div class="score">Richtige Antworten: <span id="score">0</span></div>
             </div>
             <div class="problem-container">
-                <div id="problem" class="problem"></div>
-                <input type="number" id="answer" class="answer-input" placeholder="Ergebnis eingeben" inputmode="numeric" pattern="[0-9]*">
-                <button id="submit-btn" class="submit-btn">Antwort überprüfen</button>
+                <div id="problem" class="problem">10 + 5 = ?</div>
             </div>
-            <button id="back-btn" class="back-btn">Zurück zur Level-Auswahl</button>
+            <div class="input-container">
+                <input type="number" id="answer-input" class="answer-input" placeholder="Ergebnis eingeben">
+                <div id="dial-pad" class="dial-pad hidden">
+                    <div class="dial-row">
+                        <button class="dial-btn" data-value="1">1</button>
+                        <button class="dial-btn" data-value="2">2</button>
+                        <button class="dial-btn" data-value="3">3</button>
+                    </div>
+                    <div class="dial-row">
+                        <button class="dial-btn" data-value="4">4</button>
+                        <button class="dial-btn" data-value="5">5</button>
+                        <button class="dial-btn" data-value="6">6</button>
+                    </div>
+                    <div class="dial-row">
+                        <button class="dial-btn" data-value="7">7</button>
+                        <button class="dial-btn" data-value="8">8</button>
+                        <button class="dial-btn" data-value="9">9</button>
+                    </div>
+                    <div class="dial-row">
+                        <button class="dial-btn" data-value="0">0</button>
+                        <button class="dial-btn clear-btn" id="clear-btn">C</button>
+                        <button class="dial-btn backspace-btn" id="backspace-btn">⌫</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Ergebnisanzeige -->
         <div id="result-screen" class="screen hidden">
             <h2>Ergebnis</h2>
-            <div class="result-content">
-                <p>Level: <span id="result-level">0</span></p>
-                <p>Richtige Antworten: <span id="result-correct">0</span>/10</p>
-                <p>Benötigte Zeit: <span id="result-time">0</span>s</p>
-                <p id="result-message"></p>
-                
-                <!-- Highscores -->
-                <div id="highscores">
-                    <h3>Highscores</h3>
-                    <p>Level 1: <span id="highscore-1">0</span></p>
-                    <p>Level 2: <span id="highscore-2">0</span></p>
-                    <p>Level 3: <span id="highscore-3">0</span></p>
-                    <p>Level 4: <span id="highscore-4">0</span></p>
-                </div>
-                
-                <!-- Frequently Wrong Problems -->
-                <div id="wrong-problems">
-                    <h3>Häufig falsch beantwortete Aufgaben</h3>
-                    <div id="wrong-problems-list"></div>
-                </div>
+            <div class="result-stats">
+                <p>Level: <span id="result-level">1</span></p>
+                <p>Richtige Antworten: <span id="result-score">0</span>/<span id="total-problems">0</span></p>
+                <p>Prozentsatz: <span id="result-percentage">0</span>%</p>
             </div>
-            <button id="restart-btn" class="restart-btn">Neues Spiel starten</button>
+            <div class="highscore">
+                <h3>Highscore</h3>
+                <p>Dein Highscore: <span id="highscore">0</span></p>
+            </div>
+            <div class="common-mistakes">
+                <h3>Häufig falsch gelöste Aufgaben</h3>
+                <ul id="mistake-list"></ul>
+            </div>
+            <button id="restart-btn">Neues Spiel</button>
         </div>
     </div>
 

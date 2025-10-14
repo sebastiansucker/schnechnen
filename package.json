@@ -1,24 +1,32 @@
 {
-  "name": "schnechnen-math-game",
+  "name": "schnechnen",
   "version": "1.0.0",
-  "description": "Ein interaktives Mathe-Spiel zum Üben von Addition, Subtraktion, Multiplikation und Division für Kinder.",
-  "main": "script.js",
+  "description": "Ein Mathe-Spiel zum Lernen, ähnlich wie das Wortspiel",
+  "main": "index.js",
   "scripts": {
-    "test": "node test.js",
-    "test:browser": "open test.html",
-    "start": "open index.html",
-    "test:e2e": "playwright test"
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "node test/unit-test.js",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report",
+    "start": "http-server . -p 8080",
+    "dev": "concurrently \"npm run start\" \"npm run test:e2e:ui\""
   },
   "keywords": [
     "math",
     "game",
-    "kids",
-    "education"
+    "learning",
+    "education",
+    "javascript"
   ],
-  "author": "Sebastian Sucker",
+  "author": "Schnechnen Team",
   "license": "MIT",
   "devDependencies": {
-    "jest": "^29.0.0",
-    "playwright": "^1.40.0"
+    "@playwright/test": "^1.40.1",
+    "concurrently": "^8.2.2",
+    "http-server": "^14.1.1"
+  },
+  "dependencies": {
+    "playwright": "^1.40.1"
   }
 }
