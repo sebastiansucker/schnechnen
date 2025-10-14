@@ -8,9 +8,12 @@ class MathGame {
         this.timeElapsed = 0;
         this.problemCount = 0;
         this.maxProblems = 10;
+        this.wrongProblems = [];
+        this.problemRatings = {};
         
         this.initializeElements();
         this.bindEvents();
+        this.loadStorage();
         this.showScreen('level-selection');
     }
     
@@ -169,10 +172,52 @@ class MathGame {
         
         this.problemCount++;
         
+        // Track wrong problems
+        if (userAnswer !== this.currentProblem.answer) {
+            // Create problem identifier
+            const problemId = `${this.currentProblem.num1}${this.currentProblem.operator}${this.currentProblem.num2}`;
+            
+            // Update wrong problems tracking
+            const wrongProblemIndex = this.wrongProblems.findIndex(p => 
+                p.num1 === this.currentProblem.num1 && 
+                p.num2 === this.currentProblem.num2 && 
+                p.operator === this.currentProblem.operator
+            );
+            
+            if (wrongProblemIndex === -1) {
+                // New wrong problem
+                this.wrongProblems.push({
+                    num1: this.currentProblem.num1,
+                    num2: this.currentProblem.num2,
+                    operator: this.currentProblem.operator,
+                    count: 1
+                });
+            } else {
+                // Existing wrong problem, increment count
+                this.wrongProblems[wrongProblemIndex].count++;
+            }
+            
+            // Update problem rating
+            if (!this.problemRatings[problemId]) {
+                this.problemRatings[problemId] = 1;
+            } else {
+                this.problemRatings[problemId]++;
+            }
+        } else {
+            // Correct answer - decrease rating
+            const problemId = `${this.currentProblem.num1}${this.currentProblem.operator}${this.currentProblem.num2}`;
+            if (this.problemRatings[problemId]) {
+                this.problemRatings[problemId] = Math.max(0, this.problemRatings[problemId] - 0.5);
+            }
+        }
+        
         if (userAnswer === this.currentProblem.answer) {
             this.score++;
             this.scoreElement.textContent = this.score;
         }
+        
+        // Save storage after each answer
+        this.saveStorage();
         
         // Warte kurz, bevor die nächste Aufgabe angezeigt wird
         setTimeout(() => {
@@ -186,6 +231,12 @@ class MathGame {
         this.resultLevelElement.textContent = this.currentLevel;
         this.resultCorrectElement.textContent = this.score;
         this.resultTimeElement.textContent = this.timeElapsed;
+        
+        // Update highscore if this is a new highscore
+        if (this.score > this.highscores[this.currentLevel]) {
+            this.highscores[this.currentLevel] = this.score;
+            this.saveStorage();
+        }
         
         // Ergebnisnachricht basierend auf der Punktzahl
         let message = '';
@@ -205,6 +256,43 @@ class MathGame {
         this.showScreen('result-screen');
     }
     
+    loadStorage() {
+        // Load highscores
+        const highscores = localStorage.getItem('mathGameHighscores');
+        if (highscores) {
+            this.highscores = JSON.parse(highscores);
+        } else {
+            this.highscores = {1: 0, 2: 0, 3: 0, 4: 0};
+        }
+        
+        // Load wrong problems
+        const wrongProblems = localStorage.getItem('mathGameWrongProblems');
+        if (wrongProblems) {
+            this.wrongProblems = JSON.parse(wrongProblems);
+        } else {
+            this.wrongProblems = [];
+        }
+        
+        // Load problem ratings
+        const problemRatings = localStorage.getItem('mathGameProblemRatings');
+        if (problemRatings) {
+            this.problemRatings = JSON.parse(problemRatings);
+        } else {
+            this.problemRatings = {};
+        }
+    }
+    
+    saveStorage() {
+        // Save highscores
+        localStorage.setItem('mathGameHighscores', JSON.stringify(this.highscores));
+        
+        // Save wrong problems
+        localStorage.setItem('mathGameWrongProblems', JSON.stringify(this.wrongProblems));
+        
+        // Save problem ratings
+        localStorage.setItem('mathGameProblemRatings', JSON.stringify(this.problemRatings));
+    }
+    
     showScreen(screenName) {
         // Alle Screens ausblenden
         this.levelSelection.classList.add('hidden');
@@ -218,6 +306,34 @@ class MathGame {
             this.gameScreen.classList.remove('hidden');
         } else if (screenName === 'result-screen') {
             this.resultScreen.classList.remove('hidden');
+            
+            // Update result screen with highscores and wrong problems
+            this.updateResultScreen();
+        }
+    }
+    
+    updateResultScreen() {
+        // Update highscores
+        document.getElementById('highscore-1').textContent = this.highscores[1];
+        document.getElementById('highscore-2').textContent = this.highscores[2];
+        document.getElementById('highscore-3').textContent = this.highscores[3];
+        document.getElementById('highscore-4').textContent = this.highscores[4];
+        
+        // Update wrong problems
+        const wrongProblemsList = document.getElementById('wrong-problems-list');
+        wrongProblemsList.innerHTML = '';
+        
+        if (this.wrongProblems.length === 0) {
+            wrongProblemsList.innerHTML = '<p>Keine häufig falsch beantworteten Aufgaben.</p>';
+        } else {
+            // Sort wrong problems by count (descending)
+            const sortedWrongProblems = [...this.wrongProblems].sort((a, b) => b.count - a.count);
+            
+            sortedWrongProblems.forEach(problem => {
+                const problemElement = document.createElement('p');
+                problemElement.textContent = `${problem.num1} ${problem.operator} ${problem.num2} = ? (Falsch: ${problem.count}x)`;
+                wrongProblemsList.appendChild(problemElement);
+            });
         }
     }
 }
