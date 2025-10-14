@@ -81,8 +81,9 @@ test.describe('Schnechnen Spiel Tests', () => {
     // Gib die Lösung ein
     await page.fill('#answer-input', solution.toString());
     
-    // Sendet Enter-Taste (wird im Spiel abgefangen)
-    await page.press('#answer-input', 'Enter');
+  // Klicke die Submit-Taste auf dem Dial-Pad
+  await expect(page.locator('#submit-btn')).toBeVisible();
+  await page.click('#submit-btn');
     
     // Warte kurz, damit das nächste Problem geladen wird
     await page.waitForTimeout(1000);
@@ -134,11 +135,14 @@ test.describe('Schnechnen Spiel Tests', () => {
     const dialButtons = page.locator('.dial-btn[data-value]');
     await expect(dialButtons).toHaveCount(10); // 0-9
     
-    // Prüfe, dass die Clear-Taste sichtbar ist
+  // Prüfe, dass die Clear-Taste sichtbar ist
     await expect(page.locator('#clear-btn')).toBeVisible();
     
     // Prüfe, dass die Backspace-Taste sichtbar ist
     await expect(page.locator('#backspace-btn')).toBeVisible();
+
+  // Prüfe, dass die Submit-Taste sichtbar ist
+  await expect(page.locator('#submit-btn')).toBeVisible();
     
     // Teste das Klicken auf eine Zahl
     await page.click('.dial-btn[data-value="5"]');

@@ -56,6 +56,7 @@ const elements = {
     dialButtons: document.querySelectorAll('.dial-btn[data-value]'),
     clearButton: document.getElementById('clear-btn'),
     backspaceButton: document.getElementById('backspace-btn'),
+    submitButton: document.getElementById('submit-btn'),
     resultLevel: document.getElementById('result-level'),
     resultScore: document.getElementById('result-score'),
     totalProblemsElement: document.getElementById('total-problems'),
@@ -92,6 +93,13 @@ function initEventListeners() {
 
     // Backspace-Button
     elements.backspaceButton.addEventListener('click', backspaceInput);
+
+    // Submit-Button (dial pad)
+    if (elements.submitButton) {
+        elements.submitButton.addEventListener('click', () => {
+            checkAnswer();
+        });
+    }
 
     // Eingabefeld
     elements.answerInput.addEventListener('keydown', (e) => {
