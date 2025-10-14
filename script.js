@@ -10,6 +10,7 @@ class MathGame {
         this.maxProblems = 10;
         this.wrongProblems = [];
         this.problemRatings = {};
+        this.currentSessionProblems = []; // Track problems shown in current session
         
         this.initializeElements();
         this.bindEvents();
@@ -74,6 +75,7 @@ class MathGame {
         this.timeElapsed = 0;
         this.problemCount = 0;
         this.startTime = Date.now();
+        this.currentSessionProblems = []; // Reset problems for current session
         
         this.updateTimer();
         this.timer = setInterval(() => {
@@ -102,20 +104,32 @@ class MathGame {
         switch (this.currentLevel) {
             case 1: // Addition und Subtraktion bis 10
                 // Use weighted selection for level 1 problems
-                const weightedProblem1 = this.getWeightedProblem(10, 10);
+                let weightedProblem1 = this.getWeightedProblem(10, 10);
+                // Check if this problem was already shown in current session
+                while (this.isProblemInCurrentSession(weightedProblem1.num1, weightedProblem1.num2, weightedProblem1.operator)) {
+                    weightedProblem1 = this.getWeightedProblem(10, 10);
+                }
                 num1 = weightedProblem1.num1;
                 num2 = weightedProblem1.num2;
                 operator = weightedProblem1.operator;
                 answer = weightedProblem1.answer;
+                // Add to current session problems
+                this.addProblemToCurrentSession(num1, num2, operator);
                 break;
                 
             case 2: // Addition und Subtraktion bis 100
                 // Use weighted selection for level 2 problems
-                const weightedProblem2 = this.getWeightedProblem(100, 100);
+                let weightedProblem2 = this.getWeightedProblem(100, 100);
+                // Check if this problem was already shown in current session
+                while (this.isProblemInCurrentSession(weightedProblem2.num1, weightedProblem2.num2, weightedProblem2.operator)) {
+                    weightedProblem2 = this.getWeightedProblem(100, 100);
+                }
                 num1 = weightedProblem2.num1;
                 num2 = weightedProblem2.num2;
                 operator = weightedProblem2.operator;
                 answer = weightedProblem2.answer;
+                // Add to current session problems
+                this.addProblemToCurrentSession(num1, num2, operator);
                 break;
                 
             case 3: // Multiplikation bis 100
@@ -273,6 +287,20 @@ class MathGame {
         setTimeout(() => {
             this.generateProblem();
         }, 500);
+    }
+    
+    // Method to check if a problem has already been shown in the current session
+    isProblemInCurrentSession(num1, num2, operator) {
+        return this.currentSessionProblems.some(problem => 
+            problem.num1 === num1 && 
+            problem.num2 === num2 && 
+            problem.operator === operator
+        );
+    }
+    
+    // Method to add a problem to the current session
+    addProblemToCurrentSession(num1, num2, operator) {
+        this.currentSessionProblems.push({num1, num2, operator});
     }
     
     endGame() {
