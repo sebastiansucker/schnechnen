@@ -28,6 +28,63 @@ const CONFIG = {
     }
 };
 
+// Create a safe elements object when running under Node (unit tests) or real DOM when in browser
+function createElements() {
+    if (typeof document !== 'undefined') {
+        return {
+            startScreen: document.getElementById('start-screen'),
+            gameScreen: document.getElementById('game-screen'),
+            resultScreen: document.getElementById('result-screen'),
+            levelButtons: document.querySelectorAll('.level-btn'),
+            timeElement: document.getElementById('time'),
+            scoreElement: document.getElementById('score'),
+            currentLevelElement: document.getElementById('current-level'),
+            problemElement: document.getElementById('problem'),
+            answerInput: document.getElementById('answer-input'),
+            dialPad: document.getElementById('dial-pad'),
+            // Only select numeric dial buttons that provide a data-value attribute
+            dialButtons: document.querySelectorAll('.dial-btn[data-value]'),
+            backspaceButton: document.getElementById('backspace-btn'),
+            submitButton: document.getElementById('submit-btn'),
+            resultLevel: document.getElementById('result-level'),
+            resultScore: document.getElementById('result-score'),
+            totalProblemsElement: document.getElementById('total-problems'),
+            resultPercentage: document.getElementById('result-percentage'),
+            highscoreElement: document.getElementById('highscore'),
+            mistakeList: document.getElementById('mistake-list'),
+            restartButton: document.getElementById('restart-btn'),
+            backButton: document.getElementById('back-btn')
+        };
+    }
+
+    // Node.js placeholders for unit tests (provide minimal API used by functions)
+    return {
+        startScreen: { classList: { add: () => {}, remove: () => {} } },
+        gameScreen: { classList: { add: () => {}, remove: () => {} } },
+        resultScreen: { classList: { add: () => {}, remove: () => {} } },
+        levelButtons: [],
+        timeElement: { textContent: '' },
+        scoreElement: { textContent: '' },
+        currentLevelElement: { textContent: '' },
+        problemElement: { textContent: '' },
+        answerInput: { value: '', focus: () => {} },
+        dialPad: { classList: { remove: () => {} } },
+        dialButtons: [],
+        backspaceButton: { addEventListener: () => {} },
+        submitButton: { addEventListener: () => {} },
+        resultLevel: { textContent: '' },
+        resultScore: { textContent: '' },
+        totalProblemsElement: { textContent: '' },
+        resultPercentage: { textContent: '' },
+        highscoreElement: { textContent: '' },
+        mistakeList: { innerHTML: '' },
+        restartButton: { addEventListener: () => {} },
+        backButton: { addEventListener: () => {} }
+    };
+}
+
+const elements = createElements();
+
 // Spielzustand
 let gameState = {
     currentLevel: null,
@@ -40,31 +97,7 @@ let gameState = {
     currentProblem: null
 };
 
-// DOM-Elemente
-const elements = {
-    startScreen: document.getElementById('start-screen'),
-    gameScreen: document.getElementById('game-screen'),
-    resultScreen: document.getElementById('result-screen'),
-    levelButtons: document.querySelectorAll('.level-btn'),
-    timeElement: document.getElementById('time'),
-    scoreElement: document.getElementById('score'),
-    currentLevelElement: document.getElementById('current-level'),
-    problemElement: document.getElementById('problem'),
-    answerInput: document.getElementById('answer-input'),
-    dialPad: document.getElementById('dial-pad'),
-    // Only select numeric dial buttons that provide a data-value attribute
-    dialButtons: document.querySelectorAll('.dial-btn[data-value]'),
-    backspaceButton: document.getElementById('backspace-btn'),
-    submitButton: document.getElementById('submit-btn'),
-    resultLevel: document.getElementById('result-level'),
-    resultScore: document.getElementById('result-score'),
-    totalProblemsElement: document.getElementById('total-problems'),
-    resultPercentage: document.getElementById('result-percentage'),
-    highscoreElement: document.getElementById('highscore'),
-    mistakeList: document.getElementById('mistake-list'),
-    restartButton: document.getElementById('restart-btn'),
-    backButton: document.getElementById('back-btn')
-};
+// DOM elements are initialized via createElements() at the top of the file
 
 // Initialisierung
 document.addEventListener('DOMContentLoaded', () => {
@@ -228,8 +261,8 @@ function generateProblem() {
         wrongCount: 0
     };
     
-    // Aufgabe anzeigen
-    elements.problemElement.textContent = `${num1} ${operation} ${num2} = ?`;
+    // Aufgabe anzeigen (use printable operator symbols)
+    elements.problemElement.textContent = `${num1} ${displayOperator(operation)} ${num2} = ?`;
     
     // Eingabefeld zurücksetzen
     elements.answerInput.value = '';
@@ -375,9 +408,16 @@ function displayMistakes() {
     
     sortedProblems.forEach(problem => {
         const li = document.createElement('li');
-        li.textContent = `${problem.num1} ${problem.operation} ${problem.num2} = ${problem.result} (Falsch: ${problem.wrongCount}x)`;
+        li.textContent = `${problem.num1} ${displayOperator(problem.operation)} ${problem.num2} = ${problem.result} (Falsch: ${problem.wrongCount}x)`;
         elements.mistakeList.appendChild(li);
     });
+}
+
+// Helper: map internal operator tokens to printable symbols
+function displayOperator(op) {
+    if (op === '*') return '×';
+    if (op === '/') return '÷';
+    return op;
 }
 
 // Spiel zurücksetzen
