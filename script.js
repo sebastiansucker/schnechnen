@@ -49,7 +49,6 @@ function createElements() {
             resultLevel: document.getElementById('result-level'),
             resultScore: document.getElementById('result-score'),
             totalProblemsElement: document.getElementById('total-problems'),
-            resultPercentage: document.getElementById('result-percentage'),
             highscoreElement: document.getElementById('highscore'),
             mistakeList: document.getElementById('mistake-list'),
             restartButton: document.getElementById('restart-btn'),
@@ -75,7 +74,6 @@ function createElements() {
         resultLevel: { textContent: '' },
         resultScore: { textContent: '' },
         totalProblemsElement: { textContent: '' },
-        resultPercentage: { textContent: '' },
         highscoreElement: { textContent: '' },
         mistakeList: { innerHTML: '' },
         restartButton: { addEventListener: () => {} },
@@ -345,12 +343,8 @@ function endGame() {
     elements.resultScore.textContent = gameState.score;
     elements.totalProblemsElement.textContent = gameState.totalProblems;
     
-    // Prozentsatz berechnen
-    const percentage = gameState.totalProblems > 0 ? Math.round((gameState.score / gameState.totalProblems) * 100) : 0;
-    elements.resultPercentage.textContent = percentage;
-    
-    // Highscore aktualisieren
-    updateHighscore(percentage);
+    // Highscore aktualisieren (Anzahl richtiger Antworten)
+    updateHighscore(gameState.score);
     
     // Häufig falsch gelöste Aufgaben anzeigen
     displayMistakes();
@@ -360,9 +354,9 @@ function endGame() {
 }
 
 // Highscore aktualisieren
-function updateHighscore(percentage) {
-    if (percentage > gameState.highscore) {
-        gameState.highscore = percentage;
+function updateHighscore(score) {
+    if (score > gameState.highscore) {
+        gameState.highscore = score;
         saveHighscore();
     }
 }

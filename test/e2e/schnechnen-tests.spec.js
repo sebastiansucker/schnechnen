@@ -120,7 +120,6 @@ test.describe('Schnechnen Spiel Tests', () => {
     await expect(page.locator('#result-level')).toBeVisible();
     await expect(page.locator('#result-score')).toBeVisible();
     await expect(page.locator('#total-problems')).toBeVisible();
-    await expect(page.locator('#result-percentage')).toBeVisible();
   });
 
   test('Dial-Pad Funktion', async ({ page }) => {

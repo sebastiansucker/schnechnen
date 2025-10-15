@@ -21,7 +21,6 @@ const mockElements = {
     resultLevel: { textContent: '' },
     resultScore: { textContent: '' },
     totalProblemsElement: { textContent: '' },
-    resultPercentage: { textContent: '' },
     highscoreElement: { textContent: '' },
     mistakeList: { innerHTML: '' },
     restartButton: { addEventListener: () => {} }
