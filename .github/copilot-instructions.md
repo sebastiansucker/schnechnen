@@ -1,15 +1,15 @@
 # Schnechnen - Copilot Instructions
 
 ## Project Overview
-Schnechnen is a mobile-first math learning game built with vanilla JavaScript, HTML, and CSS. Players solve timed math problems (60 seconds) across 4 difficulty levels, with dial-pad input optimized for touch devices.
+Schnechnen is a mobile-first math learning game built with vanilla JavaScript, HTML, and CSS. Players solve timed math problems (60 seconds) across 4 difficulty levels, with dial-pad input optimized for touch devices. Features adaptive learning that repeats frequently missed problems.
 
 ## Architecture
 
 ### Core Components
-- **`script.js`**: Single-file game engine with CONFIG-driven level system
+- **`script.js`**: Single-file game engine with CONFIG-driven level system and adaptive problem generation
 - **`weighting.js`**: Standalone mistake tracking (localStorage with in-memory fallback)
 - **`index.html`**: Three-screen flow (start → game → results)
-- **`style.css`**: Mobile-first responsive design
+- **`style.css`**: Mobile-first responsive design with gradient-based color system
 
 ### Key Design Pattern: Dual Environment Support
 The app runs in both browser and Node.js (for unit tests). The `createElements()` function in `script.js` returns:
@@ -33,6 +33,13 @@ Level logic is centralized in `generateProblem()` - modify here to change math r
 ### State Management
 Global `gameState` object holds runtime state. Reset via `resetGame()` (clears everything) or back button handler (preserves highscores).
 
+### Adaptive Learning System
+`generateProblem()` integrates with `weighting.js` to implement spaced repetition:
+- 30% probability to repeat a previously missed problem (via `peekMistake()`)
+- Problems with higher `wrongCount` are prioritized
+- Correct answers remove problems from mistake pool (via `removeMistake()`)
+- Wrong answers add/increment problems in mistake pool (via `addMistake()`)
+
 ## Development Workflows
 
 ### Local Development
@@ -43,10 +50,18 @@ npm run start            # Start http-server on :8080
 ```
 
 ### Testing Strategy
-**Unit tests** (`test/unit-test.js`): Run in Node.js, test pure logic (problem generation, scoring, CONFIG validation).
+**Unit tests** (`test/unit-test.js`): Run in Node.js, test pure logic (problem generation, scoring, CONFIG validation, adaptive learning).
 ```bash
 npm run test:unit
 ```
+
+Tests include:
+- `testConfig()`: Validates CONFIG structure
+- `testProblemGeneration()`: Verifies math problem constraints
+- `testHighscore()`: Tests localStorage highscore persistence
+- `testScoreCalculation()`: Validates percentage calculations
+- `testWeighting()`: Tests basic mistake tracking
+- `testAdaptiveProblemGeneration()`: Verifies adaptive learning with wrongCount prioritization
 
 **E2E tests** (`test/e2e/`): Playwright tests require local server running.
 ```bash
@@ -71,10 +86,23 @@ window.__TEST__.generateProblem()
 ## Project Conventions
 
 ### Mobile-First Input
-- **Dial pad is default**: Input field is `readonly`, users click dial buttons
+- **Dial pad is default**: Input field is `readonly`, users click dial buttons (85px × 85px on desktop, responsive down to 64px on small screens)
 - Never auto-focus input (prevents mobile keyboard pop-up)
 - Dial buttons use `data-value` attribute for digits (0-9)
 - Special buttons: `#backspace-btn`, `#submit-btn`
+- Touch optimization: `touch-action: manipulation` prevents zoom on rapid taps
+
+### Design System
+- **Color Palette**: Gradient-based design inspired by wortspiel project
+  - Primary Orange: `#FF6B35`
+  - Primary Turquoise: `#00B4D8`
+  - Primary Purple: `#9D4EDD`
+  - Primary Pink: `#FF006E`
+  - Primary Teal: `#06A77D`
+- **CSS Variables**: All colors defined in `:root` for easy theming
+- **Gradient Backgrounds**: `linear-gradient(135deg, ...)` throughout UI
+- **Card Shadows**: `0 8px 32px rgba(0, 0, 0, 0.1)` for depth
+- **Border Radius**: `16px` standard, `20px` for container
 
 ### Operator Display
 Internal operators (`+`, `-`, `*`, `/`) map to printable symbols via `displayOperator()`:
