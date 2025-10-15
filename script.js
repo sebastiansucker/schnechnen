@@ -40,7 +40,7 @@ function createElements() {
             scoreElement: document.getElementById('score'),
             currentLevelElement: document.getElementById('current-level'),
             problemElement: document.getElementById('problem'),
-            answerInput: document.getElementById('answer-input'),
+            userAnswerElement: document.getElementById('user-answer'),
             dialPad: document.getElementById('dial-pad'),
             // Only select numeric dial buttons that provide a data-value attribute
             dialButtons: document.querySelectorAll('.dial-btn[data-value]'),
@@ -66,7 +66,7 @@ function createElements() {
         scoreElement: { textContent: '' },
         currentLevelElement: { textContent: '' },
         problemElement: { textContent: '' },
-        answerInput: { value: '', focus: () => {} },
+        userAnswerElement: { textContent: '' },
         dialPad: { classList: { remove: () => {} } },
         dialButtons: [],
         backspaceButton: { addEventListener: () => {} },
@@ -128,15 +128,6 @@ function initEventListeners() {
             checkAnswer();
         });
     }
-
-    // (toggle keyboard removed — input remains readonly and uses dial-pad by default)
-
-    // Eingabefeld
-    elements.answerInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            checkAnswer();
-        }
-    });
 
     // Neues Spiel-Button
     elements.restartButton.addEventListener('click', () => {
@@ -260,11 +251,13 @@ function generateProblem() {
     };
     
     // Aufgabe anzeigen (use printable operator symbols)
-    elements.problemElement.textContent = `${num1} ${displayOperator(operation)} ${num2} = ?`;
+    elements.problemElement.innerHTML = `${num1} ${displayOperator(operation)} ${num2} = <span id="user-answer" class="user-answer">?</span>`;
     
-    // Eingabefeld zurücksetzen
-    elements.answerInput.value = '';
-    elements.answerInput.focus();
+    // User-Answer Element neu holen (weil innerHTML neu gesetzt wurde)
+    elements.userAnswerElement = document.getElementById('user-answer');
+    
+    // Eingabe zurücksetzen
+    elements.userAnswerElement.textContent = '?';
     
     // Dial-Pad anzeigen
     elements.dialPad.classList.remove('hidden');
@@ -277,30 +270,37 @@ function handleDialPadClick(value) {
     } else if (value === 'backspace') {
         backspaceInput();
     } else {
-        elements.answerInput.value += value;
-        elements.answerInput.focus();
+        const currentText = elements.userAnswerElement.textContent;
+        if (currentText === '?') {
+            elements.userAnswerElement.textContent = value;
+        } else {
+            elements.userAnswerElement.textContent += value;
+        }
     }
 }
 
 // Eingabefeld leeren
 function clearInput() {
-    elements.answerInput.value = '';
-    elements.answerInput.focus();
+    elements.userAnswerElement.textContent = '?';
 }
 
 // Letztes Zeichen löschen
 function backspaceInput() {
-    elements.answerInput.value = elements.answerInput.value.slice(0, -1);
-    elements.answerInput.focus();
+    const currentText = elements.userAnswerElement.textContent;
+    if (currentText.length > 0 && currentText !== '?') {
+        const newText = currentText.slice(0, -1);
+        elements.userAnswerElement.textContent = newText.length === 0 ? '?' : newText;
+    }
 }
 
 // Antwort prüfen
 function checkAnswer() {
     if (!gameState.currentProblem || gameState.currentProblem.answered) return;
     
-    const userAnswer = parseInt(elements.answerInput.value);
+    const userAnswerText = elements.userAnswerElement.textContent;
+    const userAnswer = parseInt(userAnswerText);
     // If the input is empty or not a number, ignore the submit
-    if (Number.isNaN(userAnswer)) return;
+    if (Number.isNaN(userAnswer) || userAnswerText === '?') return;
     const correctAnswer = gameState.currentProblem.result;
     
     // Antwort prüfen
@@ -431,8 +431,10 @@ function resetGame() {
         currentProblem: null
     };
     
-    // Eingabefeld leeren
-    elements.answerInput.value = '';
+    // Anzeige zurücksetzen
+    if (elements.userAnswerElement) {
+        elements.userAnswerElement.textContent = '?';
+    }
 }
 
 // Bildschirm anzeigen

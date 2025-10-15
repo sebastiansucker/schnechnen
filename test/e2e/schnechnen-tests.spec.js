@@ -50,8 +50,8 @@ test.describe('Schnechnen Spiel Tests', () => {
     // Prüfe, dass ein Problem angezeigt wird
     await expect(page.locator('#problem')).toBeVisible();
     
-    // Prüfe, dass das Eingabefeld sichtbar ist
-    await expect(page.locator('#answer-input')).toBeVisible();
+    // Prüfe, dass der User-Answer-Bereich sichtbar ist
+    await expect(page.locator('#user-answer')).toBeVisible();
     
     // Prüfe, dass das Dial-Pad sichtbar ist
     await expect(page.locator('#dial-pad')).not.toHaveClass('hidden');
@@ -145,8 +145,8 @@ test.describe('Schnechnen Spiel Tests', () => {
     // Teste das Klicken auf eine Zahl
     await page.click('.dial-btn[data-value="5"]');
     
-    // Prüfe, dass die Zahl im Eingabefeld angezeigt wird
-    await expect(page.locator('#answer-input')).toHaveValue('5');
+    // Prüfe, dass die Zahl im User-Answer-Bereich angezeigt wird
+    await expect(page.locator('#user-answer')).toHaveText('5');
   });
 
   test('Level-Wechsel funktioniert', async ({ page }) => {
