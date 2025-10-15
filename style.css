@@ -155,6 +155,8 @@ h3 {
     position: relative;
     overflow: hidden;
     text-align: center;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .level-btn::before {
@@ -219,6 +221,8 @@ h3 {
     transition: all 0.3s ease;
     font-weight: bold;
     box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn-primary:hover {
@@ -380,6 +384,8 @@ button.btn-primary:hover {
     justify-content: center;
     align-items: center;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .dial-btn:hover {
@@ -492,6 +498,8 @@ button.btn-primary:hover {
     box-shadow: var(--card-shadow);
     position: relative;
     overflow: hidden;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 #restart-btn::before {
