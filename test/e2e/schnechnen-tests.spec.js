@@ -8,13 +8,13 @@ test.describe('Schnechnen Spiel Tests', () => {
 
   test('Startbildschirm wird korrekt angezeigt', async ({ page }) => {
     // Prüfe, dass der Startbildschirm angezeigt wird
-    await expect(page).toHaveTitle('Schnechnen - Mathe Spiel');
+    await expect(page).toHaveTitle('Schnechnen');
     
     // Prüfe, dass die Hauptüberschrift angezeigt wird
     await expect(page.locator('h1')).toHaveText('Schnechnen');
     
   // Prüfe, dass die Spielbeschreibung angezeigt wird (scoped selector to avoid multiple <p> elements)
-  await expect(page.locator('#start-screen p')).toHaveText('Mathe Spiel zum Lernen');
+  await expect(page.locator('#start-screen p')).toHaveText('SCHNell REchnen');
     
     // Prüfe, dass die Level-Auswahl angezeigt wird
     await expect(page.locator('.level-selection')).toBeVisible();
