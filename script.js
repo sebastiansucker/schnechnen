@@ -63,7 +63,8 @@ const elements = {
     resultPercentage: document.getElementById('result-percentage'),
     highscoreElement: document.getElementById('highscore'),
     mistakeList: document.getElementById('mistake-list'),
-    restartButton: document.getElementById('restart-btn')
+    restartButton: document.getElementById('restart-btn'),
+    backButton: document.getElementById('back-btn')
 };
 
 // Initialisierung
@@ -128,6 +129,26 @@ function initEventListeners() {
         resetGame();
         showScreen('start');
     });
+
+    // Restart current level button
+    // (restart-level button removed; use Zurück to leave and re-enter a level)
+
+    // Back button: leave current level and go back to level selection
+    if (elements.backButton) {
+        elements.backButton.addEventListener('click', () => {
+            if (gameState.timer) clearInterval(gameState.timer);
+            // Reset runtime state but keep highscores
+            gameState.currentLevel = null;
+            gameState.timeLeft = 60;
+            gameState.score = 0;
+            gameState.totalProblems = 0;
+            gameState.problems = [];
+            gameState.currentProblem = null;
+            // Show start screen
+            resetGame();
+            showScreen('start');
+        });
+    }
 }
 
 // Spiel starten

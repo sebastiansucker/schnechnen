@@ -100,6 +100,75 @@ h3 {
     font-size: 1.1rem;
 }
 
+.game-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Primary button used in the header controls to keep styles DRY */
+.btn-primary {
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    background: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: bold;
+}
+
+.btn-primary:hover {
+    background: #115293;
+    transform: translateY(-1px);
+}
+
+/* Stronger rule to override user-agent button styles */
+button.btn-primary {
+    -webkit-appearance: none;
+    appearance: none;
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    background: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: bold;
+    text-align: center;
+}
+
+button.btn-primary:hover {
+    background: #115293;
+    transform: translateY(-1px);
+}
+
+/* Aggressive reset for header buttons to ensure UA styles don't leak in */
+.game-header .btn-primary {
+    all: unset;
+    display: inline-block;
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    background: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: bold;
+    text-align: center;
+}
+
+.game-header .btn-primary:hover {
+    background: #115293;
+    transform: translateY(-1px);
+}
+
+/* Specific classes kept for semantics but reuse .btn-primary */
+/* kept semantic classes are applied via the HTML by adding the .btn-primary class */
+
 .problem-container {
     width: 100%;
     margin-bottom: 30px;

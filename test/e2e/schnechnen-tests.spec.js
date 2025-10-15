@@ -174,4 +174,8 @@ test.describe('Schnechnen Spiel Tests', () => {
     });
     await expect(page.locator('#current-level')).toHaveText('4');
   });
+
+  test('Neu starten Button setzt Level zurück und startet neu', async ({ page }) => {
+    test.skip('Neu starten removed; use Zurück then re-enter level if restart is desired');
+  });
 });
