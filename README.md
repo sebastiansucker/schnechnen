@@ -10,6 +10,7 @@ Ein kleines, responsives Mathe-Lernspiel (JavaScript) mit modernem Design, inspi
 - ⏱️ **60-Sekunden-Spielmodus** mit visueller Feedback-Animation
 - 📱 **Mobile-First**: Eingabe per Dial-Pad, optimiert für Touch-Geräte
 - 🏆 **Highscore pro Level**: Anzahl richtiger Antworten (localStorage)
+- 🧠 **Adaptives Lernen**: Häufige Fehler werden automatisch wiederholt (30% Chance)
 - ❌ **Fehleranalyse**: Anzeige häufig falsch gelöster Aufgaben
 - ✅ **Getestet**: Unit tests (Node), E2E tests (Playwright)
 
@@ -108,12 +109,12 @@ Eine GitHub Actions-Workflow-Datei ist vorhanden unter `.github/workflows/ci.yml
 
 ## TODO (Ideen)
 
-- [ ] Adaptive Problemgenerierung basierend auf `weighting.js` (häufige Fehler öfter wiederholen)
+- [x] Adaptive Problemgenerierung basierend auf `weighting.js` (häufige Fehler öfter wiederholen)
 - [x] Animationen für Feedback (z.B. grüner/roter Rahmen bei Antworten)
 - [ ] Weitere Level mit gemischten Operationen
 - [ ] Statistik-Seite mit Verlaufsdiagramm der Highscores
 - [ ] Dark Mode Support
-- [ ] PWA-Funktionalität (Offline-Nutzung, Install-Prompt)
+- [x] PWA-Funktionalität (Offline-Nutzung, Install-Prompt)
 - [ ] Tastatur-Shortcuts (Enter für Submit, Backspace funktional)
 - [ ] ARIA-Labels für bessere Accessibility
 - [ ] Internationalisierung (i18n) für mehrere Sprachen

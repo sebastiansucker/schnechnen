@@ -214,28 +214,41 @@ function generateProblem() {
     
     let num1, num2, operation, result;
     
-    // Aufgabe generieren
-    do {
-        operation = levelConfig.operations[Math.floor(Math.random() * levelConfig.operations.length)];
-        
-        if (operation === '+') {
-            num1 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
-            num2 = Math.floor(Math.random() * (levelConfig.maxNumber - num1 + 1)) + 1;
-            result = num1 + num2;
-        } else if (operation === '-') {
-            num1 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
-            num2 = Math.floor(Math.random() * num1) + 1;
-            result = num1 - num2;
-        } else if (operation === '*') {
-            num1 = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
-            num2 = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
-            result = num1 * num2;
-        } else if (operation === '/') {
-            num2 = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
-            result = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
-            num1 = num2 * result;
-        }
-    } while (result < levelConfig.minResult); // Sicherstellen, dass Ergebnis mindestens minResult ist
+    // Adaptive Problemgenerierung: 30% Chance, ein häufiges Fehlerproblem zu wiederholen
+    const MISTAKE_REPEAT_CHANCE = 0.3;
+    const shouldRepeatMistake = Math.random() < MISTAKE_REPEAT_CHANCE;
+    const mistakeProblem = window.Weighting ? window.Weighting.peekMistake(gameState.currentLevel) : null;
+    
+    if (shouldRepeatMistake && mistakeProblem) {
+        // Wiederverwende ein Problem aus der Fehlerliste
+        num1 = mistakeProblem.num1;
+        num2 = mistakeProblem.num2;
+        operation = mistakeProblem.operation;
+        result = mistakeProblem.result;
+    } else {
+        // Generiere ein neues zufälliges Problem
+        do {
+            operation = levelConfig.operations[Math.floor(Math.random() * levelConfig.operations.length)];
+            
+            if (operation === '+') {
+                num1 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
+                num2 = Math.floor(Math.random() * (levelConfig.maxNumber - num1 + 1)) + 1;
+                result = num1 + num2;
+            } else if (operation === '-') {
+                num1 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
+                num2 = Math.floor(Math.random() * num1) + 1;
+                result = num1 - num2;
+            } else if (operation === '*') {
+                num1 = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
+                num2 = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
+                result = num1 * num2;
+            } else if (operation === '/') {
+                num2 = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
+                result = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
+                num1 = num2 * result;
+            }
+        } while (result < levelConfig.minResult); // Sicherstellen, dass Ergebnis mindestens minResult ist
+    }
     
     // Aufgabe speichern
     gameState.currentProblem = {
@@ -307,6 +320,11 @@ function checkAnswer() {
         gameState.currentProblem.answered = true;
         gameState.currentProblem.wrongCount = 0; // Reset wrong count on correct answer
         
+        // Wenn das Problem aus der Fehlerliste war, entferne es
+        if (window.Weighting) {
+            window.Weighting.removeMistake(gameState.currentLevel, gameState.currentProblem);
+        }
+        
         // Feedback-Animation für richtige Antwort
         showFeedback(true);
     } else {
@@ -315,6 +333,11 @@ function checkAnswer() {
         gameState.currentProblem.wrongCount++;
         // Falsche Aufgaben in Liste speichern
         gameState.problems.push(gameState.currentProblem);
+        
+        // Füge Problem zur Weighting-Liste hinzu für adaptives Lernen
+        if (window.Weighting) {
+            window.Weighting.addMistake(gameState.currentLevel, gameState.currentProblem);
+        }
         
         // Feedback-Animation für falsche Antwort
         showFeedback(false);
