@@ -104,6 +104,19 @@ Eine GitHub Actions-Workflow-Datei ist vorhanden unter `.github/workflows/ci.yml
 - Für bessere Zugänglichkeit sollten ARIA-Labels für Submit/Backspace/Toggle hinzugefügt werden.
 - Wenn gewünscht, kann die Tastatur-Einstellung in `localStorage` persistiert werden.
 
+## TODO (Ideen)
+
+- [ ] Adaptive Problemgenerierung basierend auf `weighting.js` (häufige Fehler öfter wiederholen)
+- [ ] Animationen für Feedback (z.B. grüner/roter Rahmen bei Antworten)
+- [ ] Weitere Level mit gemischten Operationen
+- [ ] Statistik-Seite mit Verlaufsdiagramm der Highscores
+- [ ] Dark Mode Support
+- [ ] PWA-Funktionalität (Offline-Nutzung, Install-Prompt)
+- [ ] Tastatur-Shortcuts (Enter für Submit, Backspace funktional)
+- [ ] ARIA-Labels für bessere Accessibility
+- [ ] Internationalisierung (i18n) für mehrere Sprachen
+- [x] Zoom verhindern auf Mobilgeräten
+
 ## License
 
 MIT
