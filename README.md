@@ -1,15 +1,17 @@
 # Schnechnen — Mathe-Spiel
 
-Ein kleines, responsives Mathe-Lernspiel (JavaScript) mit Unit- und End-to-End-Tests.
+Ein kleines, responsives Mathe-Lernspiel (JavaScript) mit modernem Design, inspiriert von Wortspiel.
 
 ## Features
 
-- 4 Lern-Level (Addition/Subtraktion, Multiplikation, Division)
-- 60-Sekunden-Spielmodus
-- Eingabe per Dial-Pad (mobil-first) + OK-Button
-- Highscore pro Level: Anzahl richtiger Antworten (localStorage)
-- Anzeige häufig falsch gelöster Aufgaben
-- Unit tests (Node), E2E tests (Playwright)
+- 🎨 **Modernes Design**: Gradient-basiertes UI mit Orange/Türkis/Violett-Farbpalette
+- 🐌 **Logo**: Schnecken-Emoji in rundem, gradienten Rahmen
+- 📊 **4 Lern-Level**: Addition/Subtraktion, Multiplikation, Division
+- ⏱️ **60-Sekunden-Spielmodus** mit visueller Feedback-Animation
+- 📱 **Mobile-First**: Eingabe per Dial-Pad, optimiert für Touch-Geräte
+- 🏆 **Highscore pro Level**: Anzahl richtiger Antworten (localStorage)
+- ❌ **Fehleranalyse**: Anzeige häufig falsch gelöster Aufgaben
+- ✅ **Getestet**: Unit tests (Node), E2E tests (Playwright)
 
 ## Projektstruktur
 
