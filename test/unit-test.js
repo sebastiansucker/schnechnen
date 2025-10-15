@@ -98,6 +98,9 @@ function runTests() {
     // Test 4: Ergebnisberechnung
     testScoreCalculation();
     
+    // Test 5: Gewichtung / Fehlerwiederholung
+    testWeighting();
+    
     console.log('Alle Tests abgeschlossen.');
 }
 
@@ -223,6 +226,39 @@ function testScoreCalculation() {
         return true;
     } catch (error) {
         console.error('Fehler bei Ergebnisberechnung-Tests:', error);
+        return false;
+    }
+}
+
+function testWeighting() {
+    console.log('Teste Gewichtung/Fehlerwiederholung...');
+    try {
+        const weighting = require('../weighting');
+        // clear any previous data
+        weighting.clear();
+
+        const level = 1;
+        const problem = { num1: 3, num2: 4, operation: '+', result: 7 };
+
+        // Simulate a wrong answer being recorded
+        weighting.addMistake(level, problem);
+
+        // Now, peek the next mistake for the level — should return the same problem
+        const peek = weighting.peekMistake(level);
+        if (!peek) {
+            console.error('Fehler: Erwartete eine gespeicherte falsche Aufgabe, aber keine gefunden.');
+            return false;
+        }
+
+        if (peek.num1 !== problem.num1 || peek.num2 !== problem.num2 || peek.operation !== problem.operation || peek.result !== problem.result) {
+            console.error('Fehler: Die gespeicherte Aufgabe stimmt nicht mit der erwarteten überein.');
+            return false;
+        }
+
+        console.log('✓ Gewichtung und Fehlerwiederholung erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen der Gewichtung:', error);
         return false;
     }
 }
