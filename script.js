@@ -178,9 +178,6 @@ function startGame(level) {
     // Spielbildschirm anzeigen
     showScreen('game');
     
-    // Aktuelles Level anzeigen
-    elements.currentLevelElement.textContent = level;
-    
     // Timer starten
     startTimer();
     
@@ -309,22 +306,45 @@ function checkAnswer() {
         gameState.score++;
         gameState.currentProblem.answered = true;
         gameState.currentProblem.wrongCount = 0; // Reset wrong count on correct answer
+        
+        // Feedback-Animation für richtige Antwort
+        showFeedback(true);
     } else {
         // Falsche Antwort
         gameState.currentProblem.answered = true;
         gameState.currentProblem.wrongCount++;
         // Falsche Aufgaben in Liste speichern
         gameState.problems.push(gameState.currentProblem);
+        
+        // Feedback-Animation für falsche Antwort
+        showFeedback(false);
     }
     
     gameState.totalProblems++;
     
-    // Aktualisieren der Anzeige
-    elements.scoreElement.textContent = gameState.score;
-    
     // Nächste Aufgabe generieren
     setTimeout(() => {
         generateProblem();
+    }, 600);
+}
+
+// Feedback-Animation anzeigen
+function showFeedback(isCorrect) {
+    const problemElement = elements.problemElement;
+    
+    // Entferne alte Klassen
+    problemElement.classList.remove('correct', 'wrong');
+    
+    // Füge neue Klasse hinzu
+    if (isCorrect) {
+        problemElement.classList.add('correct');
+    } else {
+        problemElement.classList.add('wrong');
+    }
+    
+    // Entferne Klasse nach Animation
+    setTimeout(() => {
+        problemElement.classList.remove('correct', 'wrong');
     }, 500);
 }
 

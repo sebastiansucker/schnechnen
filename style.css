@@ -95,14 +95,15 @@ h3 {
     align-items: center;
     width: 100%;
     margin-bottom: 30px;
-    padding: 10px;
+    padding: 15px 20px;
     background: #f0f0f0;
     border-radius: 8px;
 }
 
-.timer, .level-indicator, .score {
+.timer {
     font-weight: bold;
-    font-size: 1.1rem;
+    font-size: 1.3rem;
+    color: #333;
 }
 
 .game-controls {
@@ -197,6 +198,51 @@ button.btn-primary:hover {
     display: inline-block;
     text-align: center;
     border-bottom: 3px solid #4CAF50;
+    transition: all 0.3s ease;
+}
+
+/* Feedback-Animationen */
+@keyframes correctAnswer {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+        color: #4CAF50;
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes wrongAnswer {
+    0% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-10px);
+    }
+    50% {
+        transform: translateX(10px);
+    }
+    75% {
+        transform: translateX(-10px);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+
+.problem.correct {
+    animation: correctAnswer 0.5s ease;
+    background: #c8e6c9 !important;
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+}
+
+.problem.wrong {
+    animation: wrongAnswer 0.5s ease;
+    background: #ffcdd2 !important;
+    box-shadow: 0 0 20px rgba(244, 67, 54, 0.5);
 }
 
 .dial-pad {
@@ -353,16 +399,15 @@ button.btn-primary:hover {
     }
     
     .game-header {
-        flex-direction: column;
-        gap: 8px;
-        text-align: center;
-        font-size: 0.9rem;
-        padding: 8px;
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 15px;
         margin-bottom: 15px;
     }
     
-    .timer, .level-indicator, .score {
-        font-size: 0.95rem;
+    .timer {
+        font-size: 1.1rem;
     }
     
     .level-btn {

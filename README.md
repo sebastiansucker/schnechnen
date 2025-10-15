@@ -107,7 +107,7 @@ Eine GitHub Actions-Workflow-Datei ist vorhanden unter `.github/workflows/ci.yml
 ## TODO (Ideen)
 
 - [ ] Adaptive Problemgenerierung basierend auf `weighting.js` (häufige Fehler öfter wiederholen)
-- [ ] Animationen für Feedback (z.B. grüner/roter Rahmen bei Antworten)
+- [x] Animationen für Feedback (z.B. grüner/roter Rahmen bei Antworten)
 - [ ] Weitere Level mit gemischten Operationen
 - [ ] Statistik-Seite mit Verlaufsdiagramm der Highscores
 - [ ] Dark Mode Support
