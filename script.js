@@ -51,7 +51,6 @@ const elements = {
     currentLevelElement: document.getElementById('current-level'),
     problemElement: document.getElementById('problem'),
     answerInput: document.getElementById('answer-input'),
-    toggleKeyboard: document.getElementById('toggle-keyboard'),
     dialPad: document.getElementById('dial-pad'),
     // Only select numeric dial buttons that provide a data-value attribute
     dialButtons: document.querySelectorAll('.dial-btn[data-value]'),
@@ -99,23 +98,7 @@ function initEventListeners() {
         });
     }
 
-    // Toggle system keyboard
-    if (elements.toggleKeyboard) {
-        elements.toggleKeyboard.addEventListener('click', () => {
-            const input = elements.answerInput;
-            if (input.hasAttribute('readonly')) {
-                // enable system keyboard
-                input.removeAttribute('readonly');
-                input.focus();
-                elements.toggleKeyboard.textContent = 'Dial-Pad verwenden';
-            } else {
-                // disable system keyboard
-                input.setAttribute('readonly', '');
-                input.blur();
-                elements.toggleKeyboard.textContent = 'Tastatur verwenden';
-            }
-        });
-    }
+    // (toggle keyboard removed — input remains readonly and uses dial-pad by default)
 
     // Eingabefeld
     elements.answerInput.addEventListener('keydown', (e) => {
