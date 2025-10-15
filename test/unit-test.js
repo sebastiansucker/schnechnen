@@ -100,6 +100,9 @@ function runTests() {
     // Test 5: Gewichtung / Fehlerwiederholung
     testWeighting();
     
+    // Test 6: Adaptive Problemgenerierung
+    testAdaptiveProblemGeneration();
+    
     console.log('Alle Tests abgeschlossen.');
 }
 
@@ -258,6 +261,72 @@ function testWeighting() {
         return true;
     } catch (error) {
         console.error('Fehler beim Testen der Gewichtung:', error);
+        return false;
+    }
+}
+
+function testAdaptiveProblemGeneration() {
+    console.log('Teste Adaptive Problemgenerierung...');
+    try {
+        const weighting = require('../weighting');
+        weighting.clear();
+
+        const level = 1;
+        const mistakeProblem = { num1: 5, num2: 3, operation: '+', result: 8 };
+        
+        // Füge einen häufigen Fehler hinzu - jeder Aufruf inkrementiert wrongCount um 1
+        weighting.addMistake(level, mistakeProblem); // wrongCount = 1
+        weighting.addMistake(level, mistakeProblem); // wrongCount = 2
+        weighting.addMistake(level, mistakeProblem); // wrongCount = 3
+
+        // Prüfe, ob peekMistake das Problem mit dem höchsten wrongCount zurückgibt
+        const peeked = weighting.peekMistake(level);
+        if (!peeked) {
+            console.error('Fehler: peekMistake sollte ein Problem zurückgeben.');
+            return false;
+        }
+
+        if (peeked.wrongCount !== 3) {
+            console.error(`Fehler: wrongCount sollte 3 sein, ist aber ${peeked.wrongCount}.`);
+            return false;
+        }
+
+        // Simuliere richtige Antwort -> Problem sollte entfernt werden
+        weighting.removeMistake(level, mistakeProblem);
+        const afterRemove = weighting.peekMistake(level);
+        if (afterRemove !== null) {
+            console.error('Fehler: Nach removeMistake sollte kein Problem mehr vorhanden sein.');
+            return false;
+        }
+
+        // Teste mehrere Probleme - das mit höchstem wrongCount sollte zuerst kommen
+        weighting.clear();
+        
+        // Problem 1: wrongCount = 1
+        const prob1 = { num1: 2, num2: 2, operation: '+', result: 4 };
+        weighting.addMistake(level, prob1);
+
+        // Problem 2: wrongCount = 5 (mehrfach falsch beantwortet)
+        const prob2 = { num1: 5, num2: 5, operation: '+', result: 10 };
+        for (let i = 0; i < 5; i++) {
+            weighting.addMistake(level, prob2);
+        }
+
+        // Problem 3: wrongCount = 2
+        const prob3 = { num1: 3, num2: 3, operation: '+', result: 6 };
+        weighting.addMistake(level, prob3);
+        weighting.addMistake(level, prob3);
+
+        const highestWrong = weighting.peekMistake(level);
+        if (highestWrong.wrongCount !== 5) {
+            console.error(`Fehler: Das Problem mit dem höchsten wrongCount sollte zurückgegeben werden (5), aber wrongCount ist ${highestWrong.wrongCount}.`);
+            return false;
+        }
+
+        console.log('✓ Adaptive Problemgenerierung erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen der adaptiven Problemgenerierung:', error);
         return false;
     }
 }
