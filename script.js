@@ -431,9 +431,8 @@ function endGame() {
     // Spiel-History speichern
     saveGameHistory(gameState.currentLevel, gameState.score, gameState.totalProblems);
     
-    // Highscore für aktuelles Level anzeigen
-    const currentLevelHighscore = window.__SCHNECHEN_HIGHSCORES[gameState.currentLevel] || 0;
-    elements.highscoreElement.textContent = currentLevelHighscore;
+    // Aktuelles Ergebnis (Anzahl richtiger Antworten) anzeigen
+    elements.highscoreElement.textContent = gameState.score;
     
     // Häufig falsch gelöste Aufgaben aus weighting.js anzeigen
     displayMistakes();

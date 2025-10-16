@@ -169,6 +169,59 @@ test.describe('Schnechnen Spiel Tests', () => {
     await expect(page.locator('#problem')).toBeVisible();
   });
 
+  test('Ergebnis zeigt Anzahl richtiger Antworten', async ({ page }) => {
+    // Starte Level 1
+    await page.click('button[data-level="1"]');
+    await page.waitForSelector('#problem');
+    
+    // Beantworte ein paar Fragen korrekt
+    for (let i = 0; i < 5; i++) {
+      // Hole die aktuelle Aufgabe
+      const problemData = await page.evaluate(() => {
+        if (window.gameState && window.gameState.currentProblem) {
+          return {
+            result: window.gameState.currentProblem.result,
+            score: window.gameState.score
+          };
+        }
+        return null;
+      });
+      
+      if (problemData) {
+        // Gebe die richtige Antwort ein
+        const answer = problemData.result.toString();
+        for (const digit of answer) {
+          await page.click(`.dial-btn[data-value="${digit}"]`);
+        }
+        await page.click('#submit-btn');
+        await page.waitForTimeout(700); // Warte auf nächstes Problem
+      }
+    }
+    
+    // Hole den aktuellen Score vor dem Beenden
+    const finalScore = await page.evaluate(() => {
+      return window.gameState ? window.gameState.score : 0;
+    });
+    
+    // Beende das Spiel
+    await page.evaluate(() => {
+      if (window.__TEST__ && typeof window.__TEST__.endGame === 'function') {
+        window.__TEST__.endGame();
+      }
+    });
+    
+    // Warte auf Result-Screen
+    await page.waitForSelector('#result-screen:not(.hidden)');
+    
+    // Prüfe, dass das Ergebnis (Anzahl richtiger Antworten) korrekt angezeigt wird
+    const displayedScore = await page.locator('#highscore').textContent();
+    expect(parseInt(displayedScore)).toBe(finalScore);
+    
+    // Prüfe auch, dass die richtige Anzahl/gesamt übereinstimmt
+    const resultScore = await page.locator('#result-score').textContent();
+    expect(parseInt(resultScore)).toBe(finalScore);
+  });
+
   test('Neu starten Button setzt Level zurück und startet neu', async ({ page }) => {
     test.skip('Neu starten removed; use Zurück then re-enter level if restart is desired');
   });
