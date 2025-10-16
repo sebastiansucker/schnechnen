@@ -50,6 +50,8 @@ npm run start            # Start http-server on :8080
 ```
 
 ### Testing Strategy
+**CRITICAL RULE**: Always run `npm test` before committing! All tests must pass before pushing changes to the repository.
+
 **Unit tests** (`test/unit-test.js`): Run in Node.js, test pure logic (problem generation, scoring, CONFIG validation, adaptive learning).
 ```bash
 npm run test:unit
@@ -72,6 +74,12 @@ npm run start
 npm run test:e2e         # Headless run
 npm run test:e2e:ui      # Interactive UI mode
 ```
+
+**Run all tests** before committing:
+```bash
+npm test                 # Runs both unit and E2E tests (60 E2E + 6 unit tests)
+```
+All tests must pass before pushing to GitHub.
 
 **Important**: E2E tests use `http://localhost:8080` (hardcoded in `playwright.config.js`). Server must be running first.
 
