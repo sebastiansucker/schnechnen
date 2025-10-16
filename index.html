@@ -78,21 +78,20 @@
         <div id="result-screen" class="screen hidden">
             <h2>Ergebnis</h2>
             <div class="result-stats">
-                <p>Level: <span id="result-level">1</span></p>
-                <p>Richtige Antworten: <span id="result-score">0</span>/<span id="total-problems">0</span></p>
-            </div>
-            <div class="highscore">
-                <h3>Highscore</h3>
-                <p>Dein Highscore: <span id="highscore">0</span></p>
+                <p><strong>Level:</strong> <span id="result-level">1</span></p>
+                <p><strong>Richtige Antworten:</strong> <span id="result-score">0</span>/<span id="total-problems">0</span></p>
+                <p class="highscore-display"><strong>Highscore für dieses Level:</strong> <span id="highscore">0</span></p>
             </div>
             <div class="common-mistakes">
                 <h3>Häufig falsch gelöste Aufgaben</h3>
+                <p class="mistakes-subtitle">Diese Aufgaben wurden in allen Sessions am häufigsten falsch beantwortet:</p>
                 <ul id="mistake-list"></ul>
             </div>
             <button id="restart-btn">Neues Spiel</button>
         </div>
     </div>
 
+    <script src="weighting.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

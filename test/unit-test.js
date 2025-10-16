@@ -18,12 +18,14 @@ const mockElements = {
     dialButtons: [],
     clearButton: { addEventListener: () => {} },
     backspaceButton: { addEventListener: () => {} },
+    submitButton: { addEventListener: () => {} },
     resultLevel: { textContent: '' },
     resultScore: { textContent: '' },
     totalProblemsElement: { textContent: '' },
     highscoreElement: { textContent: '' },
-    mistakeList: { innerHTML: '' },
-    restartButton: { addEventListener: () => {} }
+    mistakeList: { innerHTML: '', appendChild: () => {} },
+    restartButton: { addEventListener: () => {} },
+    backButton: { addEventListener: () => {} }
 };
 
 // Mock localStorage

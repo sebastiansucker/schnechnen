@@ -389,11 +389,12 @@ function endGame() {
     // Highscore aktualisieren (Anzahl richtiger Antworten)
     updateHighscore(gameState.score);
     
-    // Häufig falsch gelöste Aufgaben anzeigen
-    displayMistakes();
+    // Highscore für aktuelles Level anzeigen
+    const currentLevelHighscore = window.__SCHNECHEN_HIGHSCORES[gameState.currentLevel] || 0;
+    elements.highscoreElement.textContent = currentLevelHighscore;
     
-    // Highscore anzeigen
-    elements.highscoreElement.textContent = gameState.highscore;
+    // Häufig falsch gelöste Aufgaben aus weighting.js anzeigen
+    displayMistakes();
 }
 
 // Highscore aktualisieren
@@ -428,24 +429,27 @@ function loadHighscores() {
 
 // Häufig falsch gelöste Aufgaben anzeigen
 function displayMistakes() {
-    // Sortiere Aufgaben nach Anzahl falscher Antworten (absteigend)
-    const sortedProblems = [...gameState.problems]
-        .filter(problem => problem.wrongCount > 0)
-        .sort((a, b) => b.wrongCount - a.wrongCount)
-        .slice(0, 5); // Nur die 5 häufigsten falschen Aufgaben
+    // Hole alle Fehler für das aktuelle Level aus weighting.js (alle Sessions)
+    const mistakes = window.Weighting ? window.Weighting.getMistakes(gameState.currentLevel) : [];
+    
+    // Sortiere nach wrongCount (absteigend) und nimm die Top 5
+    const sortedMistakes = mistakes
+        .slice()
+        .sort((a, b) => (b.wrongCount || 0) - (a.wrongCount || 0))
+        .slice(0, 5);
     
     // Liste leeren
     elements.mistakeList.innerHTML = '';
     
     // Aufgaben anzeigen
-    if (sortedProblems.length === 0) {
-        elements.mistakeList.innerHTML = '<li>Keine falsch gelösten Aufgaben bisher</li>';
+    if (sortedMistakes.length === 0) {
+        elements.mistakeList.innerHTML = '<li>Keine falsch gelösten Aufgaben bisher! 🎉</li>';
         return;
     }
     
-    sortedProblems.forEach(problem => {
+    sortedMistakes.forEach(problem => {
         const li = document.createElement('li');
-        li.textContent = `${problem.num1} ${displayOperator(problem.operation)} ${problem.num2} = ${problem.result} (Falsch: ${problem.wrongCount}x)`;
+        li.textContent = `${problem.num1} ${displayOperator(problem.operation)} ${problem.num2} = ${problem.result} (${problem.wrongCount}× falsch)`;
         elements.mistakeList.appendChild(li);
     });
 }

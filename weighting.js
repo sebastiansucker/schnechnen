@@ -71,10 +71,24 @@ function removeMistake(level, problem) {
     _saveAll(all);
 }
 
-module.exports = {
-    addMistake,
-    getMistakes,
-    peekMistake,
-    removeMistake,
-    clear
-};
+// Export für Node.js (Unit Tests)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        addMistake,
+        getMistakes,
+        peekMistake,
+        removeMistake,
+        clear
+    };
+}
+
+// Export für Browser
+if (typeof window !== 'undefined') {
+    window.Weighting = {
+        addMistake,
+        getMistakes,
+        peekMistake,
+        removeMistake,
+        clear
+    };
+}
