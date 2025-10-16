@@ -386,9 +386,9 @@ button.btn-primary:hover {
 
 .stats-buttons {
     display: flex;
-    gap: 10px;
+    gap: 15px;
     flex-direction: column;
-    margin-top: 20px;
+    margin-top: 30px;
 }
 
 .stats-buttons button {
