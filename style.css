@@ -344,6 +344,57 @@ button.btn-primary:hover {
     box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
 }
 
+.btn-secondary {
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    background: linear-gradient(135deg, var(--primary-turquoise), var(--primary-teal));
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0, 180, 216, 0.3);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 180, 216, 0.4);
+}
+
+.btn-danger {
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    background: linear-gradient(135deg, #FF4757, #FF3838);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 71, 87, 0.4);
+}
+
+.stats-buttons {
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+    margin-top: 20px;
+}
+
+.stats-buttons button {
+    width: 100%;
+}
+
 .problem-container {
     width: 100%;
     margin-bottom: 20px;

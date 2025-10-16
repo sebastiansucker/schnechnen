@@ -56,6 +56,7 @@ function createElements() {
             backButton: document.getElementById('back-btn'),
             statsButton: document.getElementById('stats-btn'),
             statsBackButton: document.getElementById('stats-back-btn'),
+            statsResetButton: document.getElementById('stats-reset-btn'),
             statsLevelButtons: document.querySelectorAll('.stats-level-btn'),
             statHighscore: document.getElementById('stat-highscore'),
             statTotalGames: document.getElementById('stat-total-games'),
@@ -160,6 +161,13 @@ function initEventListeners() {
     if (elements.statsBackButton) {
         elements.statsBackButton.addEventListener('click', () => {
             showScreen('start');
+        });
+    }
+
+    // Stats Reset-Button
+    if (elements.statsResetButton) {
+        elements.statsResetButton.addEventListener('click', () => {
+            resetAllStatistics();
         });
     }
 
@@ -530,6 +538,37 @@ function loadHighscores() {
     } catch (e) {
         console.error('Fehler beim Laden des Highscores:', e);
         gameState.highscore = 0;
+    }
+}
+
+// Alle Statistiken löschen
+function resetAllStatistics() {
+    // Bestätigung vom Spieler erfragen
+    if (!confirm('🗑️ Wirklich ALLE Statistiken, Highscores und Fehlerprotokoll löschen? Dies kann nicht rückgängig gemacht werden!')) {
+        return;
+    }
+
+    try {
+        // Lösche localStorage-Einträge
+        localStorage.removeItem('schnechnen-highscores');
+        localStorage.removeItem('schnechnen-history');
+        localStorage.removeItem('schnechnen-mistakes');
+        
+        // Lösche globale Objekte
+        window.__SCHNECHEN_HIGHSCORES = {};
+        
+        // Lösche Weighting-Daten
+        if (window.Weighting) {
+            window.Weighting.resetAll();
+        }
+        
+        // Aktualisiere Stats-Anzeige
+        showStatsScreen(1);
+        
+        console.log('✅ Alle Statistiken wurden gelöscht');
+    } catch (e) {
+        console.error('Fehler beim Löschen der Statistiken:', e);
+        alert('❌ Fehler beim Löschen der Statistiken');
     }
 }
 

@@ -33,6 +33,11 @@ function clear() {
     storage.setItem(KEY, JSON.stringify({}));
 }
 
+function resetAll() {
+    const storage = _getStorage();
+    storage.setItem(KEY, JSON.stringify({}));
+}
+
 function addMistake(level, problem) {
     const all = _loadAll();
     const lvl = String(level);
@@ -79,7 +84,8 @@ if (typeof module !== 'undefined' && module.exports) {
         getMistakes,
         peekMistake,
         removeMistake,
-        clear
+        clear,
+        resetAll
     };
 }
 
@@ -90,6 +96,7 @@ if (typeof window !== 'undefined') {
         getMistakes,
         peekMistake,
         removeMistake,
-        clear
+        clear,
+        resetAll
     };
 }
