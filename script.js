@@ -35,6 +35,7 @@ function createElements() {
             startScreen: document.getElementById('start-screen'),
             gameScreen: document.getElementById('game-screen'),
             resultScreen: document.getElementById('result-screen'),
+            statsScreen: document.getElementById('stats-screen'),
             levelButtons: document.querySelectorAll('.level-btn'),
             timeElement: document.getElementById('time'),
             scoreElement: document.getElementById('score'),
@@ -52,7 +53,14 @@ function createElements() {
             highscoreElement: document.getElementById('highscore'),
             mistakeList: document.getElementById('mistake-list'),
             restartButton: document.getElementById('restart-btn'),
-            backButton: document.getElementById('back-btn')
+            backButton: document.getElementById('back-btn'),
+            statsButton: document.getElementById('stats-btn'),
+            statsBackButton: document.getElementById('stats-back-btn'),
+            statsLevelButtons: document.querySelectorAll('.stats-level-btn'),
+            statHighscore: document.getElementById('stat-highscore'),
+            statTotalGames: document.getElementById('stat-total-games'),
+            statAvgScore: document.getElementById('stat-avg-score'),
+            chartCanvas: document.getElementById('highscore-chart')
         };
     }
 
@@ -134,6 +142,34 @@ function initEventListeners() {
         resetGame();
         showScreen('start');
     });
+
+    // Stats-Button
+    if (elements.statsButton) {
+        elements.statsButton.addEventListener('click', () => {
+            showStatsScreen(1); // Default: Level 1
+        });
+    }
+
+    // Stats Back-Button
+    if (elements.statsBackButton) {
+        elements.statsBackButton.addEventListener('click', () => {
+            showScreen('start');
+        });
+    }
+
+    // Stats Level-Buttons
+    if (elements.statsLevelButtons) {
+        elements.statsLevelButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const level = parseInt(button.dataset.level);
+                updateStatsForLevel(level);
+                
+                // Update active state
+                elements.statsLevelButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+            });
+        });
+    }
 
     // Restart current level button
     // (restart-level button removed; use Zurück to leave and re-enter a level)
@@ -389,6 +425,9 @@ function endGame() {
     // Highscore aktualisieren (Anzahl richtiger Antworten)
     updateHighscore(gameState.score);
     
+    // Spiel-History speichern
+    saveGameHistory(gameState.currentLevel, gameState.score, gameState.totalProblems);
+    
     // Highscore für aktuelles Level anzeigen
     const currentLevelHighscore = window.__SCHNECHEN_HIGHSCORES[gameState.currentLevel] || 0;
     elements.highscoreElement.textContent = currentLevelHighscore;
@@ -490,6 +529,9 @@ function showScreen(screenName) {
     elements.startScreen.classList.add('hidden');
     elements.gameScreen.classList.add('hidden');
     elements.resultScreen.classList.add('hidden');
+    if (elements.statsScreen) {
+        elements.statsScreen.classList.add('hidden');
+    }
     
     // Angegebenen Screen anzeigen
     if (screenName === 'start') {
@@ -498,7 +540,191 @@ function showScreen(screenName) {
         elements.gameScreen.classList.remove('hidden');
     } else if (screenName === 'result') {
         elements.resultScreen.classList.remove('hidden');
+    } else if (screenName === 'stats') {
+        if (elements.statsScreen) {
+            elements.statsScreen.classList.remove('hidden');
+        }
     }
+}
+
+// ==================== Statistik-Funktionen ====================
+
+// Spiel-History speichern
+function saveGameHistory(level, score, totalProblems) {
+    try {
+        const history = JSON.parse(localStorage.getItem('schnechnen-history')) || {};
+        history[level] = history[level] || [];
+        
+        const percentage = totalProblems > 0 ? Math.round((score / totalProblems) * 100) : 0;
+        
+        history[level].push({
+            timestamp: Date.now(),
+            score: score,
+            totalProblems: totalProblems,
+            percentage: percentage
+        });
+        
+        // Behalte nur die letzten 50 Spiele pro Level
+        if (history[level].length > 50) {
+            history[level] = history[level].slice(-50);
+        }
+        
+        localStorage.setItem('schnechnen-history', JSON.stringify(history));
+    } catch (e) {
+        console.error('Fehler beim Speichern der History:', e);
+    }
+}
+
+// Hole Game-History für ein Level
+function getGameHistory(level) {
+    try {
+        const history = JSON.parse(localStorage.getItem('schnechnen-history')) || {};
+        return history[level] || [];
+    } catch (e) {
+        console.error('Fehler beim Laden der History:', e);
+        return [];
+    }
+}
+
+// Zeige Statistik-Screen
+let chartInstance = null; // Globale Variable für Chart-Instanz
+
+function showStatsScreen(level) {
+    showScreen('stats');
+    updateStatsForLevel(level);
+}
+
+// Update Statistiken für ein Level
+function updateStatsForLevel(level) {
+    const history = getGameHistory(level);
+    const highscore = window.__SCHNECHEN_HIGHSCORES[level] || 0;
+    
+    // Statistik-Karten aktualisieren
+    elements.statHighscore.textContent = highscore;
+    elements.statTotalGames.textContent = history.length;
+    
+    if (history.length > 0) {
+        const avgScore = Math.round(history.reduce((sum, g) => sum + g.score, 0) / history.length);
+        elements.statAvgScore.textContent = avgScore;
+    } else {
+        elements.statAvgScore.textContent = '0';
+    }
+    
+    // Chart rendern
+    renderChart(level, history);
+}
+
+// Rendere Chart mit Chart.js
+function renderChart(level, history) {
+    const ctx = elements.chartCanvas;
+    if (!ctx) return;
+    
+    // Zerstöre vorherige Chart-Instanz
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+    
+    // Wenn keine History vorhanden, zeige eine Nachricht
+    if (history.length === 0) {
+        ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+        const context = ctx.getContext('2d');
+        context.font = '16px "Segoe UI", sans-serif';
+        context.fillStyle = '#666';
+        context.textAlign = 'center';
+        context.fillText('Noch keine Spiele gespielt', ctx.width / 2, ctx.height / 2);
+        return;
+    }
+    
+    // Erstelle Labels (letzten 20 Spiele)
+    const displayHistory = history.slice(-20);
+    const labels = displayHistory.map((_, i) => {
+        if (history.length <= 20) {
+            return `Spiel ${i + 1}`;
+        }
+        return `#${history.length - 20 + i + 1}`;
+    });
+    
+    // Erstelle Chart
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Richtige Antworten',
+                data: displayHistory.map(h => h.score),
+                borderColor: '#FF6B35',
+                backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointBackgroundColor: '#FF6B35',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    cornerRadius: 8,
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    callbacks: {
+                        title: (context) => {
+                            return labels[context[0].dataIndex];
+                        },
+                        label: (context) => {
+                            const item = displayHistory[context.dataIndex];
+                            return [
+                                `Score: ${item.score}/${item.totalProblems}`,
+                                `Prozent: ${item.percentage}%`,
+                                `Datum: ${new Date(item.timestamp).toLocaleDateString('de-DE')}`
+                            ];
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 5,
+                        font: {
+                            size: 12
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: {
+                            size: 11
+                        },
+                        maxRotation: 45,
+                        minRotation: 0
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
 }
 
 // Exportiere Funktionen für Tests

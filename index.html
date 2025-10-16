@@ -39,6 +39,7 @@
                     <button class="level-btn" data-level="4">Level 4: Multiplikation & Division bis 100</button>
                 </div>
             </div>
+            <button id="stats-btn" class="btn-secondary">📊 Statistiken</button>
         </div>
 
         <div id="game-screen" class="screen hidden">
@@ -87,11 +88,45 @@
                 <p class="mistakes-subtitle">Diese Aufgaben wurden in allen Sessions am häufigsten falsch beantwortet:</p>
                 <ul id="mistake-list"></ul>
             </div>
-            <button id="restart-btn">Neues Spiel</button>
+                        <button id="restart-btn">Neues Spiel</button>
+        </div>
+
+        <div id="stats-screen" class="screen hidden">
+            <h2>Statistiken</h2>
+            
+            <div class="stats-level-selector">
+                <button class="stats-level-btn active" data-level="1">Level 1</button>
+                <button class="stats-level-btn" data-level="2">Level 2</button>
+                <button class="stats-level-btn" data-level="3">Level 3</button>
+                <button class="stats-level-btn" data-level="4">Level 4</button>
+            </div>
+            
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <h3>Highscore</h3>
+                    <p class="stat-value" id="stat-highscore">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Gespielte Runden</h3>
+                    <p class="stat-value" id="stat-total-games">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Durchschnitt</h3>
+                    <p class="stat-value" id="stat-avg-score">0</p>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="highscore-chart"></canvas>
+            </div>
+            
+            <button id="stats-back-btn" class="btn-primary">Zurück</button>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="weighting.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
+```

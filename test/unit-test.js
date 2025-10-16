@@ -8,6 +8,7 @@ const mockElements = {
     startScreen: { classList: { add: () => {}, remove: () => {} } },
     gameScreen: { classList: { add: () => {}, remove: () => {} } },
     resultScreen: { classList: { add: () => {}, remove: () => {} } },
+    statsScreen: { classList: { add: () => {}, remove: () => {} } },
     levelButtons: [],
     timeElement: { textContent: '' },
     scoreElement: { textContent: '' },
@@ -25,7 +26,14 @@ const mockElements = {
     highscoreElement: { textContent: '' },
     mistakeList: { innerHTML: '', appendChild: () => {} },
     restartButton: { addEventListener: () => {} },
-    backButton: { addEventListener: () => {} }
+    backButton: { addEventListener: () => {} },
+    statsButton: { addEventListener: () => {} },
+    statsBackButton: { addEventListener: () => {} },
+    statsLevelButtons: [],
+    statHighscore: { textContent: '' },
+    statTotalGames: { textContent: '' },
+    statAvgScore: { textContent: '' },
+    chartCanvas: null
 };
 
 // Mock localStorage
