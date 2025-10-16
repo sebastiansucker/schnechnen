@@ -60,7 +60,8 @@ function createElements() {
             statHighscore: document.getElementById('stat-highscore'),
             statTotalGames: document.getElementById('stat-total-games'),
             statAvgScore: document.getElementById('stat-avg-score'),
-            chartCanvas: document.getElementById('highscore-chart')
+            chartCanvas: document.getElementById('highscore-chart'),
+            statsMistakeList: document.getElementById('stats-mistake-list')
         };
     }
 
@@ -85,9 +86,11 @@ function createElements() {
         highscoreElement: { textContent: '' },
         mistakeList: { innerHTML: '' },
         restartButton: { addEventListener: () => {} },
-        backButton: { addEventListener: () => {} }
+        backButton: { addEventListener: () => {} },
+        statsMistakeList: { innerHTML: '' }
     };
 }
+
 
 const elements = createElements();
 
@@ -493,6 +496,35 @@ function displayMistakes() {
     });
 }
 
+// Zeige Top 5 Fehler für Statistik-Seite
+function displayStatsMistakes(level) {
+    // Hole alle Fehler für das Level aus weighting.js
+    const mistakes = window.Weighting ? window.Weighting.getMistakes(level) : [];
+    
+    // Sortiere nach wrongCount (absteigend) und nimm die Top 5
+    const sortedMistakes = mistakes
+        .slice()
+        .sort((a, b) => (b.wrongCount || 0) - (a.wrongCount || 0))
+        .slice(0, 5);
+    
+    // Liste leeren
+    elements.statsMistakeList.innerHTML = '';
+    
+    // Aufgaben anzeigen
+    if (sortedMistakes.length === 0) {
+        elements.statsMistakeList.innerHTML = '<li class="no-mistakes">Keine Fehler bisher – perfekt! 🎉</li>';
+        return;
+    }
+    
+    sortedMistakes.forEach(problem => {
+        const li = document.createElement('li');
+        const problemText = `${problem.num1} ${displayOperator(problem.operation)} ${problem.num2} = ${problem.result}`;
+        const countBadge = `<span class="mistake-count">${problem.wrongCount}× falsch</span>`;
+        li.innerHTML = `${problemText} ${countBadge}`;
+        elements.statsMistakeList.appendChild(li);
+    });
+}
+
 // Helper: map internal operator tokens to printable symbols
 function displayOperator(op) {
     if (op === '*') return '×';
@@ -609,6 +641,9 @@ function updateStatsForLevel(level) {
     } else {
         elements.statAvgScore.textContent = '0';
     }
+    
+    // Fehler anzeigen
+    displayStatsMistakes(level);
     
     // Chart rendern
     renderChart(level, history);

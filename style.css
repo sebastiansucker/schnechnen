@@ -773,6 +773,85 @@ button.btn-primary:hover {
     border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 
+/* Statistics mistakes section */
+.stats-mistakes {
+    width: 100%;
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.stats-mistakes::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-bg);
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.stats-mistakes h3 {
+    margin: 0 0 10px 0;
+    color: var(--text-primary);
+    font-size: 1.3rem;
+    text-align: center;
+}
+
+.stats-mistakes-subtitle {
+    margin: 0 0 20px 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+#stats-mistake-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#stats-mistake-list li {
+    padding: 15px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(157, 78, 221, 0.1) 100%);
+    border-radius: 12px;
+    font-size: 1.1rem;
+    text-align: center;
+    color: var(--text-primary);
+    border-left: 4px solid var(--primary-orange);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#stats-mistake-list li:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
+}
+
+#stats-mistake-list li .mistake-count {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 4px 12px;
+    background: var(--primary-orange);
+    color: white;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+#stats-mistake-list .no-mistakes {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-style: italic;
+    background: linear-gradient(135deg, rgba(6, 167, 125, 0.1) 0%, rgba(0, 180, 216, 0.1) 100%);
+    border-left: 4px solid var(--primary-teal);
+}
+
 @media (max-width: 500px) {
     .stats-level-selector {
         grid-template-columns: repeat(2, 1fr);

@@ -6,10 +6,11 @@ function _getStorage() {
         if (typeof localStorage !== 'undefined' && localStorage) return localStorage;
     } catch (e) {}
     // fallback in-memory
-    if (!global.__SCHNECHEN_MEM_STORE) global.__SCHNECHEN_MEM_STORE = {};
+    // Use globalThis for a safe cross-environment in-memory store
+    if (typeof globalThis.__SCHNECHEN_MEM_STORE === 'undefined') globalThis.__SCHNECHEN_MEM_STORE = {};
     return {
-        getItem: (k) => global.__SCHNECHEN_MEM_STORE[k] || null,
-        setItem: (k, v) => { global.__SCHNECHEN_MEM_STORE[k] = v; }
+        getItem: (k) => globalThis.__SCHNECHEN_MEM_STORE[k] || null,
+        setItem: (k, v) => { globalThis.__SCHNECHEN_MEM_STORE[k] = v; }
     };
 }
 

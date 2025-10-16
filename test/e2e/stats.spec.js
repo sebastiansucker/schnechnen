@@ -141,4 +141,103 @@ test.describe('Statistik-Seite Tests', () => {
     const avgScore = await page.locator('#stat-avg-score').textContent();
     expect(parseInt(avgScore)).toBe(12);
   });
+
+  test('Fehler-Sektion zeigt "Keine Fehler" bei leeren Daten', async ({ page }) => {
+    // Gehe zur Statistik-Seite
+    await page.click('#stats-btn');
+    
+    // Prüfe, dass die Fehler-Liste die "Keine Fehler"-Nachricht zeigt
+    await expect(page.locator('#stats-mistake-list .no-mistakes')).toBeVisible();
+    await expect(page.locator('#stats-mistake-list .no-mistakes')).toContainText('Keine Fehler');
+  });
+
+  test('Fehler-Sektion zeigt Top 5 Fehler an', async ({ page }) => {
+    // Füge Fehler in localStorage ein
+    await page.evaluate(() => {
+      const mistakes = {
+        '1': [
+          { num1: 7, num2: 8, operation: '+', result: 15, wrongCount: 5 },
+          { num1: 9, num2: 4, operation: '-', result: 5, wrongCount: 3 },
+          { num1: 6, num2: 7, operation: '*', result: 42, wrongCount: 8 },
+          { num1: 12, num2: 3, operation: '/', result: 4, wrongCount: 2 },
+          { num1: 5, num2: 5, operation: '+', result: 10, wrongCount: 1 },
+          { num1: 8, num2: 2, operation: '*', result: 16, wrongCount: 6 }
+        ]
+      };
+      localStorage.setItem('schnechnen-mistakes', JSON.stringify(mistakes));
+    });
+    
+    // Lade die Seite neu
+    await page.reload();
+    
+    // Gehe zur Statistik-Seite
+    await page.click('#stats-btn');
+    
+    // Prüfe, dass genau 5 Fehler angezeigt werden (nicht die "no-mistakes" Nachricht)
+    const mistakeItems = page.locator('#stats-mistake-list li:not(.no-mistakes)');
+    await expect(mistakeItems).toHaveCount(5);
+    
+    // Prüfe, dass die Fehler nach wrongCount sortiert sind
+    const firstMistake = mistakeItems.nth(0);
+    await expect(firstMistake).toContainText('6 × 7 = 42');
+    await expect(firstMistake).toContainText('8× falsch');
+  });
+
+  test('Fehler-Sektion zeigt korrekte Operatoren', async ({ page }) => {
+    // Füge Fehler mit verschiedenen Operatoren ein
+    await page.evaluate(() => {
+      const mistakes = {
+        '2': [
+          { num1: 6, num2: 7, operation: '*', result: 42, wrongCount: 3 },
+          { num1: 12, num2: 3, operation: '/', result: 4, wrongCount: 2 }
+        ]
+      };
+      localStorage.setItem('schnechnen-mistakes', JSON.stringify(mistakes));
+    });
+    
+    // Lade die Seite neu
+    await page.reload();
+    
+    // Gehe zur Statistik-Seite
+    await page.click('#stats-btn');
+    
+    // Wechsle zu Level 2
+    await page.click('.stats-level-btn[data-level="2"]');
+    
+    // Prüfe, dass Multiplikation als × angezeigt wird
+    await expect(page.locator('#stats-mistake-list li').first()).toContainText('6 × 7 = 42');
+    
+    // Prüfe, dass Division als ÷ angezeigt wird
+    await expect(page.locator('#stats-mistake-list li').nth(1)).toContainText('12 ÷ 3 = 4');
+  });
+
+  test('Fehler-Sektion aktualisiert sich beim Level-Wechsel', async ({ page }) => {
+    // Füge Fehler für verschiedene Level ein
+    await page.evaluate(() => {
+      const mistakes = {
+        '1': [
+          { num1: 5, num2: 3, operation: '+', result: 8, wrongCount: 4 }
+        ],
+        '2': [
+          { num1: 12, num2: 4, operation: '*', result: 48, wrongCount: 6 }
+        ]
+      };
+      localStorage.setItem('schnechnen-mistakes', JSON.stringify(mistakes));
+    });
+    
+    // Lade die Seite neu
+    await page.reload();
+    
+    // Gehe zur Statistik-Seite
+    await page.click('#stats-btn');
+    
+    // Prüfe Level 1 Fehler
+    await expect(page.locator('#stats-mistake-list li').first()).toContainText('5 + 3 = 8');
+    
+    // Wechsle zu Level 2
+    await page.click('.stats-level-btn[data-level="2"]');
+    
+    // Prüfe Level 2 Fehler
+    await expect(page.locator('#stats-mistake-list li').first()).toContainText('12 × 4 = 48');
+  });
 });
