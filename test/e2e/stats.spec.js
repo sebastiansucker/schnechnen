@@ -137,6 +137,54 @@ test.describe('Statistik-Seite Tests', () => {
     await expect(page.locator('#stat-total-games')).toHaveText('3');
   });
 
+  test('Highscore wird sofort nach Spiel in Statistik angezeigt', async ({ page }) => {
+    // Spiele ein kurzes Spiel
+    await page.click('button[data-level="1"]');
+    await page.waitForSelector('#problem');
+    
+    // Beantworte 3 Fragen korrekt
+    for (let i = 0; i < 3; i++) {
+      const problemData = await page.evaluate(() => {
+        if (window.gameState && window.gameState.currentProblem) {
+          return { result: window.gameState.currentProblem.result };
+        }
+        return null;
+      });
+      
+      if (problemData) {
+        const answer = problemData.result.toString();
+        for (const digit of answer) {
+          await page.click(`.dial-btn[data-value="${digit}"]`);
+        }
+        await page.click('#submit-btn');
+        await page.waitForTimeout(700);
+      }
+    }
+    
+    // Hole den Score vor dem Beenden
+    const finalScore = await page.evaluate(() => {
+      return window.gameState ? window.gameState.score : 0;
+    });
+    
+    // Beende das Spiel
+    await page.evaluate(() => {
+      if (window.__TEST__ && typeof window.__TEST__.endGame === 'function') {
+        window.__TEST__.endGame();
+      }
+    });
+    
+    // Warte auf Result-Screen
+    await page.waitForSelector('#result-screen:not(.hidden)');
+    
+    // Gehe zurück und zur Statistik
+    await page.click('#restart-btn');
+    await page.click('#stats-btn');
+    
+    // Prüfe, dass der Highscore sofort sichtbar ist (ohne Reload!)
+    await expect(page.locator('#stat-highscore')).toHaveText(finalScore.toString());
+    await expect(page.locator('#stat-total-games')).toHaveText('1');
+  });
+
   test('Fehler-Sektion zeigt "Keine Fehler" bei leeren Daten', async ({ page }) => {
     // Gehe zur Statistik-Seite
     await page.click('#stats-btn');

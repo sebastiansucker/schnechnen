@@ -452,6 +452,12 @@ function saveHighscore() {
         const highscores = JSON.parse(localStorage.getItem('schnechnen-highscores')) || {};
         highscores[gameState.currentLevel] = gameState.highscore;
         localStorage.setItem('schnechnen-highscores', JSON.stringify(highscores));
+        
+        // Aktualisiere auch das globale Highscore-Objekt
+        if (!window.__SCHNECHEN_HIGHSCORES) {
+            window.__SCHNECHEN_HIGHSCORES = {};
+        }
+        window.__SCHNECHEN_HIGHSCORES[gameState.currentLevel] = gameState.highscore;
     } catch (e) {
         console.error('Fehler beim Speichern des Highscores:', e);
     }
