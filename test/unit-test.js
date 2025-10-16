@@ -113,6 +113,9 @@ function runTests() {
     // Test 6: Adaptive Problemgenerierung
     testAdaptiveProblemGeneration();
     
+    // Test 7: Reset Statistiken
+    testResetStatistics();
+    
     console.log('Alle Tests abgeschlossen.');
 }
 
@@ -337,6 +340,68 @@ function testAdaptiveProblemGeneration() {
         return true;
     } catch (error) {
         console.error('Fehler beim Testen der adaptiven Problemgenerierung:', error);
+        return false;
+    }
+}
+
+function testResetStatistics() {
+    console.log('Teste Zurücksetzen von Statistiken...');
+    try {
+        const weighting = require('../weighting');
+
+        const level = 1;
+        const problem = { num1: 7, num2: 3, operation: '+', result: 10 };
+
+        // 1. Füge Fehler hinzu
+        weighting.addMistake(level, problem);
+        weighting.addMistake(level, problem);
+        
+        let peeked = weighting.peekMistake(level);
+        if (!peeked) {
+            console.error('Fehler: Problem sollte nach addMistake vorhanden sein.');
+            return false;
+        }
+
+        // 2. Speichere einen Highscore
+        const highscores = JSON.parse(mockLocalStorage.getItem('schnechnen-highscores')) || {};
+        highscores[level] = 95;
+        mockLocalStorage.setItem('schnechnen-highscores', JSON.stringify(highscores));
+
+        // 3. Speichere Spiel-History
+        const history = JSON.parse(mockLocalStorage.getItem('schnechnen-history')) || {};
+        history[level] = [{ score: 90, totalProblems: 100, date: new Date().toISOString() }];
+        mockLocalStorage.setItem('schnechnen-history', JSON.stringify(history));
+
+        // 4. Rufe resetAll auf (Weighting)
+        weighting.resetAll();
+
+        // 5. Prüfe, dass Fehler gelöscht sind
+        peeked = weighting.peekMistake(level);
+        if (peeked !== null) {
+            console.error('Fehler: Nach resetAll sollten keine Fehler mehr vorhanden sein.');
+            return false;
+        }
+
+        // 6. Lösche Highscores
+        mockLocalStorage.setItem('schnechnen-highscores', JSON.stringify({}));
+        const loadedHighscores = JSON.parse(mockLocalStorage.getItem('schnechnen-highscores')) || {};
+        if (loadedHighscores[level]) {
+            console.error('Fehler: Highscore sollte gelöscht sein.');
+            return false;
+        }
+
+        // 7. Lösche History
+        mockLocalStorage.setItem('schnechnen-history', JSON.stringify({}));
+        const loadedHistory = JSON.parse(mockLocalStorage.getItem('schnechnen-history')) || {};
+        if (loadedHistory[level]) {
+            console.error('Fehler: History sollte gelöscht sein.');
+            return false;
+        }
+
+        console.log('✓ Zurücksetzen von Statistiken erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen des Zurücksetzen von Statistiken:', error);
         return false;
     }
 }
