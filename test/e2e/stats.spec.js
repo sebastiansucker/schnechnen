@@ -283,4 +283,113 @@ test.describe('Statistik-Seite Tests', () => {
     // Prüfe Level 2 Fehler
     await expect(page.locator('#stats-mistake-list li').first()).toContainText('12 × 4 = 48');
   });
+
+  test('Reset-Statistiken funktioniert und löscht alle Daten', async ({ page }) => {
+    // Füge Spiel-History, Highscores und Fehler ein
+    await page.evaluate(() => {
+      const history = {
+        '1': [
+          { timestamp: Date.now() - 2000, score: 10, totalProblems: 15, percentage: 67 },
+          { timestamp: Date.now() - 1000, score: 15, totalProblems: 15, percentage: 100 }
+        ]
+      };
+      localStorage.setItem('schnechnen-history', JSON.stringify(history));
+      
+      const highscores = { '1': 15, '2': 20 };
+      localStorage.setItem('schnechnen-highscores', JSON.stringify(highscores));
+      
+      const mistakes = {
+        '1': [
+          { num1: 7, num2: 8, operation: '+', result: 15, wrongCount: 5 },
+          { num1: 9, num2: 4, operation: '-', result: 5, wrongCount: 3 }
+        ]
+      };
+      localStorage.setItem('schnechnen-mistakes', JSON.stringify(mistakes));
+    });
+    
+    // Lade die Seite neu
+    await page.reload();
+    
+    // Gehe zur Statistik-Seite
+    await page.click('#stats-btn');
+    
+    // Verifiziere, dass Daten vorhanden sind
+    await expect(page.locator('#stat-highscore')).toHaveText('15');
+    await expect(page.locator('#stat-total-games')).toHaveText('2');
+    
+    // Stelle sicher, dass Fehler vorhanden sind
+    const mistakesBefore = page.locator('#stats-mistake-list li:not(.no-mistakes)');
+    await expect(mistakesBefore).toHaveCount(2);
+    
+    // Klicke auf Reset-Button
+    const resetBtn = page.locator('#stats-reset-btn');
+    await expect(resetBtn).toBeVisible();
+    
+    // Reagiere auf Dialog - akzeptiere ihn
+    page.on('dialog', async dialog => {
+      expect(dialog.type()).toBe('confirm');
+      expect(dialog.message()).toContain('Statistiken');
+      await dialog.accept();
+    });
+    
+    await page.click('#stats-reset-btn');
+    await page.waitForTimeout(500);
+    
+    // Verifiziere, dass alles zurückgesetzt wurde
+    await expect(page.locator('#stat-highscore')).toHaveText('0');
+    await expect(page.locator('#stat-total-games')).toHaveText('0');
+    
+    // Prüfe, dass die "Keine Fehler"-Nachricht wieder sichtbar ist
+    await expect(page.locator('#stats-mistake-list .no-mistakes')).toBeVisible();
+    await expect(page.locator('#stats-mistake-list .no-mistakes')).toContainText('Keine Fehler');
+  });
+
+  test('Reset-Dialog kann abgebrochen werden', async ({ page }) => {
+    // Füge Testdaten ein
+    await page.evaluate(() => {
+      const highscores = { '1': 50 };
+      localStorage.setItem('schnechnen-highscores', JSON.stringify(highscores));
+    });
+    
+    // Lade die Seite neu
+    await page.reload();
+    
+    // Gehe zur Statistik-Seite
+    await page.click('#stats-btn');
+    
+    // Verifiziere initiale Daten
+    await expect(page.locator('#stat-highscore')).toHaveText('50');
+    
+    // Lehne Dialog ab
+    page.on('dialog', async dialog => {
+      await dialog.dismiss();
+    });
+    
+    // Klicke Reset-Button
+    await page.click('#stats-reset-btn');
+    await page.waitForTimeout(500);
+    
+    // Verifiziere, dass Daten NICHT gelöscht wurden
+    await expect(page.locator('#stat-highscore')).toHaveText('50');
+  });
+
+  test('Reset-Button ist nur in Stats-Screen sichtbar', async ({ page }) => {
+    // Stelle sicher, dass Reset-Button auf Start-Screen nicht sichtbar ist
+    const resetBtnStart = page.locator('#stats-reset-btn');
+    await expect(resetBtnStart).not.toBeVisible();
+    
+    // Gehe zur Statistik-Seite
+    await page.click('#stats-btn');
+    
+    // Jetzt sollte Reset-Button sichtbar sein
+    const resetBtnStats = page.locator('#stats-reset-btn');
+    await expect(resetBtnStats).toBeVisible();
+    
+    // Gehe zurück
+    await page.click('#stats-back-btn');
+    
+    // Reset-Button sollte wieder nicht sichtbar sein
+    const resetBtnStartAgain = page.locator('#stats-reset-btn');
+    await expect(resetBtnStartAgain).not.toBeVisible();
+  });
 });
