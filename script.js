@@ -634,13 +634,6 @@ function updateStatsForLevel(level) {
     elements.statHighscore.textContent = highscore;
     elements.statTotalGames.textContent = history.length;
     
-    if (history.length > 0) {
-        const avgScore = Math.round(history.reduce((sum, g) => sum + g.score, 0) / history.length);
-        elements.statAvgScore.textContent = avgScore;
-    } else {
-        elements.statAvgScore.textContent = '0';
-    }
-    
     // Fehler anzeigen
     displayStatsMistakes(level);
     

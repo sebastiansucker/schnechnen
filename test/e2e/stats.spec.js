@@ -27,7 +27,7 @@ test.describe('Statistik-Seite Tests', () => {
     await expect(statsLevelButtons).toHaveCount(4);
     
     // Prüfe, dass Statistik-Karten vorhanden sind
-    await expect(page.locator('.stat-card')).toHaveCount(3);
+    await expect(page.locator('.stat-card')).toHaveCount(2);
   });
 
   test('Zurück-Button funktioniert', async ({ page }) => {
@@ -50,7 +50,6 @@ test.describe('Statistik-Seite Tests', () => {
     // Prüfe Statistik-Werte
     await expect(page.locator('#stat-highscore')).toHaveText('0');
     await expect(page.locator('#stat-total-games')).toHaveText('0');
-    await expect(page.locator('#stat-avg-score')).toHaveText('0');
   });
 
   test('Spiel-History wird gespeichert und angezeigt', async ({ page }) => {
@@ -136,10 +135,6 @@ test.describe('Statistik-Seite Tests', () => {
     // Prüfe Statistik-Werte
     await expect(page.locator('#stat-highscore')).toHaveText('15');
     await expect(page.locator('#stat-total-games')).toHaveText('3');
-    
-    // Durchschnitt sollte (10 + 12 + 15) / 3 = 12.33 ≈ 12 sein
-    const avgScore = await page.locator('#stat-avg-score').textContent();
-    expect(parseInt(avgScore)).toBe(12);
   });
 
   test('Fehler-Sektion zeigt "Keine Fehler" bei leeren Daten', async ({ page }) => {
