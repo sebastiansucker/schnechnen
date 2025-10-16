@@ -32,25 +32,25 @@
             <p>SCHNell REchnen</p>
             <div class="level-selection">
                 <h2>Level auswählen:</h2>
-                <div class="level-buttons">
-                    <button class="level-btn" data-level="1">Level 1: Addition & Subtraktion bis 10</button>
-                    <button class="level-btn" data-level="2">Level 2: Addition & Subtraktion bis 100</button>
-                    <button class="level-btn" data-level="3">Level 3: Multiplikation bis 100</button>
-                    <button class="level-btn" data-level="4">Level 4: Multiplikation & Division bis 100</button>
+                <div class="level-buttons" role="group" aria-label="Level Auswahl">
+                    <button class="level-btn" data-level="1" aria-pressed="false" aria-label="Level 1: Addition und Subtraktion bis 10">Level 1: Addition &amp; Subtraktion bis 10</button>
+                    <button class="level-btn" data-level="2" aria-pressed="false" aria-label="Level 2: Addition und Subtraktion bis 100">Level 2: Addition &amp; Subtraktion bis 100</button>
+                    <button class="level-btn" data-level="3" aria-pressed="false" aria-label="Level 3: Multiplikation bis 100">Level 3: Multiplikation bis 100</button>
+                    <button class="level-btn" data-level="4" aria-pressed="false" aria-label="Level 4: Multiplikation und Division bis 100">Level 4: Multiplikation &amp; Division bis 100</button>
                 </div>
             </div>
-            <button id="stats-btn" class="btn-secondary">📊 Statistiken</button>
+            <button id="stats-btn" class="btn-secondary" aria-label="Statistiken anzeigen" title="Statistiken">📊 Statistiken</button>
         </div>
 
         <div id="game-screen" class="screen hidden">
             <div class="game-header">
                 <div class="timer">Zeit: <span id="time">60</span>s</div>
                 <div class="game-controls">
-                    <button id="back-btn" class="btn-primary">Zurück</button>
+                    <button id="back-btn" class="btn-primary" aria-label="Zum Start zurückkehren">Zurück</button>
                 </div>
             </div>
-            <div class="problem-container">
-                <div id="problem" class="problem">10 + 5 = <span id="user-answer" class="user-answer">?</span></div>
+            <div class="problem-container" role="region" aria-live="polite" aria-label="Aktuelle Aufgabe">
+                <div id="problem" class="problem" aria-atomic="true">10 + 5 = <span id="user-answer" class="user-answer" aria-label="Deine Antwort">?</span></div>
             </div>
             <div id="dial-pad" class="dial-pad hidden">
                 <div class="dial-row">
@@ -69,25 +69,25 @@
                     <button class="dial-btn" data-value="9">9</button>
                 </div>
                 <div class="dial-row">
-                    <button class="dial-btn" data-value="0">0</button>
-                    <button class="dial-btn backspace-btn" id="backspace-btn">⌫</button>
-                    <button class="dial-btn submit-btn" id="submit-btn">OK</button>
+                    <button class="dial-btn" data-value="0" aria-label="Ziffer 0">0</button>
+                    <button class="dial-btn backspace-btn" id="backspace-btn" aria-label="Löschen (Backspace)">⌫</button>
+                    <button class="dial-btn submit-btn" id="submit-btn" aria-label="Antwort abschicken">OK</button>
                 </div>
             </div>
         </div>
 
         <div id="result-screen" class="screen hidden">
-            <div id="highscore-animation" class="highscore-animation hidden"></div>
+            <div id="highscore-animation" class="highscore-animation hidden" role="status" aria-live="polite" aria-hidden="true"></div>
             <h2>Ergebnis</h2>
-            <div class="result-stats">
-                <p><strong>Level:</strong> <span id="result-level">1</span></p>
-                <p><strong>Richtige Antworten:</strong> <span id="result-score">0</span>/<span id="total-problems">0</span></p>
-                <p class="highscore-display"><strong>Ergebnis:</strong> <span id="highscore">0</span></p>
+            <div class="result-stats" role="region" aria-label="Ergebnisübersicht">
+                <p><strong>Level:</strong> <span id="result-level" aria-label="Level Ergebnis">1</span></p>
+                <p><strong>Richtige Antworten:</strong> <span id="result-score" aria-label="Anzahl richtiger Antworten">0</span>/<span id="total-problems" aria-label="Gesamtanzahl Aufgaben">0</span></p>
+                <p class="highscore-display"><strong>Ergebnis:</strong> <span id="highscore" aria-label="Highscore">0</span></p>
             </div>
             <div class="common-mistakes">
-                <h3>Häufig falsch gelöste Aufgaben</h3>
+                <h3 id="mistakes-heading">Häufig falsch gelöste Aufgaben</h3>
                 <p class="mistakes-subtitle">Diese Aufgaben wurden in allen Sessions am häufigsten falsch beantwortet:</p>
-                <ul id="mistake-list"></ul>
+                <ul id="mistake-list" aria-labelledby="mistakes-heading"></ul>
             </div>
                         <button id="restart-btn">Neues Spiel</button>
         </div>
@@ -95,37 +95,37 @@
         <div id="stats-screen" class="screen hidden">
             <h2>Statistiken</h2>
             
-            <div class="stats-level-selector">
-                <button class="stats-level-btn active" data-level="1">Level 1</button>
-                <button class="stats-level-btn" data-level="2">Level 2</button>
-                <button class="stats-level-btn" data-level="3">Level 3</button>
-                <button class="stats-level-btn" data-level="4">Level 4</button>
+            <div class="stats-level-selector" role="tablist" aria-label="Statistik Level Wechsel">
+                <button class="stats-level-btn active" data-level="1" role="tab" aria-selected="true" aria-controls="stats-panel-1">Level 1</button>
+                <button class="stats-level-btn" data-level="2" role="tab" aria-selected="false" aria-controls="stats-panel-2">Level 2</button>
+                <button class="stats-level-btn" data-level="3" role="tab" aria-selected="false" aria-controls="stats-panel-3">Level 3</button>
+                <button class="stats-level-btn" data-level="4" role="tab" aria-selected="false" aria-controls="stats-panel-4">Level 4</button>
             </div>
             
             <div class="stats-cards">
-                <div class="stat-card">
+                <div class="stat-card" role="region" aria-label="Highscore">
                     <h3>Highscore</h3>
-                    <p class="stat-value" id="stat-highscore">0</p>
+                    <p class="stat-value" id="stat-highscore" aria-live="polite">0</p>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card" role="region" aria-label="Gespielte Runden">
                     <h3>Gespielte Runden</h3>
-                    <p class="stat-value" id="stat-total-games">0</p>
+                    <p class="stat-value" id="stat-total-games" aria-live="polite">0</p>
                 </div>
             </div>
             
-            <div class="chart-container">
-                <canvas id="highscore-chart"></canvas>
+            <div class="chart-container" role="img" aria-label="Verlauf der Highscores">
+                <canvas id="highscore-chart" role="img" aria-label="Highscore Chart"></canvas>
             </div>
             
-            <div class="stats-mistakes">
-                <h3>Häufigste Fehler</h3>
+            <div class="stats-mistakes" role="region" aria-labelledby="stats-mistakes-heading">
+                <h3 id="stats-mistakes-heading">Häufigste Fehler</h3>
                 <p class="stats-mistakes-subtitle">Die 5 am häufigsten falsch beantworteten Aufgaben:</p>
-                <ul id="stats-mistake-list"></ul>
+                <ul id="stats-mistake-list" aria-describedby="stats-mistakes-heading"></ul>
             </div>
             
             <div class="stats-buttons">
-                <button id="stats-reset-btn" class="btn-danger">🗑️ Statistiken löschen</button>
-                <button id="stats-back-btn" class="btn-primary">Zurück</button>
+                <button id="stats-reset-btn" class="btn-danger" aria-label="Alle Statistiken löschen">🗑️ Statistiken löschen</button>
+                <button id="stats-back-btn" class="btn-primary" aria-label="Zur Statistikübersicht zurück">Zurück</button>
             </div>
         </div>
     </div>

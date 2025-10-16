@@ -116,10 +116,10 @@ Eine GitHub Actions-Workflow-Datei ist vorhanden unter `.github/workflows/ci.yml
 - [x] Statistik-Seite mit Verlaufsdiagramm der Highscores
 - [ ] Dark Mode Support
 - [x] PWA-Funktionalität (Offline-Nutzung, Install-Prompt)
-- [ ] Tastatur-Shortcuts (Enter für Submit, Backspace funktional)
-- [ ] ARIA-Labels für bessere Accessibility
+- [x] ARIA-Labels für bessere Accessibility
 - [ ] Internationalisierung (i18n) für mehrere Sprachen
 - [x] Zoom verhindern auf Mobilgeräten
+- [ ] ...
 
 ## License
 
