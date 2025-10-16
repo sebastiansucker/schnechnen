@@ -94,6 +94,9 @@ function createElements() {
 
 const elements = createElements();
 
+// Highscore-Animation-Element referenzieren
+elements.highscoreAnimation = document.getElementById('highscore-animation');
+
 // Spielzustand
 let gameState = {
     currentLevel: null,
@@ -425,6 +428,9 @@ function endGame() {
     elements.resultScore.textContent = gameState.score;
     elements.totalProblemsElement.textContent = gameState.totalProblems;
     
+    // Alten Highscore speichern (für Animation)
+    const oldHighscore = gameState.highscore;
+    
     // Highscore aktualisieren (Anzahl richtiger Antworten)
     updateHighscore(gameState.score);
     
@@ -434,8 +440,61 @@ function endGame() {
     // Aktuelles Ergebnis (Anzahl richtiger Antworten) anzeigen
     elements.highscoreElement.textContent = gameState.score;
     
+    // Highscore-Animation anzeigen, wenn neuer Highscore erreicht
+    if (gameState.score > oldHighscore) {
+        // Animationen mit kleiner Verzögerung für bessere UX
+        setTimeout(() => {
+            showHighscoreAnimation();
+        }, 500);
+    }
+    
     // Häufig falsch gelöste Aufgaben aus weighting.js anzeigen
     displayMistakes();
+}
+
+// Zeigt die Highscore-Animation am Ende des Spiels an
+function showHighscoreAnimation() {
+    if (!elements.highscoreAnimation) return;
+    
+    // Animationstext setzen
+    elements.highscoreAnimation.innerHTML = '🎉 Neuer Highscore! 🎉';
+    elements.highscoreAnimation.classList.remove('hidden');
+    
+    // Konfetti erzeugen
+    createConfetti();
+    
+    // Nach 5s wieder ausblenden
+    setTimeout(() => {
+        elements.highscoreAnimation.classList.add('hidden');
+    }, 5000);
+}
+
+// Erzeugt fallende Konfetti-Partikel
+function createConfetti() {
+    const colors = ['#FF6B35', '#00B4D8', '#9D4EDD', '#FF006E', '#06A77D'];
+    const confettiCount = 30;
+    
+    for (let i = 0; i < confettiCount; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        
+        // Zufällige horizontale Verschiebung
+        const tx = (Math.random() - 0.5) * 300;
+        confetti.style.setProperty('--tx', tx + 'px');
+        
+        // Zufällige Animation-Dauer
+        const duration = 3 + Math.random() * 2;
+        confetti.style.animation = `confetti-fall ${duration}s linear forwards`;
+        
+        document.body.appendChild(confetti);
+        
+        // Entferne Konfetti nach Animation
+        setTimeout(() => {
+            confetti.remove();
+        }, duration * 1000);
+    }
 }
 
 // Highscore aktualisieren

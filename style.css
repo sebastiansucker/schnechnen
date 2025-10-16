@@ -28,6 +28,78 @@ body {
     overflow: hidden;
 }
 
+/* Highscore-Animation */
+.highscore-animation {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    background: linear-gradient(135deg, #FF6B35 0%, #00B4D8 50%, #9D4EDD 100%);
+    color: white;
+    font-size: 2rem;
+    font-weight: 900;
+    padding: 30px 50px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(255, 107, 53, 0.4);
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    animation: confetti-pop 5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: 2px;
+}
+
+.highscore-animation.hidden {
+    display: none;
+}
+
+/* Konfetti fallende Animation */
+@keyframes confetti-fall {
+    0% {
+        top: -10px;
+        opacity: 1;
+        transform: translateX(0) rotate(0deg);
+    }
+    100% {
+        top: 100vh;
+        opacity: 0;
+        transform: translateX(var(--tx, 0px)) rotate(360deg);
+    }
+}
+
+.confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+    z-index: 999;
+}
+
+.confetti-piece {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    animation: confetti-fall linear forwards;
+}
+
+@keyframes confetti-pop {
+    0% {
+        transform: translate(-50%, -50%) scale(0) rotate(-180deg);
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    85% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 0;
+    }
+}
+
 .container {
     width: 100%;
     max-width: 500px;
