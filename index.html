@@ -33,10 +33,11 @@
             <div class="level-selection">
                 <h2>Level auswählen:</h2>
                 <div class="level-buttons" role="group" aria-label="Level Auswahl">
-                    <button class="level-btn" data-level="1" aria-pressed="false" aria-label="Level 1: Addition und Subtraktion bis 10">Level 1: Addition &amp; Subtraktion bis 10</button>
-                    <button class="level-btn" data-level="2" aria-pressed="false" aria-label="Level 2: Addition und Subtraktion bis 100">Level 2: Addition &amp; Subtraktion bis 100</button>
+                    <button class="level-btn" data-level="0" aria-pressed="false" aria-label="Level 0: Addition bis 10">Level 0: Addition bis 10</button>
+                    <button class="level-btn" data-level="1" aria-pressed="false" aria-label="Level 1: Addition und Subtraktion bis 10">Level 1: Addition & Subtraktion bis 10</button>
+                    <button class="level-btn" data-level="2" aria-pressed="false" aria-label="Level 2: Addition und Subtraktion bis 100">Level 2: Addition & Subtraktion bis 100</button>
                     <button class="level-btn" data-level="3" aria-pressed="false" aria-label="Level 3: Multiplikation bis 100">Level 3: Multiplikation bis 100</button>
-                    <button class="level-btn" data-level="4" aria-pressed="false" aria-label="Level 4: Multiplikation und Division bis 100">Level 4: Multiplikation &amp; Division bis 100</button>
+                    <button class="level-btn" data-level="4" aria-pressed="false" aria-label="Level 4: Multiplikation und Division bis 100">Level 4: Multiplikation & Division bis 100</button>
                 </div>
             </div>
             <button id="stats-btn" class="btn-secondary" aria-label="Statistiken anzeigen" title="Statistiken">📊 Statistiken</button>
@@ -96,6 +97,7 @@
             <h2>Statistiken</h2>
             
             <div class="stats-level-selector" role="tablist" aria-label="Statistik Level Wechsel">
+                <button class="stats-level-btn" data-level="0" role="tab" aria-selected="false" aria-controls="stats-panel-0">Level 0</button>
                 <button class="stats-level-btn active" data-level="1" role="tab" aria-selected="true" aria-controls="stats-panel-1">Level 1</button>
                 <button class="stats-level-btn" data-level="2" role="tab" aria-selected="false" aria-controls="stats-panel-2">Level 2</button>
                 <button class="stats-level-btn" data-level="3" role="tab" aria-selected="false" aria-controls="stats-panel-3">Level 3</button>
@@ -115,6 +117,12 @@
             
             <div class="chart-container" role="img" aria-label="Verlauf der Highscores">
                 <canvas id="highscore-chart" role="img" aria-label="Highscore Chart"></canvas>
+            </div>
+
+            <!-- Panel for Level 0 statistics -->
+            <div id="stats-panel-0" class="stats-panel hidden" role="region" aria-labelledby="stats-panel-0">
+                <h3>Level 0 Statistiken</h3>
+                <p>Zusammenfassung der Spiele im Level 0.</p>
             </div>
             
             <div class="stats-mistakes" role="region" aria-labelledby="stats-mistakes-heading">

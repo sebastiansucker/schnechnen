@@ -119,6 +119,7 @@ Eine GitHub Actions-Workflow-Datei ist vorhanden unter `.github/workflows/ci.yml
 - [x] ARIA-Labels für bessere Accessibility
 - [ ] Internationalisierung (i18n) für mehrere Sprachen
 - [x] Zoom verhindern auf Mobilgeräten
+- [x] npm:test:e2e sollte den server starten
 - [ ] ...
 
 ## License

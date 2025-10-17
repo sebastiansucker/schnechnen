@@ -61,6 +61,12 @@ const mockWindow = {
 // Mock der benötigten Funktionen
 const mockConfig = {
     levels: {
+        0: {
+            name: "Addition bis 10",
+            operations: ['+'],
+            maxNumber: 10,
+            minResult: 0
+        },
         1: {
             name: "Addition & Subtraktion bis 10",
             operations: ['+', '-'],
@@ -123,7 +129,7 @@ function testConfig() {
     console.log('Teste Konfiguration...');
     
     // Prüfe, ob alle Level konfiguriert sind
-    if (!mockConfig.levels[1] || !mockConfig.levels[2] || !mockConfig.levels[3] || !mockConfig.levels[4]) {
+    if (!mockConfig.levels[0] || !mockConfig.levels[1] || !mockConfig.levels[2] || !mockConfig.levels[3] || !mockConfig.levels[4]) {
         console.error('Fehler: Nicht alle Level konfiguriert');
         return false;
     }

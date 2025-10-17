@@ -1,6 +1,12 @@
 // Spielkonfiguration
 const CONFIG = {
     levels: {
+        0: {
+            name: "Addition bis 10",
+            operations: ['+'],
+            maxNumber: 10,
+            minResult: 0
+        },
         1: {
             name: "Addition & Subtraktion bis 10",
             operations: ['+', '-'],
@@ -233,6 +239,9 @@ function startGame(level) {
     
     // Erste Aufgabe generieren
     generateProblem();
+
+    // Ensure dial-pad is visible when a game starts
+    try { const dp = document.getElementById('dial-pad'); if (dp) dp.classList.remove('hidden'); } catch (_) {}
     
     // Do not focus the input by default to avoid opening the mobile keyboard; keep it readonly by default
     // elements.answerInput.focus();
@@ -258,7 +267,7 @@ function startTimer() {
 
 // Neue Aufgabe generieren
 function generateProblem() {
-    if (!gameState.currentLevel) return;
+    if (gameState.currentLevel === null || gameState.currentLevel === undefined) return;
     
     const levelConfig = CONFIG.levels[gameState.currentLevel];
     
@@ -365,6 +374,7 @@ function checkAnswer() {
     
     // Antwort prüfen
     if (userAnswer === correctAnswer) {
+    // correct answer detected
         // Richtige Antwort
         gameState.score++;
         gameState.currentProblem.answered = true;
@@ -378,6 +388,7 @@ function checkAnswer() {
         // Feedback-Animation für richtige Antwort
         showFeedback(true);
     } else {
+    // wrong answer detected
         // Falsche Antwort
         gameState.currentProblem.answered = true;
         gameState.currentProblem.wrongCount++;
@@ -881,6 +892,38 @@ try {
             window.__TEST__.endGame = endGame;
             window.__TEST__.startGame = startGame;
             window.__TEST__.generateProblem = generateProblem;
+            // Expose a read-only snapshot of the runtime state for tests
+            window.__TEST__.getState = function() {
+                return {
+                    currentLevel: gameState.currentLevel,
+                    score: gameState.score,
+                    totalProblems: gameState.totalProblems,
+                    timeLeft: gameState.timeLeft
+                };
+            };
+            // Helper to submit an answer programmatically in tests
+            window.__TEST__.submitAnswer = function(answer) {
+                try {
+                    const ua = document.getElementById('user-answer');
+                    if (ua) ua.textContent = String(answer);
+                    // refresh the cached element reference so checkAnswer reads the current span
+                    try { if (typeof elements !== 'undefined') elements.userAnswerElement = document.getElementById('user-answer'); } catch (e) {}
+                    // call the checkAnswer function to process the answer
+                    if (typeof checkAnswer === 'function') checkAnswer();
+                } catch (e) {
+                    console.error('submitAnswer helper failed', e);
+                }
+            };
+            // Allow tests to mutate the internal gameState reliably
+            window.__TEST__.setGameState = function(obj) {
+                try {
+                    if (typeof obj === 'object' && obj !== null) {
+                        Object.assign(gameState, obj);
+                    }
+                } catch (e) {
+                    console.error('setGameState failed', e);
+                }
+            };
         }
     }
 } catch (e) {

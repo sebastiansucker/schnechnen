@@ -19,12 +19,13 @@ test.describe('Schnechnen Spiel Tests', () => {
     // Prüfe, dass die Level-Auswahl angezeigt wird
     await expect(page.locator('.level-selection')).toBeVisible();
     
-    // Prüfe, dass alle vier Level-Buttons angezeigt werden
+    // Prüfe, dass alle fünf Level-Buttons angezeigt werden
     const levelButtons = page.locator('.level-btn');
-    await expect(levelButtons).toHaveCount(4);
+    await expect(levelButtons).toHaveCount(5);
     
     // Prüfe die Texte der Level-Buttons
     const levelTexts = await levelButtons.allTextContents();
+    expect(levelTexts).toContain('Level 0: Addition bis 10');
     expect(levelTexts).toContain('Level 1: Addition & Subtraktion bis 10');
     expect(levelTexts).toContain('Level 2: Addition & Subtraktion bis 100');
     expect(levelTexts).toContain('Level 3: Multiplikation bis 100');
@@ -48,7 +49,8 @@ test.describe('Schnechnen Spiel Tests', () => {
     await expect(page.locator('#user-answer')).toBeVisible();
     
     // Prüfe, dass das Dial-Pad sichtbar ist
-    await expect(page.locator('#dial-pad')).not.toHaveClass('hidden');
+    await page.waitForSelector('#dial-pad');
+    await expect(page.locator('#dial-pad')).toBeVisible();
   });
 
   test('Spielablauf mit korrekter Antwort', async ({ page }) => {
