@@ -148,5 +148,23 @@ test.describe('Level 0 Test', () => {
     // Verify result screen shows 1 correct
     await page.waitForSelector('#result-screen');
     await expect(page.locator('#result-score')).toHaveText('1');
+
+    // Return to start and open statistics
+    await page.click('#restart-btn');
+    // wait for start screen to be visible again
+    await expect(page.locator('#start-screen')).not.toHaveClass('hidden');
+    // open stats via the stats button
+    await page.click('#stats-btn');
+    // wait for stats screen to be visible
+    await expect(page.locator('#stats-screen')).not.toHaveClass('hidden');
+
+    // Stats default to Level 1 — switch to Level 0 to inspect the game we just played
+    await page.click('.stats-level-btn[data-level="0"]');
+    // small delay to allow UI to update
+    await page.waitForTimeout(300);
+
+    // Verify stats show the completed game and correct highscore for Level 0
+    await expect(page.locator('#stat-total-games')).toHaveText('1');
+    await expect(page.locator('#stat-highscore')).toHaveText('1');
   });
 });
