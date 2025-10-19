@@ -167,4 +167,73 @@ test.describe('Level 0 Test', () => {
     await expect(page.locator('#stat-total-games')).toHaveText('1');
     await expect(page.locator('#stat-highscore')).toHaveText('1');
   });
+
+  test('adaptive learning records mistakes correctly', async ({ page }) => {
+    // Start Level 0 via UI click
+    await page.click('button[data-level="0"]');
+    await page.waitForSelector('#game-screen');
+    await page.waitForSelector('#problem');
+    await page.waitForSelector('#dial-pad:not(.hidden)');
+    
+    // Solve 10 problems (9 correct, 1 wrong)
+    for (let i = 0; i < 10; i++) {
+      // Get the current problem
+      let problemText = await page.locator('#problem').textContent();
+      let m = problemText.match(/(\d+)\s*([+\-×÷*/])\s*(\d+)/);
+      expect(m).not.toBeNull();
+      const a = parseInt(m[1], 10);
+      const b = parseInt(m[3], 10);
+      const correct = a + b;
+      
+      // Clear input first (backspace until empty)
+      let currentInput = await page.locator('#user-answer').textContent();
+      while (currentInput !== '?' && currentInput !== '') {
+        await page.click('#backspace-btn');
+        await page.waitForTimeout(50);
+        currentInput = await page.locator('#user-answer').textContent();
+      }
+      
+      // For 9 correct answers and 1 wrong answer, we'll make the last one wrong
+      const answer = i === 9 ? (correct === 0 ? 1 : correct - 1) : correct;
+      
+      // Enter answer via dial buttons
+      for (const digit of String(answer)) {
+        await page.click(`.dial-btn[data-value="${digit}"]`);
+        await page.waitForTimeout(50);
+      }
+      
+      // Click OK button
+      await page.click('#submit-btn');
+      
+      // Wait for problem to change
+      await page.waitForTimeout(300);
+    }
+    
+    // End the game
+    await page.evaluate(() => {
+      if (window.__TEST__ && typeof window.__TEST__.endGame === 'function') {
+        window.__TEST__.endGame();
+      }
+    });
+    
+    // Wait for result screen to appear
+    await page.waitForSelector('#result-screen');
+    
+    // Go back to stats to check mistakes
+    await page.click('#restart-btn');
+    await expect(page.locator('#start-screen')).not.toHaveClass('hidden');
+    await page.click('#stats-btn');
+    await expect(page.locator('#stats-screen')).not.toHaveClass('hidden');
+    
+    // Switch to Level 0
+    await page.click('.stats-level-btn[data-level="0"]');
+    await page.waitForTimeout(300);
+    
+    // Check that the mistakes list contains at least one item (the wrong problem should be recorded)
+    const mistakeItems = page.locator('#stats-mistake-list li:not(.no-mistakes)');
+    // Wait a bit for the stats to update
+    await page.waitForTimeout(500);
+    const count = await mistakeItems.count();
+    expect(count).toBeGreaterThanOrEqual(1);
+  });
 });
