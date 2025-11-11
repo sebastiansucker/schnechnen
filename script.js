@@ -391,7 +391,9 @@ function checkAnswer() {
     // wrong answer detected
         // Falsche Antwort
         gameState.currentProblem.answered = true;
-        gameState.currentProblem.wrongCount++;
+        // WICHTIG: wrongCount wird NICHT hier inkrementiert!
+        // Es wird durch addMistake() in weighting.js verwaltet
+        
         // Falsche Aufgaben in Liste speichern
         gameState.problems.push(gameState.currentProblem);
         

@@ -588,6 +588,23 @@ function testResetStatistics() {
             console.error('Fehler: Problem sollte nach addMistake vorhanden sein.');
             return false;
         }
+        
+        // TEST: Problem falsch → richtig → falsch (darf nicht doppelt in Liste sein)
+        // Szenario: addMistake → removeMistake → addMistake
+        weighting.clear();
+        weighting.addMistake(level, problem); // wrongCount = 1
+        weighting.removeMistake(level, problem); // sollte gelöscht werden
+        weighting.addMistake(level, problem); // sollte mit wrongCount = 1 hinzugefügt werden
+        
+        const mistakes = weighting.getMistakes(level);
+        if (mistakes.length !== 1) {
+            console.error(`Fehler: Nach remove/add sollten 1 Fehler sein, sind aber ${mistakes.length}.`);
+            return false;
+        }
+        if (mistakes[0].wrongCount !== 1) {
+            console.error(`Fehler: wrongCount sollte 1 sein (nach remove/add), ist aber ${mistakes[0].wrongCount}.`);
+            return false;
+        }
 
         // 2. Speichere einen Highscore
         const highscores = JSON.parse(mockLocalStorage.getItem('schnechnen-highscores')) || {};
