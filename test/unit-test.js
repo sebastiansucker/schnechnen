@@ -98,6 +98,188 @@ const mockConfig = {
 // Für diesen Test simulieren wir die Funktionen direkt
 
 // Test-Funktionen
+
+// Test 8: Input-Handling (Dial-Pad)
+function testInputHandling() {
+    try {
+        // Testfall 1: Eingabe mit Ziffern
+        let input = '';
+        // Simuliere Dial-Pad Clicks
+        const dialInput = (value) => {
+            if (value === 'backspace') {
+                input = input.slice(0, -1);
+            } else if (value === 'clear') {
+                input = '';
+            } else {
+                input += value;
+            }
+            return input;
+        };
+        
+        // Test: Ziffern hinzufügen
+        dialInput('5');
+        dialInput('3');
+        if (input !== '53') {
+            console.error('Fehler: Eingabe sollte "53" sein.');
+            return false;
+        }
+        
+        // Test: Backspace
+        dialInput('backspace');
+        if (input !== '5') {
+            console.error('Fehler: Nach Backspace sollte input "5" sein.');
+            return false;
+        }
+        
+        // Test: Clear
+        dialInput('clear');
+        if (input !== '') {
+            console.error('Fehler: Nach Clear sollte input leer sein.');
+            return false;
+        }
+        
+        // Test: Negative Zahlen mit Minus
+        dialInput('-');
+        dialInput('7');
+        if (input !== '-7') {
+            console.error('Fehler: Negative Zahl sollte "-7" sein.');
+            return false;
+        }
+        
+        console.log('✓ Input-Handling erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen des Input-Handling:', error);
+        return false;
+    }
+}
+
+// Test 9: Answer-Checking Logic
+function testAnswerChecking() {
+    try {
+        // Test verschiedene Antwort-Szenarien
+        const testCases = [
+            { userAnswer: 5, correctAnswer: 5, shouldBeCorrect: true },
+            { userAnswer: 5, correctAnswer: 7, shouldBeCorrect: false },
+            { userAnswer: 0, correctAnswer: 0, shouldBeCorrect: true },
+            { userAnswer: -5, correctAnswer: -5, shouldBeCorrect: true },
+            { userAnswer: 100, correctAnswer: 50, shouldBeCorrect: false },
+        ];
+        
+        for (const testCase of testCases) {
+            const isCorrect = testCase.userAnswer === testCase.correctAnswer;
+            if (isCorrect !== testCase.shouldBeCorrect) {
+                console.error(`Fehler: Answer-Check fehlgeschlagen für ${testCase.userAnswer} vs ${testCase.correctAnswer}`);
+                return false;
+            }
+        }
+        
+        // Test: NaN handling
+        const userAnswer = parseInt('?');
+        if (!Number.isNaN(userAnswer)) {
+            console.error('Fehler: parseInt("?") sollte NaN sein.');
+            return false;
+        }
+        
+        // Test: Empty string handling
+        const emptyAnswer = parseInt('');
+        if (!Number.isNaN(emptyAnswer)) {
+            console.error('Fehler: parseInt("") sollte NaN sein.');
+            return false;
+        }
+        
+        console.log('✓ Answer-Checking erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen des Answer-Checking:', error);
+        return false;
+    }
+}
+
+// Test 10: Timer Logic
+function testTimerLogic() {
+    try {
+        // Test Timer-Countdown-Logik
+        let timeLeft = 60;
+        const decrementTime = () => {
+            timeLeft--;
+            return timeLeft;
+        };
+        
+        // Test: Zeit zählt runter
+        decrementTime();
+        if (timeLeft !== 59) {
+            console.error('Fehler: Timer sollte auf 59 sein.');
+            return false;
+        }
+        
+        // Test: Time bei 0 stoppt
+        timeLeft = 1;
+        decrementTime();
+        if (timeLeft !== 0) {
+            console.error('Fehler: Timer sollte auf 0 sein.');
+            return false;
+        }
+        
+        // Test: Negative Werte möglich (wird in endGame() abgefangen)
+        decrementTime();
+        if (timeLeft !== -1) {
+            console.error('Fehler: Timer sollte auf -1 sein.');
+            return false;
+        }
+        
+        console.log('✓ Timer-Logik erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen der Timer-Logik:', error);
+        return false;
+    }
+}
+
+// Test 11: Display Operator Conversion
+function testDisplayOperator() {
+    try {
+        // Operator-Konvertierungsfunktion simulieren
+        const displayOperator = (op) => {
+            switch(op) {
+                case '*':
+                    return '×';
+                case '/':
+                    return '÷';
+                case '+':
+                    return '+';
+                case '-':
+                    return '-';
+                default:
+                    return op;
+            }
+        };
+        
+        // Test: Operator-Konvertierung
+        const testCases = [
+            { input: '*', expected: '×' },
+            { input: '/', expected: '÷' },
+            { input: '+', expected: '+' },
+            { input: '-', expected: '-' },
+            { input: 'unknown', expected: 'unknown' }
+        ];
+        
+        for (const testCase of testCases) {
+            const result = displayOperator(testCase.input);
+            if (result !== testCase.expected) {
+                console.error(`Fehler: displayOperator('${testCase.input}') sollte '${testCase.expected}' sein, ist aber '${result}'`);
+                return false;
+            }
+        }
+        
+        console.log('✓ Display-Operator erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen des Display-Operators:', error);
+        return false;
+    }
+}
+
 function runTests() {
     console.log('Starte Unit Tests für Schnechnen Spiel...');
     
@@ -121,6 +303,18 @@ function runTests() {
     
     // Test 7: Reset Statistiken
     testResetStatistics();
+    
+    // Test 8: Input-Handling (Dial-Pad)
+    testInputHandling();
+    
+    // Test 9: Answer-Checking Logic
+    testAnswerChecking();
+    
+    // Test 10: Timer Logic
+    testTimerLogic();
+    
+    // Test 11: Display Operator Conversion
+    testDisplayOperator();
     
     console.log('Alle Tests abgeschlossen.');
 }

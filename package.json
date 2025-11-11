@@ -6,6 +6,8 @@
   "scripts": {
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "node test/unit-test.js",
+    "test:coverage": "nyc --reporter=text --reporter=html node test/unit-test.js",
+    "test:coverage:report": "open coverage/index.html",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
@@ -23,7 +25,8 @@
   "devDependencies": {
     "@playwright/test": "^1.56.1",
     "concurrently": "^8.2.2",
-    "http-server": "^14.1.1"
+    "http-server": "^14.1.1",
+    "nyc": "^15.1.0"
   },
   "dependencies": {
     "chart.js": "^4.5.1",
