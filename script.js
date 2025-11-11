@@ -929,3 +929,47 @@ try {
 } catch (e) {
     // ignore in non-browser contexts
 }
+
+// Export Funktionen für Unit-Tests (Node.js Umgebung)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        // Core game logic functions
+        generateProblem: typeof generateProblem !== 'undefined' ? generateProblem : null,
+        checkAnswer: typeof checkAnswer !== 'undefined' ? checkAnswer : null,
+        displayOperator: typeof displayOperator !== 'undefined' ? displayOperator : null,
+        startGame: typeof startGame !== 'undefined' ? startGame : null,
+        endGame: typeof endGame !== 'undefined' ? endGame : null,
+        startTimer: typeof startTimer !== 'undefined' ? startTimer : null,
+        handleDialPadClick: typeof handleDialPadClick !== 'undefined' ? handleDialPadClick : null,
+        backspaceInput: typeof backspaceInput !== 'undefined' ? backspaceInput : null,
+        clearInput: typeof clearInput !== 'undefined' ? clearInput : null,
+        
+        // Utility functions
+        updateHighscore: typeof updateHighscore !== 'undefined' ? updateHighscore : null,
+        saveHighscore: typeof saveHighscore !== 'undefined' ? saveHighscore : null,
+        loadHighscores: typeof loadHighscores !== 'undefined' ? loadHighscores : null,
+        resetAllStatistics: typeof resetAllStatistics !== 'undefined' ? resetAllStatistics : null,
+        
+        // Animation functions
+        showHighscoreAnimation: typeof showHighscoreAnimation !== 'undefined' ? showHighscoreAnimation : null,
+        createConfetti: typeof createConfetti !== 'undefined' ? createConfetti : null,
+        
+        // Display functions
+        displayMistakes: typeof displayMistakes !== 'undefined' ? displayMistakes : null,
+        displayStatsMistakes: typeof displayStatsMistakes !== 'undefined' ? displayStatsMistakes : null,
+        
+        // Config and state
+        CONFIG: CONFIG,
+        getGameState: function() { return typeof gameState !== 'undefined' ? gameState : null; },
+        resetGameState: function() { 
+            if (typeof gameState === 'undefined') return;
+            gameState.currentLevel = null;
+            gameState.timeLeft = 60;
+            gameState.score = 0;
+            gameState.totalProblems = 0;
+            gameState.problems = [];
+            gameState.currentProblem = null;
+            if (gameState.timer) clearInterval(gameState.timer);
+        }
+    };
+}

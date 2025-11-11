@@ -1,5 +1,26 @@
 // Unit Tests für Schnechnen Spiel
 
+// Importiere exportierte Funktionen aus script.js
+let scriptExports = {};
+try {
+    // Mock global objects vor dem Laden von script.js
+    if (typeof document === 'undefined') {
+        global.document = {
+            getElementById: () => ({ textContent: '', innerHTML: '', classList: { add: () => {}, remove: () => {} } }),
+            addEventListener: () => {}
+        };
+        global.window = {
+            localStorage: global.localStorage || {}
+        };
+    }
+    
+    scriptExports = require('../script.js');
+} catch (e) {
+    // Falls script.js nicht vollständig geladen werden kann, nutze lokale Mocks
+    // Dies ist normal, da script.js DOM-Abhängigkeiten hat
+    console.log('Info: script.js teilweise geladen (DOM-abhängige Funktionen)');
+}
+
 // Wir benötigen eine einfache Mock-Umgebung für die Tests
 // Da wir keine echte DOM-Umgebung haben, simulieren wir einige Funktionen
 
@@ -239,21 +260,27 @@ function testTimerLogic() {
 // Test 11: Display Operator Conversion
 function testDisplayOperator() {
     try {
-        // Operator-Konvertierungsfunktion simulieren
-        const displayOperator = (op) => {
-            switch(op) {
-                case '*':
-                    return '×';
-                case '/':
-                    return '÷';
-                case '+':
-                    return '+';
-                case '-':
-                    return '-';
-                default:
-                    return op;
-            }
-        };
+        // Nutze displayOperator aus script.js wenn verfügbar, sonst fallback
+        let displayOperator;
+        if (scriptExports && typeof scriptExports.displayOperator === 'function') {
+            displayOperator = scriptExports.displayOperator;
+        } else {
+            // Lokale Fallback-Implementierung
+            displayOperator = (op) => {
+                switch(op) {
+                    case '*':
+                        return '×';
+                    case '/':
+                        return '÷';
+                    case '+':
+                        return '+';
+                    case '-':
+                        return '-';
+                    default:
+                        return op;
+                }
+            };
+        }
         
         // Test: Operator-Konvertierung
         const testCases = [
