@@ -492,6 +492,15 @@ button.btn-primary:hover {
     margin-bottom: 8px;
 }
 
+.dial-row-bottom {
+    display: grid;
+    grid-template-columns: 85px 85px 85px;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+
 .dial-btn {
     width: 85px;
     height: 85px;
