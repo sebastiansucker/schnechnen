@@ -223,8 +223,4 @@ test.describe('Schnechnen Spiel Tests', () => {
     const resultScore = await page.locator('#result-score').textContent();
     expect(parseInt(resultScore)).toBe(finalScore);
   });
-
-  test('Neu starten Button setzt Level zurück und startet neu', async ({ page }) => {
-    test.skip('Neu starten removed; use Zurück then re-enter level if restart is desired');
-  });
 });
