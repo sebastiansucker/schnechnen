@@ -205,8 +205,8 @@ test.describe('Level 0 Test', () => {
       // Click OK button
       await page.click('#submit-btn');
       
-      // Wait for problem to change
-      await page.waitForTimeout(300);
+      // Wait for problem to change and feedback animation
+      await page.waitForTimeout(700);
     }
     
     // End the game
@@ -217,22 +217,24 @@ test.describe('Level 0 Test', () => {
     });
     
     // Wait for result screen to appear
-    await page.waitForSelector('#result-screen');
+    await page.waitForSelector('#result-screen:not(.hidden)');
+    await page.waitForTimeout(500);
     
-    // Go back to stats to check mistakes
+    // Go back to start, then to stats
     await page.click('#restart-btn');
-    await expect(page.locator('#start-screen')).not.toHaveClass('hidden');
+    await page.waitForSelector('#start-screen:not(.hidden)');
+    await page.waitForTimeout(300);
+    
     await page.click('#stats-btn');
-    await expect(page.locator('#stats-screen')).not.toHaveClass('hidden');
+    await page.waitForSelector('#stats-screen:not(.hidden)');
+    await page.waitForTimeout(500);
     
     // Switch to Level 0
     await page.click('.stats-level-btn[data-level="0"]');
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(800);
     
     // Check that the mistakes list contains at least one item (the wrong problem should be recorded)
     const mistakeItems = page.locator('#stats-mistake-list li:not(.no-mistakes)');
-    // Wait a bit for the stats to update
-    await page.waitForTimeout(500);
     const count = await mistakeItems.count();
     expect(count).toBeGreaterThanOrEqual(1);
   });
