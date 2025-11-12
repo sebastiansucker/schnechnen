@@ -290,8 +290,8 @@ function generateProblem() {
             operation = levelConfig.operations[Math.floor(Math.random() * levelConfig.operations.length)];
             
             if (operation === '+') {
-                num1 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
-                num2 = Math.floor(Math.random() * (levelConfig.maxNumber - num1 + 1)) + 1;
+                num1 = Math.floor(Math.random() * (levelConfig.maxNumber - 1)) + 1;
+                num2 = Math.floor(Math.random() * (levelConfig.maxNumber - num1)) + 1;
                 result = num1 + num2;
             } else if (operation === '-') {
                 num1 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
