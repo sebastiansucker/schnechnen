@@ -19,7 +19,7 @@ The app runs in both browser and Node.js (for unit tests). The `createElements()
 **Critical**: When adding new DOM elements, update both branches of `createElements()` and the mock objects in `test/unit-test.js`.
 
 ### Level Configuration (`CONFIG` object)
-All game mechanics are driven by `CONFIG.levels[1-4]`:
+All game mechanics are driven by `CONFIG.levels[0-4]`:
 ```javascript
 {
   name: "Display name",
@@ -28,6 +28,8 @@ All game mechanics are driven by `CONFIG.levels[1-4]`:
   minResult: 0                        // Minimum acceptable result
 }
 ```
+**Level 0** (Addition 1-10): Special introductory level with addition only, max number 10, for learning basic addition skills.
+
 Level logic is centralized in `generateProblem()` - modify here to change math rules.
 
 ### State Management
@@ -66,6 +68,18 @@ Tests include:
 - `testAdaptiveProblemGeneration()`: Verifies adaptive learning with wrongCount prioritization
 
 **E2E tests** (`test/e2e/`): Playwright tests require local server running.
+
+**Level 0 E2E Tests** (`test/e2e/level0-test.spec.js`): Comprehensive tests covering the entire Level 0 gameplay:
+- Level 0 availability and basic functionality
+- Addition-only problem verification
+- Correct and incorrect answer handling (1 correct, 1 wrong = 1 correct score)
+- Adaptive learning and mistake tracking
+- Timer countdown (60s → 0)
+- Automatic game end when timer reaches 0
+- Backspace functionality and digit removal
+- Multi-digit answer submission (10-20 range)
+- Highscore persistence across page reloads
+- Complex input workflows (enter → clear → re-enter → submit)
 ```bash
 # Terminal 1:
 npm run start
@@ -77,7 +91,7 @@ npm run test:e2e:ui      # Interactive UI mode
 
 **Run all tests** before committing:
 ```bash
-npm test                 # Runs both unit and E2E tests (60 E2E + 6 unit tests)
+npm test                 # Runs both unit and E2E tests (215 E2E + 11 unit tests)
 ```
 All tests must pass before pushing to GitHub.
 
@@ -95,6 +109,7 @@ window.__TEST__.generateProblem()
 
 ### Mobile-First Input
 - **Dial pad is default**: Input field is `readonly`, users click dial buttons (85px × 85px on desktop, responsive down to 64px on small screens)
+- **Dial pad layout**: Bottom row organized as: Backspace (left) → 0 (center) → OK (right)
 - Never auto-focus input (prevents mobile keyboard pop-up)
 - Dial buttons use `data-value` attribute for digits (0-9)
 - Special buttons: `#backspace-btn`, `#submit-btn`
@@ -133,7 +148,8 @@ Three screens with `.hidden` class toggling via `showScreen()`:
 ### Adding a New Level
 1. Add entry to `CONFIG.levels` with operations array and constraints
 2. Add corresponding button to `index.html` with `data-level="N"`
-3. Update level button text in E2E test expectations
+3. Create comprehensive E2E test file (e.g., `test/e2e/levelN-test.spec.js`)
+4. Update level button text in E2E test expectations
 
 ### Problem Generation Logic
 `generateProblem()` uses different strategies per operation:
