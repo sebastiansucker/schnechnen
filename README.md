@@ -6,14 +6,14 @@ Ein kleines, responsives Mathe-Lernspiel (JavaScript) mit modernem Design, inspi
 
 - 🎨 **Modernes Design**: Gradient-basiertes UI mit Orange/Türkis/Violett-Farbpalette
 - 🐌 **Logo**: Schnecken-Emoji in rundem, gradienten Rahmen
-- 📊 **4 Lern-Level**: Addition/Subtraktion, Multiplikation, Division
+- 📊 **5 Lern-Level**: Level 0 (Addition 1-10), Addition/Subtraktion, Multiplikation, Division
 - ⏱️ **60-Sekunden-Spielmodus** mit visueller Feedback-Animation
-- 📱 **Mobile-First**: Eingabe per Dial-Pad, optimiert für Touch-Geräte
+- 📱 **Mobile-First**: Eingabe per Dial-Pad (Backspace ← 0 → OK), optimiert für Touch-Geräte
 - 🏆 **Highscore pro Level**: Anzahl richtiger Antworten (localStorage)
 - 🧠 **Adaptives Lernen**: Häufige Fehler werden automatisch wiederholt (30% Chance)
 - ❌ **Fehleranalyse**: Anzeige häufig falsch gelöster Aufgaben
 - 📈 **Statistik-Seite**: Verlaufsdiagramm der letzten 50 Spiele mit Chart.js
-- ✅ **Getestet**: Unit tests (Node), E2E tests (Playwright)
+- ✅ **Umfassend getestet**: 11 Unit Tests + 215 E2E Tests (Playwright, 5 Browser-Engines)
 
 ## Projektstruktur
 
@@ -27,11 +27,15 @@ schnechnen/
 ├── package.json        # Projekt-Abhängigkeiten
 ├── playwright.config.js # Playwright-Konfiguration
 ├── test/
-│   ├── unit-test.js    # Unit-Tests
+│   ├── unit-test.js    # Unit-Tests (11 Tests)
 │   └── e2e/
-│       ├── schnechnen-tests.spec.js # End-to-End-Tests
-│       └── check-buttons.spec.js
+│       ├── level0-test.spec.js      # Level 0 Tests (10 Tests)
+│       ├── schnechnen-tests.spec.js # Allgemeine E2E-Tests
+│       ├── check-buttons.spec.js    # Button-Tests
+│       ├── stats.spec.js            # Statistik-Tests
+│       └── weighting-integration.spec.js # Adaptive Learning Tests
 └── .github/
+    ├── copilot-instructions.md # Copilot-Anweisungen
     └── workflows/
         └── ci.yml      # GitHub Actions CI
 ```
@@ -65,13 +69,28 @@ npm run dev
 npm run test:unit
 ```
 
+**11 Unit Tests** für:
+- CONFIG-Struktur-Validierung
+- Problem-Generierung und Constraints
+- Highscore-Persistierung
+- Score-Berechnung
+- Fehlertracking (Weighting)
+- Adaptive Learning mit wrongCount-Prioritisierung
+
 ### End-to-end tests (Playwright)
 
 Stelle sicher, dass der Server läuft (siehe oben). Dann:
 
 ```bash
-npm run test:e2e
+npm run test:e2e         # Headless run
+npm run test:e2e:ui      # Interaktive UI
 ```
+
+**215 E2E Tests** über 5 Browser-Engines (Chromium, Firefox, WebKit, Mobile Chrome, Mobile Safari):
+- **Level 0 Tests** (10 Tests): Kompletter Spielablauf, Timer, Backspace, Multi-Digit-Eingabe, Persistierung
+- **Allgemeine Tests**: Navigation, Level-Wechsel, Highscores
+- **Statistik-Tests**: Verlauf, Charts, Level-Filter, Reset
+- **Adaptive Learning Tests**: Fehlertracking, wrongCount-Inkrementierung
 
 Um den HTML-Report lokal zu öffnen (nach einem Testlauf):
 
@@ -80,6 +99,14 @@ npm run test:e2e:report
 # oder
 npx playwright show-report
 ```
+
+### Alle Tests
+
+```bash
+npm test  # Führt Unit + E2E Tests aus (226 Tests gesamt)
+```
+
+**WICHTIG**: Vor dem Commit müssen alle Tests bestanden haben!
 
 ## Mobile keyboard behavior
 
@@ -103,23 +130,27 @@ Eine GitHub Actions-Workflow-Datei ist vorhanden unter `.github/workflows/ci.yml
 
 ## Developer notes & suggestions
 
-- Die Dial-Pad Buttons verwenden `data-value` Attribute — Tests interagieren mit `.dial-btn[data-value]`.
-- Die App stellt eine kleine Test-API (`window.__TEST__`) zur Verfügung, wenn sie lokal läuft oder `?e2e-test` in der URL steht. Diese API wird von den Playwright-Tests verwendet, um z.B. `endGame()` oder `startGame(level)` programmgesteuert aufzurufen.
-- Für bessere Zugänglichkeit sollten ARIA-Labels für Submit/Backspace/Toggle hinzugefügt werden.
-- Wenn gewünscht, kann die Tastatur-Einstellung in `localStorage` persistiert werden.
+- **Dial-Pad Layout**: Backspace (links) → 0 (zentriert) → OK (rechts). Buttons verwenden `data-value` Attribute — Tests interagieren mit `.dial-btn[data-value]`.
+- **Test-API**: Die App stellt eine kleine Test-API (`window.__TEST__`) zur Verfügung, wenn sie lokal läuft oder `?e2e-test` in der URL steht. Diese API wird von den Playwright-Tests verwendet, um z.B. `endGame()`, `startGame(level)` oder `generateProblem()` programmgesteuert aufzurufen.
+- **Level 0**: Spezielles Anfänger-Level mit Addition 1-10. Umfassend getestet mit eigenem Test-Suite (`level0-test.spec.js`).
+- **ARIA Labels**: Vollständig implementiert für Buttons, Dial-Pad, Charts und Statistiken (verbesserte Zugänglichkeit).
+- **Adaptive Learning**: Fehler werden in `localStorage` gespeichert und mit `wrongCount`-Tracking verwaltet. Häufige Fehler erscheinen mit 30% Wahrscheinlichkeit wieder.
+- **Tastatur-Einstellung**: In `localStorage` persistiert; kann durch Toggle-Button zwischen Dial-Pad und nativer Tastatur umgeschaltet werden.
 
 ## TODO (Ideen)
 
 - [x] Adaptive Problemgenerierung basierend auf `weighting.js` (häufige Fehler öfter wiederholen)
 - [x] Animationen für Feedback (z.B. grüner/roter Rahmen bei Antworten)
-- [ ] Weitere Level mit gemischten Operationen
+- [x] Level 0 (Anfänger-Level: Addition 1-10)
+- [x] Umfassende E2E Tests für Level 0 (10 Tests)
 - [x] Statistik-Seite mit Verlaufsdiagramm der Highscores
-- [ ] Dark Mode Support
-- [x] PWA-Funktionalität (Offline-Nutzung, Install-Prompt)
 - [x] ARIA-Labels für bessere Accessibility
-- [ ] Internationalisierung (i18n) für mehrere Sprachen
 - [x] Zoom verhindern auf Mobilgeräten
-- [x] npm:test:e2e sollte den server starten
+- [x] npm test:e2e sollte den server starten
+- [ ] Weitere Level mit gemischten Operationen
+- [ ] Dark Mode Support
+- [ ] Internationalisierung (i18n) für mehrere Sprachen
+- [ ] PWA-Funktionalität (Offline-Nutzung, Install-Prompt)
 - [ ] ...
 
 ## License
