@@ -1,6 +1,6 @@
 # Schnechnen — Mathe-Spiel
 
-Ein kleines, responsives Mathe-Lernspiel (JavaScript) mit modernem Design, inspiriert von Wortspiel.
+Ein kleines, responsives Mathe-Lernspiel (JavaScript) mit modernem Design.
 
 ## Features
 

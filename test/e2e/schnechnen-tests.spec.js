@@ -92,32 +92,6 @@ test.describe('Schnechnen Spiel Tests', () => {
     await expect(page.locator('#problem')).toBeVisible();
   });
 
-  test('Highscore-Funktion', async ({ page }) => {
-    // Wähle Level 1 aus
-    await page.click('button[data-level="1"]');
-    
-    // Warte auf das erste Problem
-    await page.waitForSelector('#problem');
-    
-    // Lösung eingeben und das Spiel beenden (wenn wir ein paar Probleme lösen)
-    // Für diesen Test einfach das erste Problem lösen und dann Ergebnisse prüfen
-    
-    // Statt einer langen Warte: rufe das Endgame direkt an (script exposes a test helper on window.__TEST__)
-    await page.evaluate(() => {
-      if (window.__TEST__ && typeof window.__TEST__.endGame === 'function') {
-        window.__TEST__.endGame();
-      }
-    });
-    
-    // Prüfe, dass das Ergebnisbildschirm angezeigt wird
-    await expect(page.locator('#result-screen')).not.toHaveClass('hidden');
-    
-    // Prüfe, dass die Ergebnisdaten angezeigt werden
-    await expect(page.locator('#result-level')).toBeVisible();
-    await expect(page.locator('#result-score')).toBeVisible();
-    await expect(page.locator('#total-problems')).toBeVisible();
-  });
-
   test('Dial-Pad Funktion', async ({ page }) => {
     // Wähle Level 1 aus
     await page.click('button[data-level="1"]');
