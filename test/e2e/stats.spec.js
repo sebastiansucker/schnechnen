@@ -24,7 +24,7 @@ test.describe('Statistik-Seite Tests', () => {
     
     // Prüfe, dass Level-Buttons vorhanden sind
   const statsLevelButtons = page.locator('.stats-level-btn');
-  await expect(statsLevelButtons).toHaveCount(5);
+  await expect(statsLevelButtons).toHaveCount(6);
     
     // Prüfe, dass Statistik-Karten vorhanden sind
     await expect(page.locator('.stat-card')).toHaveCount(2);

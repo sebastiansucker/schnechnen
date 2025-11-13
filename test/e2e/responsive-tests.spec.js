@@ -63,7 +63,7 @@ test.describe('Responsive & Mobile Verhalten', () => {
       
       // Level buttons should be accessible (may be stacked)
       const levelButtons = page.locator('.level-btn');
-      await expect(levelButtons).toHaveCount(5);
+      await expect(levelButtons).toHaveCount(6);
       
       // Start a game
       await page.click('button[data-level="1"]');
@@ -238,7 +238,7 @@ test.describe('Responsive & Mobile Verhalten', () => {
       
       // Stats buttons should be visible
       const statsButtons = page.locator('.stats-level-btn');
-      await expect(statsButtons).toHaveCount(5);
+      await expect(statsButtons).toHaveCount(6);
       
       // Content should not overflow horizontally
       const h2 = page.locator('#stats-screen h2');
