@@ -362,8 +362,8 @@ function testConfig() {
 function testProblemGeneration() {
     console.log('Teste Problemgenerierung...');
     
-    // Teste verschiedene Level
-    for (let level = 1; level <= 4; level++) {
+    // Teste verschiedene Level (including Level 0)
+    for (let level = 0; level <= 4; level++) {
         try {
             // Simuliere Problemgenerierung
             const config = mockConfig.levels[level];
@@ -374,8 +374,8 @@ function testProblemGeneration() {
                 operation = config.operations[Math.floor(Math.random() * config.operations.length)];
                 
                 if (operation === '+') {
-                    num1 = Math.floor(Math.random() * config.maxNumber) + 1;
-                    num2 = Math.floor(Math.random() * (config.maxNumber - num1 + 1)) + 1;
+                    num1 = Math.floor(Math.random() * (config.maxNumber - 1)) + 1;
+                    num2 = Math.floor(Math.random() * (config.maxNumber - num1)) + 1;
                     result = num1 + num2;
                 } else if (operation === '-') {
                     num1 = Math.floor(Math.random() * config.maxNumber) + 1;
@@ -394,6 +394,12 @@ function testProblemGeneration() {
                 // Prüfe, dass das Ergebnis mindestens minResult ist
                 if (result < config.minResult) {
                     console.error(`Fehler: Ergebnis ${result} ist kleiner als minResult ${config.minResult} für Level ${level}`);
+                    return false;
+                }
+                
+                // Prüfe, dass das Ergebnis bei Addition nicht maxNumber überschreitet
+                if (operation === '+' && result > config.maxNumber) {
+                    console.error(`Fehler: Additions-Ergebnis ${result} überschreitet maxNumber ${config.maxNumber} für Level ${level} (${num1} + ${num2})`);
                     return false;
                 }
             }
