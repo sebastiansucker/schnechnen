@@ -307,6 +307,182 @@ function testDisplayOperator() {
     }
 }
 
+// Test Randomness der Aufgabengenerierung
+function testProblemRandomness() {
+    try {
+        console.log('\n--- TEST: Problem Randomness (Aufgabenvariabilität) ---');
+        
+        // Mock gameState und elements
+        const mockGameState = {
+            currentLevel: 0,
+            currentProblem: null,
+            score: 0,
+            timeRemaining: 60
+        };
+        
+        const mockElements = {
+            problemElement: { innerHTML: '', textContent: '' },
+            userAnswerElement: { textContent: '?' },
+            dialPad: { classList: { remove: () => {} } }
+        };
+        
+        // CONFIG von script.js
+        const CONFIG = {
+            levels: {
+                0: { name: "Addition bis 10", operations: ['+'], maxNumber: 10, minResult: 0 },
+                1: { name: "Addition & Subtraktion bis 10", operations: ['+', '-'], maxNumber: 10, minResult: 0 },
+                2: { name: "Addition & Subtraktion bis 100", operations: ['+', '-'], maxNumber: 100, minResult: 0 },
+                3: { name: "Multiplikation bis 100", operations: ['*'], maxNumber: 100, minResult: 0 },
+                4: { name: "Multiplikation & Division bis 100", operations: ['*', '/'], maxNumber: 100, minResult: 0 }
+            }
+        };
+        
+        // Generiere Aufgaben und analysiere Verteilung
+        function analyzeRandomness(level, numProblems = 200) {
+            const resultDistribution = {};
+            const operand1Distribution = {};
+            const operand2Distribution = {};
+            
+            mockGameState.currentLevel = level;
+            const levelConfig = CONFIG.levels[level];
+            
+            for (let i = 0; i < numProblems; i++) {
+                let num1, num2, operation, result;
+                
+                operation = levelConfig.operations[Math.floor(Math.random() * levelConfig.operations.length)];
+                
+                if (operation === '+') {
+                    num1 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
+                    num2 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
+                    result = num1 + num2;
+                } else if (operation === '-') {
+                    num2 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
+                    num1 = num2 + Math.floor(Math.random() * (levelConfig.maxNumber - num2)) + 1;
+                    result = num1 - num2;
+                } else if (operation === '*') {
+                    num1 = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
+                    num2 = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
+                    result = num1 * num2;
+                } else if (operation === '/') {
+                    num2 = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
+                    result = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
+                    num1 = num2 * result;
+                }
+                
+                resultDistribution[result] = (resultDistribution[result] || 0) + 1;
+                operand1Distribution[num1] = (operand1Distribution[num1] || 0) + 1;
+                operand2Distribution[num2] = (operand2Distribution[num2] || 0) + 1;
+            }
+            
+            return {
+                resultDistribution,
+                operand1Distribution,
+                operand2Distribution,
+                uniqueResults: Object.keys(resultDistribution).length
+            };
+        }
+        
+        // Test Level 0: Addition sollte ausreichend vielfältig sein
+        const level0Results = analyzeRandomness(0, 200);
+        const level0MostCommon = Math.max(...Object.values(level0Results.resultDistribution)) / 200;
+        
+        console.log(`  Level 0: ${level0Results.uniqueResults} einzigartige Ergebnisse`);
+        console.log(`  Level 0: Häufigstes Ergebnis = ${(level0MostCommon * 100).toFixed(1)}%`);
+        
+        // Prüfungen
+        let allGood = true;
+        
+        // Prüfung 1: Level 0 sollte mindestens 9 verschiedene Ergebnisse haben
+        if (level0Results.uniqueResults < 9) {
+            console.error(`  ❌ Level 0: Zu wenig eindeutige Ergebnisse (${level0Results.uniqueResults}, erwartet >= 9)`);
+            allGood = false;
+        } else {
+            console.log(`  ✓ Level 0: Ausreichende Ergebnis-Vielfalt (${level0Results.uniqueResults} Ergebnisse)`);
+        }
+        
+        // Prüfung 2: Kein Ergebnis sollte zu häufig vorkommen (> 20%)
+        if (level0MostCommon > 0.20) {
+            console.error(`  ❌ Level 0: Häufigstes Ergebnis zu oft (${(level0MostCommon * 100).toFixed(1)}%, max 20%)`);
+            allGood = false;
+        } else {
+            console.log(`  ✓ Level 0: Ergebnisse gut verteilt (max ${(level0MostCommon * 100).toFixed(1)}%)`);
+        }
+        
+        // Prüfung 3: Operanden-Spanne sollte gut genutzt werden (min-max Bereich)
+        const level0Op1Values = Object.keys(level0Results.operand1Distribution).map(Number);
+        const level0Op2Values = Object.keys(level0Results.operand2Distribution).map(Number);
+        
+        const level0Op1Range = Math.max(...level0Op1Values) - Math.min(...level0Op1Values);
+        const level0Op2Range = Math.max(...level0Op2Values) - Math.min(...level0Op2Values);
+        
+        console.log(`  Level 0 - num1 Bereich: ${Math.min(...level0Op1Values)}-${Math.max(...level0Op1Values)}`);
+        console.log(`  Level 0 - num2 Bereich: ${Math.min(...level0Op2Values)}-${Math.max(...level0Op2Values)}`);
+        
+        // Für Level 0 (maxNumber=10) sollte der Bereich mindestens 7 sein
+        if (level0Op1Range < 7 || level0Op2Range < 7) {
+            console.error(`  ❌ Level 0: Operanden-Bereich zu eng`);
+            allGood = false;
+        } else {
+            console.log(`  ✓ Level 0: Operanden-Bereich gut genutzt`);
+        }
+        
+        // Test Level 1: Addition & Subtraktion bis 10
+        const level1Results = analyzeRandomness(1, 200);
+        console.log(`\n  Level 1: ${level1Results.uniqueResults} einzigartige Ergebnisse`);
+        
+        if (level1Results.uniqueResults < 10) {
+            console.error(`  ❌ Level 1: Zu wenig eindeutige Ergebnisse (${level1Results.uniqueResults}, erwartet >= 10)`);
+            allGood = false;
+        } else {
+            console.log(`  ✓ Level 1: Ausreichende Vielfalt (${level1Results.uniqueResults} Ergebnisse)`);
+        }
+        
+        // Test Level 2: Addition & Subtraktion bis 100
+        const level2Results = analyzeRandomness(2, 200);
+        console.log(`\n  Level 2: ${level2Results.uniqueResults} einzigartige Ergebnisse`);
+        
+        if (level2Results.uniqueResults < 40) {
+            console.error(`  ❌ Level 2: Zu wenig eindeutige Ergebnisse (${level2Results.uniqueResults}, erwartet >= 40)`);
+            allGood = false;
+        } else {
+            console.log(`  ✓ Level 2: Hohe Vielfalt (${level2Results.uniqueResults} Ergebnisse)`);
+        }
+        
+        // Test Level 3: Multiplikation bis 100
+        const level3Results = analyzeRandomness(3, 200);
+        console.log(`\n  Level 3: ${level3Results.uniqueResults} einzigartige Ergebnisse`);
+        
+        if (level3Results.uniqueResults < 30) {
+            console.error(`  ❌ Level 3: Zu wenig eindeutige Ergebnisse (${level3Results.uniqueResults}, erwartet >= 30)`);
+            allGood = false;
+        } else {
+            console.log(`  ✓ Level 3: Gute Vielfalt (${level3Results.uniqueResults} Ergebnisse)`);
+        }
+        
+        // Test Level 4: Multiplikation & Division bis 100
+        const level4Results = analyzeRandomness(4, 200);
+        console.log(`\n  Level 4: ${level4Results.uniqueResults} einzigartige Ergebnisse`);
+        
+        if (level4Results.uniqueResults < 30) {
+            console.error(`  ❌ Level 4: Zu wenig eindeutige Ergebnisse (${level4Results.uniqueResults}, erwartet >= 30)`);
+            allGood = false;
+        } else {
+            console.log(`  ✓ Level 4: Gute Vielfalt (${level4Results.uniqueResults} Ergebnisse)`);
+        }
+        
+        if (allGood) {
+            console.log('\n✓ Problem Randomness erfolgreich (alle Level)');
+            return true;
+        } else {
+            console.error('Fehler: Problem Randomness nicht ausreichend');
+            return false;
+        }
+    } catch (error) {
+        console.error('Fehler beim Testen der Problem Randomness:', error);
+        return false;
+    }
+}
+
 function runTests() {
     console.log('Starte Unit Tests für Schnechnen Spiel...');
     
@@ -342,6 +518,9 @@ function runTests() {
     
     // Test 11: Display Operator Conversion
     testDisplayOperator();
+    
+    // Test 12: Problem Randomness
+    testProblemRandomness();
     
     console.log('Alle Tests abgeschlossen.');
 }

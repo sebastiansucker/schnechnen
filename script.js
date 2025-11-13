@@ -290,12 +290,16 @@ function generateProblem() {
             operation = levelConfig.operations[Math.floor(Math.random() * levelConfig.operations.length)];
             
             if (operation === '+') {
-                num1 = Math.floor(Math.random() * (levelConfig.maxNumber - 1)) + 1;
-                num2 = Math.floor(Math.random() * (levelConfig.maxNumber - num1)) + 1;
+                // For addition: generate both operands independently for better randomness
+                num1 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
+                num2 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
                 result = num1 + num2;
             } else if (operation === '-') {
-                num1 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
-                num2 = Math.floor(Math.random() * num1) + 1;
+                // For subtraction: generate both operands independently
+                // Generate num2 first between 1 and maxNumber
+                num2 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
+                // Generate num1 >= num2 to avoid negative results
+                num1 = num2 + Math.floor(Math.random() * (levelConfig.maxNumber - num2)) + 1;
                 result = num1 - num2;
             } else if (operation === '*') {
                 num1 = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
