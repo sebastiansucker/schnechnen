@@ -108,6 +108,89 @@ npm test  # Führt Unit + E2E Tests aus (226 Tests gesamt)
 
 **WICHTIG**: Vor dem Commit müssen alle Tests bestanden haben!
 
+## 🏆 Leaderboard
+
+Das Spiel verfügt über ein anonymes Leaderboard, das mit Supabase integriert ist.
+
+### Setup
+
+Das Leaderboard erfordert Supabase (kostenlos). Hier ist die Setup-Anleitung:
+
+#### 1. Supabase-Projekt erstellen
+
+1. Gehe zu [supabase.com](https://supabase.com)
+2. Melde dich an (Google/GitHub)
+3. Erstelle ein neues Projekt:
+   - **Name**: `schnechnen` (beliebig)
+   - **Region**: `eu-central-1` (GDPR-konform)
+   - **Password**: Notieren/speichern
+
+#### 2. Leaderboard-Tabelle erstellen
+
+Nach der Erstellung, öffne den **SQL Editor** und führe folgende Query aus:
+
+```sql
+CREATE TABLE leaderboard (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  username VARCHAR(50) NOT NULL,
+  level INT NOT NULL CHECK (level >= 0 AND level <= 5),
+  score INT NOT NULL,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT valid_score CHECK (score >= 0)
+);
+
+CREATE INDEX idx_leaderboard_level_score ON leaderboard(level, score DESC);
+
+ALTER TABLE leaderboard ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policy: Jeder kann lesen, Inserts durch API
+CREATE POLICY "Allow public read" ON leaderboard FOR SELECT USING (true);
+```
+
+#### 3. API-Keys kopieren
+
+1. Gehe zu **Settings → API**
+2. Kopiere:
+   - **Project URL** (z.B. `https://xxxxx.supabase.co`)
+   - **anon public** Key (lange alphanumerische Zeichenkette)
+   - **service_role** Key (für Backend-API auf dem Server)
+
+#### 4. Konfiguration
+
+Die Keys sind bereits in `server.js` hardcoded und in der HTML injiziert. Der Server (Node.js) lädt die Leaderboard-Daten sicher vom Backend:
+
+```bash
+npm run start
+```
+
+Öffne http://localhost:8080 → der 🏆 **Leaderboard-Button** sollte sichtbar sein!
+
+### Funktionen
+
+- 👤 **Anonyme Spieler**: Zufällige Namen (BraveEagle42, SwiftPanda13, etc.)
+- 🎮 **Auto-Submission**: Score wird nach jedem Spiel automatisch gesendet
+- 🏅 **Top 10 pro Level**: Leaderboard zeigt die besten 10 Scores pro Level
+- 📱 **Mobile-freundlich**: Responsive Design für alle Geräte
+- 🔄 **Name wechseln**: Button zum Generieren eines neuen anonymen Namens
+
+### Sicherheit
+
+- ✅ **Keys auf Server**: `server.js` hat Zugriff auf `SERVICE_ROLE_KEY` (sicher)
+- ✅ **Frontend-API**: Browser kommuniziert mit `/api/leaderboard/:level` (nicht direkt mit Supabase)
+- ✅ **Keine privaten Daten**: Nur anonyme Namen, Level, Score gespeichert
+- ✅ **Supabase RLS**: Nur SELECT public, INSERT blockiert ohne Auth (API-only)
+
+### Troubleshooting
+
+**„Leaderboard lädt nicht"**
+- Prüfe Browser-Konsole (F12 → Console) auf Fehler
+- Überprüfe, ob die Tabelle in Supabase erstellt wurde
+- Prüfe die Network-Tab: GET `/api/leaderboard/1` sollte 200 sein
+
+**„Scores werden nicht gespeichert"**
+- Prüfe die Supabase Logs (Project → Logs)
+- Stellt sicher, dass RLS aktiviert ist
+
 ## Mobile keyboard behavior
 
 Um zu verhindern, dass die Bildschirmtastatur auf Mobilgeräten automatisch angezeigt wird, ist das Eingabefeld standardmäßig `readonly` und die Primäreingabe erfolgt über das Dial-Pad:

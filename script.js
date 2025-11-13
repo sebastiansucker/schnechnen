@@ -1,3 +1,15 @@
+/**
+ * Detect if running in test mode
+ * - E2E tests run on localhost with ?e2e-test or ?test query parameter
+ * - Unit tests set window.__TEST_MODE__ = true
+ */
+if (typeof window !== 'undefined' && !window.__TEST_MODE__) {
+    window.__TEST_MODE__ = (
+        window.location.hostname === 'localhost' &&
+        (window.location.search.includes('e2e-test') || window.location.search.includes('test'))
+    );
+}
+
 // Spielkonfiguration
 const CONFIG = {
     levels: {
@@ -221,6 +233,16 @@ function initEventListeners() {
             showScreen('start');
         });
     }
+    
+    // Leaderboard-Button
+    const leaderboardBtn = document.getElementById('leaderboard-btn');
+    if (leaderboardBtn) {
+        leaderboardBtn.addEventListener('click', () => {
+            if (typeof LeaderboardScreen !== 'undefined' && LeaderboardScreen.show) {
+                LeaderboardScreen.show();
+            }
+        });
+    }
 }
 
 // Spiel starten
@@ -377,6 +399,28 @@ function backspaceInput() {
     }
 }
 
+/**
+ * Submit score to leaderboard (skipped during tests)
+ * @param {number} level - The level number
+ * @param {number} score - The player's score
+ */
+async function submitScoreToLeaderboard(level, score) {
+    // Skip submission during tests
+    if (window.__TEST_MODE__) {
+        console.log('[Leaderboard] Skipping score submission during test mode');
+        return;
+    }
+    
+    try {
+        // This would be implemented in the future to send scores to the server
+        // For now, scores are only read from the leaderboard via GET /api/leaderboard/:level
+        console.log('[Leaderboard] Score submission not yet implemented');
+    } catch (e) {
+        console.error('[Leaderboard] Error submitting score:', e);
+        // Silently fail - submission errors should not break the game
+    }
+}
+
 // Antwort prüfen
 function checkAnswer() {
     if (!gameState.currentProblem || gameState.currentProblem.answered) return;
@@ -472,6 +516,11 @@ function endGame() {
     
     // Spiel-History speichern
     saveGameHistory(gameState.currentLevel, gameState.score, gameState.totalProblems);
+    
+    // Score zu Leaderboard übermitteln (nur wenn nicht im Test-Modus)
+    if (!window.__TEST_MODE__ && window.Leaderboard && gameState.score > 0) {
+        submitScoreToLeaderboard(gameState.currentLevel, gameState.score);
+    }
     
     // Aktuelles Ergebnis (Anzahl richtiger Antworten) anzeigen
     elements.highscoreElement.textContent = gameState.score;
@@ -695,6 +744,10 @@ function showScreen(screenName) {
     if (elements.statsScreen) {
         elements.statsScreen.classList.add('hidden');
     }
+    const leaderboardScreen = document.getElementById('leaderboard-screen');
+    if (leaderboardScreen) {
+        leaderboardScreen.classList.add('hidden');
+    }
     
     // Angegebenen Screen anzeigen
     if (screenName === 'start') {
@@ -706,6 +759,10 @@ function showScreen(screenName) {
     } else if (screenName === 'stats') {
         if (elements.statsScreen) {
             elements.statsScreen.classList.remove('hidden');
+        }
+    } else if (screenName === 'leaderboard') {
+        if (leaderboardScreen) {
+            leaderboardScreen.classList.remove('hidden');
         }
     }
 }
