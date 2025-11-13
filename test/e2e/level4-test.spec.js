@@ -7,8 +7,8 @@ test.describe('Level 4 Test: Multiplikation & Division bis 100', () => {
   });
 
   test('Level 4 ist verfügbar und funktional', async ({ page }) => {
-    // Verify Level 4 button is present
-    const level4Button = page.locator('button[data-level="4"]');
+    // Verify Level 4 button is present (scoped to start-screen to avoid stats buttons)
+    const level4Button = page.locator('#start-screen button[data-level="4"]');
     await expect(level4Button).toBeVisible();
     await expect(level4Button).toHaveText('Level 4: Multiplikation & Division bis 100');
     

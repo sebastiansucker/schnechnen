@@ -1,25 +1,28 @@
-// test/e2e/level2-test.spec.js
+// test/e2e/level1-test.spec.js
 const { test, expect } = require('@playwright/test');
 
-test.describe('Level 2 Test: Addition & Subtraktion bis 100', () => {
+test.describe('Level 1 Test: Addition & Subtraktion bis 10', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:8080');
   });
 
-  test('Level 2 ist verfügbar und funktional', async ({ page }) => {
-    // Verify Level 2 button is present (scoped to start-screen to avoid stats buttons)
-    const level2Button = page.locator('#start-screen button[data-level="2"]');
-    await expect(level2Button).toBeVisible();
-    await expect(level2Button).toHaveText('Level 2: Addition & Subtraktion bis 100');
+  test('Level 1 ist verfügbar und funktional', async ({ page }) => {
+    // Verify Level 1 button is present (scoped to start-screen to avoid stats buttons)
+    const level1Button = page.locator('#start-screen button[data-level="1"]');
+    await expect(level1Button).toBeVisible();
+    await expect(level1Button).toHaveText('Level 1: Addition & Subtraktion bis 10');
     
-    // Start Level 2
-    await page.click('button[data-level="2"]');
+    // Start Level 1
+    await page.click('button[data-level="1"]');
     
     // Verify game screen is shown
     await expect(page.locator('#game-screen')).not.toHaveClass('hidden');
     
     // Verify problem is displayed
     await expect(page.locator('#problem')).toBeVisible();
+    
+    // Verify user answer field is visible
+    await expect(page.locator('#user-answer')).toBeVisible();
     
     // Verify dial pad is visible
     await page.waitForSelector('#dial-pad');
@@ -40,9 +43,9 @@ test.describe('Level 2 Test: Addition & Subtraktion bis 100', () => {
     await expect(page.locator('#start-screen')).not.toHaveClass('hidden');
   });
 
-  test('Level 2 Probleme enthalten nur + oder -', async ({ page }) => {
-    // Start Level 2
-    await page.click('button[data-level="2"]');
+  test('Level 1 Probleme enthalten nur + oder -', async ({ page }) => {
+    // Start Level 1
+    await page.click('button[data-level="1"]');
     await page.waitForSelector('#problem');
     
     // Check 5 problems
@@ -66,9 +69,9 @@ test.describe('Level 2 Test: Addition & Subtraktion bis 100', () => {
     }
   });
 
-  test('Level 2 Operanden sind max 100', async ({ page }) => {
-    // Start Level 2
-    await page.click('button[data-level="2"]');
+  test('Level 1 Operanden sind max 10', async ({ page }) => {
+    // Start Level 1
+    await page.click('button[data-level="1"]');
     await page.waitForSelector('#problem');
     
     // Check 5 problems for max operands
@@ -86,8 +89,8 @@ test.describe('Level 2 Test: Addition & Subtraktion bis 100', () => {
       });
       
       if (operands) {
-        expect(operands.num1).toBeLessThanOrEqual(100);
-        expect(operands.num2).toBeLessThanOrEqual(100);
+        expect(operands.num1).toBeLessThanOrEqual(10);
+        expect(operands.num2).toBeLessThanOrEqual(10);
         expect(operands.result).toBeGreaterThanOrEqual(0);
       }
       
@@ -98,9 +101,9 @@ test.describe('Level 2 Test: Addition & Subtraktion bis 100', () => {
     }
   });
 
-  test('Level 2 Subtraktion ergibt kein negatives Ergebnis', async ({ page }) => {
-    // Start Level 2
-    await page.click('button[data-level="2"]');
+  test('Level 1 Subtraktion ergibt kein negatives Ergebnis', async ({ page }) => {
+    // Start Level 1
+    await page.click('button[data-level="1"]');
     await page.waitForSelector('#problem');
     
     // Check 10 problems
@@ -131,9 +134,9 @@ test.describe('Level 2 Test: Addition & Subtraktion bis 100', () => {
     }
   });
 
-  test('Level 2 mit korrekten Antworten bestanden', async ({ page }) => {
-    // Start Level 2
-    await page.click('button[data-level="2"]');
+  test('Level 1 mit korrekten Antworten bestanden', async ({ page }) => {
+    // Start Level 1
+    await page.click('button[data-level="1"]');
     await page.waitForSelector('#problem');
     
     // Solve 3 problems correctly
@@ -157,6 +160,58 @@ test.describe('Level 2 Test: Addition & Subtraktion bis 100', () => {
     }
     
     // Verify problem still displayed (game continuing)
+    await expect(page.locator('#problem')).toBeVisible();
+  });
+
+  test('Level 1 mit falscher Antwort - Score bleibt gleich', async ({ page }) => {
+    // Start Level 1
+    await page.click('button[data-level="1"]');
+    await page.waitForSelector('#problem');
+    
+    // Get score before wrong answer
+    const scoreBefore = await page.evaluate(() => {
+      return window.gameState ? window.gameState.score : 0;
+    });
+    
+    // Submit wrong answer (99)
+    await page.click('.dial-btn[data-value="9"]');
+    await page.click('.dial-btn[data-value="9"]');
+    await page.click('#submit-btn');
+    
+    await page.waitForTimeout(1000);
+    
+    // Check that:
+    // 1. Score didn't increase
+    const scoreAfter = await page.evaluate(() => {
+      return window.gameState ? window.gameState.score : 0;
+    });
+    expect(scoreAfter).toBe(scoreBefore);
+    
+    // 2. Input was reset
+    const userAnswer = await page.locator('#user-answer').textContent();
+    expect(userAnswer).toBe('?');
+    
+    // 3. Mistakes were tracked
+    const mistakesStored = await page.evaluate(() => {
+      return window.Weighting ? window.Weighting.getMistakes(1).length > 0 : false;
+    });
+    expect(mistakesStored).toBe(true);
+  });
+
+  test('Level 1 mehrere Lösungen hintereinander', async ({ page }) => {
+    // Start Level 1 (scoped to start-screen to avoid stats buttons)
+    await page.click('#start-screen button[data-level="1"]');
+    await page.waitForSelector('#problem');
+    
+    // Solve 3 problems by entering wrong answers to move to next problem
+    for (let i = 0; i < 3; i++) {
+      // Submit a wrong answer to move to next problem
+      await page.click('.dial-btn[data-value="0"]');
+      await page.click('#submit-btn');
+      await page.waitForTimeout(700);
+    }
+    
+    // Verify game is still running after 3 problems
     await expect(page.locator('#problem')).toBeVisible();
   });
 });

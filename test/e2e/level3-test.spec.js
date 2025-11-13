@@ -7,8 +7,8 @@ test.describe('Level 3 Test: Multiplikation bis 100', () => {
   });
 
   test('Level 3 ist verfügbar und funktional', async ({ page }) => {
-    // Verify Level 3 button is present
-    const level3Button = page.locator('button[data-level="3"]');
+    // Verify Level 3 button is present (scoped to start-screen to avoid stats buttons)
+    const level3Button = page.locator('#start-screen button[data-level="3"]');
     await expect(level3Button).toBeVisible();
     await expect(level3Button).toHaveText('Level 3: Multiplikation bis 100');
     
