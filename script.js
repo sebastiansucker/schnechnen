@@ -5,19 +5,22 @@ const CONFIG = {
             name: "Addition bis 10",
             operations: ['+'],
             maxNumber: 10,
-            minResult: 0
+            minResult: 0,
+            maxResult: 10
         },
         1: {
             name: "Addition & Subtraktion bis 10",
             operations: ['+', '-'],
             maxNumber: 10,
-            minResult: 0
+            minResult: 0,
+            maxResult: 10
         },
         2: {
             name: "Addition & Subtraktion bis 100",
             operations: ['+', '-'],
             maxNumber: 100,
-            minResult: 0
+            minResult: 0,
+            maxResult: 100
         },
         3: {
             name: "Multiplikation bis 100",
@@ -290,16 +293,16 @@ function generateProblem() {
             operation = levelConfig.operations[Math.floor(Math.random() * levelConfig.operations.length)];
             
             if (operation === '+') {
-                // For addition: generate both operands independently for better randomness
+                // For addition: generate independently, let do-while enforce maxResult
                 num1 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
                 num2 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
                 result = num1 + num2;
             } else if (operation === '-') {
-                // For subtraction: generate both operands independently
-                // Generate num2 first between 1 and maxNumber
-                num2 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
-                // Generate num1 >= num2 to avoid negative results
-                num1 = num2 + Math.floor(Math.random() * (levelConfig.maxNumber - num2)) + 1;
+                // For subtraction: both operands must be <= maxNumber
+                // Generate num1 first between 1 and maxNumber
+                num1 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
+                // Generate num2 between 1 and num1 (to avoid negative results and keep <= maxNumber)
+                num2 = Math.floor(Math.random() * num1) + 1;
                 result = num1 - num2;
             } else if (operation === '*') {
                 num1 = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
@@ -310,7 +313,7 @@ function generateProblem() {
                 result = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
                 num1 = num2 * result;
             }
-        } while (result < levelConfig.minResult); // Sicherstellen, dass Ergebnis mindestens minResult ist
+        } while (result < levelConfig.minResult || (levelConfig.maxResult && result > levelConfig.maxResult));
     }
     
     // Aufgabe speichern
