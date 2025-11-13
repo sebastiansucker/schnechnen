@@ -111,6 +111,14 @@ const mockConfig = {
             operations: ['*', '/'],
             maxNumber: 100,
             minResult: 0
+        },
+        5: {
+            name: "🌪️ Chaos Mode",
+            operations: ['+', '-', '*', '/'],
+            maxNumber: 100,
+            minResult: 0,
+            maxResult: 100,
+            chaosMode: true
         }
     }
 };
@@ -389,7 +397,7 @@ function testProblemBoundaries() {
         let allGood = true;
         
         // Test alle Level
-        for (let level = 0; level <= 4; level++) {
+        for (let level = 0; level <= 5; level++) {
             const violations = checkBoundaries(level, 500);
             const levelConfig = CONFIG.levels[level];
             const hasViolations = Object.values(violations).some(v => v.length > 0);
@@ -465,7 +473,8 @@ function testProblemRandomness() {
                 1: { name: "Addition & Subtraktion bis 10", operations: ['+', '-'], maxNumber: 10, minResult: 0, maxResult: 10 },
                 2: { name: "Addition & Subtraktion bis 100", operations: ['+', '-'], maxNumber: 100, minResult: 0, maxResult: 100 },
                 3: { name: "Multiplikation bis 100", operations: ['*'], maxNumber: 100, minResult: 0 },
-                4: { name: "Multiplikation & Division bis 100", operations: ['*', '/'], maxNumber: 100, minResult: 0 }
+                4: { name: "Multiplikation & Division bis 100", operations: ['*', '/'], maxNumber: 100, minResult: 0 },
+                5: { name: "🌪️ Chaos Mode", operations: ['+', '-', '*', '/'], maxNumber: 100, minResult: 0, maxResult: 100, chaosMode: true }
             }
         };
         
@@ -605,6 +614,17 @@ function testProblemRandomness() {
             console.log(`  ✓ Level 4: Gute Vielfalt (${level4Results.uniqueResults} Ergebnisse)`);
         }
         
+        // Test Level 5: 🌪️ Chaos Mode
+        const level5Results = analyzeRandomness(5, 200);
+        console.log(`\n  Level 5: ${level5Results.uniqueResults} einzigartige Ergebnisse`);
+        
+        if (level5Results.uniqueResults < 30) {
+            console.error(`  ❌ Level 5: Zu wenig eindeutige Ergebnisse (${level5Results.uniqueResults}, erwartet >= 30)`);
+            allGood = false;
+        } else {
+            console.log(`  ✓ Level 5: Gute Vielfalt (${level5Results.uniqueResults} Ergebnisse)`);
+        }
+        
         if (allGood) {
             console.log('\n✓ Problem Randomness erfolgreich (alle Level)');
             return true;
@@ -680,7 +700,7 @@ function testProblemGeneration() {
     console.log('Teste Problemgenerierung...');
     
     // Teste verschiedene Level (including Level 0)
-    for (let level = 0; level <= 4; level++) {
+    for (let level = 0; level <= 5; level++) {
         try {
             // Simuliere Problemgenerierung
             const config = mockConfig.levels[level];

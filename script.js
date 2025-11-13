@@ -33,6 +33,14 @@ const CONFIG = {
             operations: ['*', '/'],
             maxNumber: 100,
             minResult: 0
+        },
+        5: {
+            name: "🌪️ Chaos Mode",
+            operations: ['+', '-', '*', '/'],
+            maxNumber: 100,
+            minResult: 0,
+            maxResult: 100,
+            chaosMode: true
         }
     }
 };

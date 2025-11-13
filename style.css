@@ -231,6 +231,27 @@ h3 {
     -webkit-tap-highlight-color: transparent;
 }
 
+.chaos-btn {
+    background: linear-gradient(45deg, #FF006E, #9D4EDD, #5A189A, #00B4D8, #FF006E);
+    background-size: 400% 400%;
+    animation: chaos-gradient 4s ease infinite;
+    box-shadow: 0 8px 32px rgba(255, 0, 110, 0.6), 0 0 20px rgba(157, 78, 221, 0.4), inset 0 0 20px rgba(0, 180, 216, 0.2);
+    font-size: 1.3rem;
+}
+
+.chaos-btn:hover {
+    animation: chaos-gradient 2s ease infinite;
+    box-shadow: 0 12px 40px rgba(255, 0, 110, 0.8), 0 0 30px rgba(157, 78, 221, 0.6), inset 0 0 30px rgba(0, 180, 216, 0.3);
+}
+
+@keyframes chaos-gradient {
+    0% { background-position: 0% 50%; transform: rotate(0deg) scale(1); }
+    25% { background-position: 50% 0%; transform: rotate(1deg) scale(1.02); }
+    50% { background-position: 100% 50%; transform: rotate(0deg) scale(1); }
+    75% { background-position: 50% 100%; transform: rotate(-1deg) scale(1.02); }
+    100% { background-position: 0% 50%; transform: rotate(0deg) scale(1); }
+}
+
 .level-btn::before {
     content: '';
     position: absolute;
