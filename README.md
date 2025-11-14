@@ -217,6 +217,19 @@ Eine GitHub Actions-Workflow-Datei ist vorhanden unter `.github/workflows/ci.yml
 - Führt Playwright-Tests aus und lädt den `playwright-report` als Artefakt hoch.
 - Nutzt Caching für npm und Playwright-Downloads zur Beschleunigung.
 
+### Automatische Dependency Updates (Renovate Bot)
+
+Das Projekt verwendet [Renovate Bot](https://renovatebot.com/) für automatische Dependency-Updates:
+
+- **Wöchentliche Updates**: Jeden Montag vor 6 Uhr (Europe/Berlin)
+- **Automerge**: Minor/Patch-Updates für devDependencies werden automatisch gemergt
+- **Sicherheit**: Security Alerts werden automatisch gemergt
+- **Gruppierung**: Verwandte Updates (Playwright, GitHub Actions) werden zusammengefasst
+- **Lock File Maintenance**: Monatliche Aktualisierung von `package-lock.json`
+- **Rate Limiting**: Max. 5 PRs gleichzeitig, 2 pro Stunde
+
+Die Konfiguration befindet sich in `renovate.json` im Repository-Root.
+
 ## 🔒 Datenschutz & Datenspeicherung
 
 Schnechnen speichert Daten an drei Orten:
