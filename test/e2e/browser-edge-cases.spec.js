@@ -148,7 +148,7 @@ test.describe('Browser Edge Cases & Fehlerbehandlung', () => {
       
       // Chart container should be present
       const chartCanvas = page.locator('#highscore-chart');
-      const isPresent = await chartCanvas.count();
+      await chartCanvas.count();
       
       // Stats screen should remain visible (no crash)
       await expect(page.locator('#stats-screen')).not.toHaveClass(/hidden/);

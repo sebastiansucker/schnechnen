@@ -8,14 +8,15 @@ export default [
       'test-results/**',
       'coverage/**',
       'dist/**',
-      '.git/**'
+      '.git/**',
+      'eslint.config.js'
     ]
   },
   {
     files: ['**/*.js'],
     languageOptions: {
       ecmaVersion: 2020,
-      sourceType: 'module',
+      sourceType: 'commonjs',
       globals: {
         // Browser globals
         window: 'readonly',
@@ -62,28 +63,23 @@ export default [
     }
   },
   {
-    files: ['test/**/*.js'],
+    files: ['test/e2e/**/*.spec.js'],
     languageOptions: {
       sourceType: 'module',
+      ecmaVersion: 2020,
       globals: {
-        require: 'readonly',
-        module: 'readonly',
         test: 'readonly',
         describe: 'readonly',
         expect: 'readonly',
         page: 'readonly',
         devices: 'readonly',
-        Storage: 'readonly'
-      }
-    }
-  },
-  {
-    files: ['server.js'],
-    languageOptions: {
-      sourceType: 'commonjs',
-      globals: {
-        require: 'readonly',
-        module: 'readonly'
+        Storage: 'readonly',
+        window: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+        localStorage: 'readonly',
+        fetch: 'readonly',
+        console: 'readonly'
       }
     }
   }

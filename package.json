@@ -2,7 +2,6 @@
   "name": "schnechnen",
   "version": "1.0.0",
   "description": "Ein Mathe-Spiel zum Lernen, ähnlich wie das Wortspiel",
-  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "npm run test:unit && npm run test:e2e",

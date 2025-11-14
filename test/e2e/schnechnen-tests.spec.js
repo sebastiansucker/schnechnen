@@ -108,7 +108,7 @@ test.describe('Schnechnen Spiel Tests', () => {
       return window.gameState ? window.gameState.score : 0;
     });
     
-    const problemBefore = await page.locator('#problem').textContent();
+    await page.locator('#problem').textContent();
     
     // Gib absichtlich eine FALSCHE Antwort ein (z.B. "99")
     await page.click('.dial-btn[data-value="9"]');
@@ -129,7 +129,7 @@ test.describe('Schnechnen Spiel Tests', () => {
     
     // 2. Das Problem wechselt ODER gleich bleibt (adaptive learning kann es wiederholen)
     // Das ist OK - neue oder wiederholte Aufgabe
-    const problemAfter = await page.locator('#problem').textContent();
+    await page.locator('#problem').textContent();
     // Keine Assertion hier - Problem kann gleich oder anders sein
     
     // 3. Dial-Pad ist gelöscht (User-Answer zurück auf ?)

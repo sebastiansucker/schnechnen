@@ -69,12 +69,14 @@ const mockLocalStorage = {
 };
 
 // Mock document
+// eslint-disable-next-line no-unused-vars
 const mockDocument = {
     addEventListener: () => {},
     getElementById: () => mockElements
 };
 
 // Mock window
+// eslint-disable-next-line no-unused-vars
 const mockWindow = {
     localStorage: mockLocalStorage
 };
@@ -460,6 +462,7 @@ function testProblemRandomness() {
             timeRemaining: 60
         };
         
+        // eslint-disable-next-line no-unused-vars
         const mockElements = {
             problemElement: { innerHTML: '', textContent: '' },
             userAnswerElement: { textContent: '?' },
