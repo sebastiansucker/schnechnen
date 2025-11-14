@@ -1011,8 +1011,8 @@ button.btn-primary:hover {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    overflow-y: auto;
-    max-height: 90vh;
+    height: 100%;
+    overflow: hidden;
 }
 
 #leaderboard-screen h2 {
@@ -1062,6 +1062,8 @@ button.btn-primary:hover {
     box-shadow: var(--card-shadow);
     padding: 20px;
     min-height: 300px;
+    flex: 1;
+    overflow-y: auto;
 }
 
 .leaderboard-list {
@@ -1121,6 +1123,7 @@ button.btn-primary:hover {
     padding: 15px 20px;
     border-radius: var(--border-radius);
     margin: 10px 0;
+    flex-shrink: 0;
 }
 
 .leaderboard-info p {
@@ -1172,6 +1175,7 @@ button.btn-primary:hover {
     gap: 10px;
     padding: 0 10px;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 #player-reset-name-btn {
