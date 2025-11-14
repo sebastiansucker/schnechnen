@@ -171,6 +171,25 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Initialize Supabase client for direct frontend access -->
+    <script>
+        // Initialize Supabase client if config is available
+        if (typeof window !== 'undefined' && window.supabase) {
+            // Supabase config is injected by server.js for local development
+            // For GitHub Pages, use hardcoded config
+            const SUPABASE_URL = window.SUPABASE_CONFIG?.url || 'https://buncjjcbmvwindpyhnhs.supabase.co';
+            const SUPABASE_ANON_KEY = window.SUPABASE_CONFIG?.anonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1bmNqamNibXZ3aW5kcHlobmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4ODQzMjUsImV4cCI6MjA3ODQ2MDMyNX0.sla1FQMlqpnoNq2ebjLBHJpvau_N6DzBw2i511uD2YI';
+            
+            try {
+                window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('[Init] Supabase client initialized for frontend access');
+            } catch (e) {
+                console.warn('[Init] Failed to initialize Supabase client:', e.message);
+            }
+        }
+    </script>
+    
     <script src="weighting.js"></script>
     <script src="leaderboard.js"></script>
     <script src="script.js"></script>

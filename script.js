@@ -412,9 +412,54 @@ async function submitScoreToLeaderboard(level, score) {
     }
     
     try {
-        // This would be implemented in the future to send scores to the server
-        // For now, scores are only read from the leaderboard via GET /api/leaderboard/:level
-        console.log('[Leaderboard] Score submission not yet implemented');
+        // Try backend API first (for local development with Node.js server)
+        let submitted = false;
+        
+        try {
+            const response = await fetch('/api/leaderboard/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: window.Leaderboard?.getUsername() || 'Anonymous',
+                    level,
+                    score
+                })
+            });
+            
+            if (response.ok) {
+                submitted = true;
+                console.log('[Leaderboard] Score submitted via backend API');
+            }
+        } catch (e) {
+            console.warn('[Leaderboard] Backend API not available:', e.message);
+        }
+        
+        // If backend didn't work, try direct Supabase submission
+        if (!submitted && window.supabaseClient) {
+            try {
+                const { error } = await window.supabaseClient
+                    .from('leaderboard')
+                    .insert([{
+                        username: window.Leaderboard?.getUsername() || 'Anonymous',
+                        level,
+                        score,
+                        timestamp: new Date().toISOString()
+                    }]);
+                
+                if (error) {
+                    console.warn('[Leaderboard] Supabase submit error:', error);
+                } else {
+                    submitted = true;
+                    console.log('[Leaderboard] Score submitted via Supabase');
+                }
+            } catch (e) {
+                console.warn('[Leaderboard] Supabase submission failed:', e.message);
+            }
+        }
+        
+        if (!submitted) {
+            console.warn('[Leaderboard] Could not submit score - no backend available');
+        }
     } catch (e) {
         console.error('[Leaderboard] Error submitting score:', e);
         // Silently fail - submission errors should not break the game

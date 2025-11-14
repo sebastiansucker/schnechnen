@@ -73,14 +73,44 @@ const LeaderboardScreen = (() => {
         list.innerHTML = '<li class="leaderboard-loading">Lade Rekorde...</li>';
         
         try {
-            // Fetch scores from the backend API
-            const response = await fetch(`/api/leaderboard/${level}`);
-            if (!response.ok) {
-                throw new Error(`API error: ${response.status}`);
+            let scores = [];
+            
+            // Try backend API first (for local development with Node.js server)
+            try {
+                const response = await fetch(`/api/leaderboard/${level}`, { timeout: 3000 });
+                if (response.ok) {
+                    scores = await response.json();
+                }
+            } catch (e) {
+                // Backend not available, try direct Supabase
+                console.warn('[Leaderboard] Backend API not available, using direct Supabase', e.message);
             }
             
-            const scores = await response.json();
+            // If backend didn't work, try direct Supabase connection
+            if (!scores || scores.length === 0) {
+                if (window.SUPABASE_CONFIG && typeof window.supabaseClient !== 'undefined') {
+                    try {
+                        const { data, error } = await window.supabaseClient
+                            .from('leaderboard')
+                            .select('username, level, score, timestamp')
+                            .eq('level', level)
+                            .order('score', { ascending: false })
+                            .limit(10);
+                        
+                        if (error) {
+                            console.warn('[Leaderboard] Supabase error:', error);
+                            scores = [];
+                        } else {
+                            scores = data || [];
+                        }
+                    } catch (e) {
+                        console.warn('[Leaderboard] Supabase connection failed:', e.message);
+                        scores = [];
+                    }
+                }
+            }
             
+            // Render results
             if (!scores || scores.length === 0) {
                 list.innerHTML = '<li class="leaderboard-empty">📭 Noch keine Scores für dieses Level</li>';
                 return;
@@ -120,7 +150,7 @@ const LeaderboardScreen = (() => {
             });
         } catch (e) {
             console.error('Error loading leaderboard:', e);
-            list.innerHTML = '<li class="leaderboard-empty">❌ Fehler beim Laden der Rekorde</li>';
+            list.innerHTML = '<li class="leaderboard-empty">🌐 Rekord-Server nicht erreichbar. Bitte später versuchen.</li>';
         }
     }
     

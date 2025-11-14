@@ -93,8 +93,9 @@ const server = http.createServer(async (req, res) => {
         const level = parseInt(pathname.split('/')[3]);
         
         if (!supabaseServer) {
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Service not configured' }));
+            console.warn('[API] Supabase not configured - returning empty leaderboard');
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify([]));
             return;
         }
         
@@ -108,8 +109,9 @@ const server = http.createServer(async (req, res) => {
             
             if (error) {
                 console.error('[API] Leaderboard read error:', error);
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: error.message }));
+                // Return empty list instead of error - graceful fallback
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify([]));
                 return;
             }
             
@@ -117,8 +119,9 @@ const server = http.createServer(async (req, res) => {
             res.end(JSON.stringify(data || []));
         } catch (e) {
             console.error('[API] Error:', e);
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: e.message }));
+            // Return empty list instead of error - graceful fallback
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify([]));
         }
         return;
     }
@@ -126,8 +129,9 @@ const server = http.createServer(async (req, res) => {
     // GET /api/leaderboard - Get top scores for all levels
     if (pathname === '/api/leaderboard' && req.method === 'GET') {
         if (!supabaseServer) {
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Service not configured' }));
+            console.warn('[API] Supabase not configured - returning empty leaderboard');
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify([]));
             return;
         }
         
@@ -140,8 +144,9 @@ const server = http.createServer(async (req, res) => {
             
             if (error) {
                 console.error('[API] Leaderboard read error:', error);
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: error.message }));
+                // Return empty list instead of error - graceful fallback
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify([]));
                 return;
             }
             
@@ -149,6 +154,53 @@ const server = http.createServer(async (req, res) => {
             res.end(JSON.stringify(data || []));
         } catch (e) {
             console.error('[API] Error:', e);
+            // Return empty list instead of error - graceful fallback
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify([]));
+        }
+        return;
+    }
+    
+    // POST /api/leaderboard/submit - Submit a score to the leaderboard
+    if (pathname === '/api/leaderboard/submit' && req.method === 'POST') {
+        const body = await parseJsonBody(req);
+        
+        if (!supabaseServer) {
+            console.warn('[API] Supabase not configured - cannot submit score');
+            res.writeHead(503, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Service not configured' }));
+            return;
+        }
+        
+        try {
+            const { username, level, score } = body;
+            
+            if (!username || level === undefined || score === undefined) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Missing required fields: username, level, score' }));
+                return;
+            }
+            
+            const { data, error } = await supabaseServer
+                .from('leaderboard')
+                .insert([{
+                    username,
+                    level,
+                    score,
+                    timestamp: new Date().toISOString()
+                }]);
+            
+            if (error) {
+                console.error('[API] Leaderboard submit error:', error);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: error.message }));
+                return;
+            }
+            
+            res.writeHead(201, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, data }));
+        } catch (e) {
+            console.error('[API] Submit error:', e);
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: e.message }));
         }
