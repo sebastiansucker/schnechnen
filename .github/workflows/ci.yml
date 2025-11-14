@@ -23,15 +23,6 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
-      - name: Create Supabase config from secrets
-        run: |
-          cat > supabase-config.js << 'EOF'
-          const SUPABASE_CONFIG = {
-            url: "${{ secrets.SUPABASE_URL }}",
-            anonKey: "${{ secrets.SUPABASE_ANON_KEY }}"
-          };
-          EOF
-
       - name: Run unit tests
         run: npm run test:unit
 
