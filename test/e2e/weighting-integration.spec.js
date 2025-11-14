@@ -9,6 +9,8 @@ test.describe('Fehlertracking und Adaptive Learning Tests', () => {
     await page.evaluate(() => {
       localStorage.removeItem('schnechnen-mistakes');
       localStorage.removeItem('schnechnen-highscores');
+      // Enable test mode to prevent scores from being submitted to leaderboard
+      window.__TEST_MODE__ = true;
     });
   });
 

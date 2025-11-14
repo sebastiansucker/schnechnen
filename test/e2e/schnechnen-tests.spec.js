@@ -4,6 +4,10 @@ const { test, expect } = require('@playwright/test');
 test.describe('Schnechnen Spiel Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:8080');
+    // Enable test mode to prevent scores from being submitted to leaderboard
+    await page.evaluate(() => {
+      window.__TEST_MODE__ = true;
+    });
   });
 
   test('Startbildschirm wird korrekt angezeigt', async ({ page }) => {

@@ -9,6 +9,8 @@ test.describe('Statistik-Seite Tests', () => {
     await page.evaluate(() => {
       localStorage.removeItem('schnechnen-history');
       localStorage.removeItem('schnechnen-highscores');
+      // Enable test mode to prevent scores from being submitted to leaderboard
+      window.__TEST_MODE__ = true;
     });
   });
 
