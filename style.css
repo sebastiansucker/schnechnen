@@ -1313,6 +1313,26 @@ button.btn-primary:hover {
     flex: 1;
 }
 
+.leaderboard-player-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.leaderboard-player-info .leaderboard-player-name {
+    flex: none;
+    gap: 0;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.leaderboard-player-info .leaderboard-date {
+    font-size: 0.8rem;
+    color: #999;
+    font-weight: normal;
+}
+
 .leaderboard-player-score {
     display: flex;
     align-items: center;

@@ -158,9 +158,9 @@ const LeaderboardScreen = (() => {
                 
                 li.innerHTML = `
                     <div class="leaderboard-rank ${rankClass}">${rank}</div>
-                    <div class="leaderboard-player-name">
-                        <span>${escapeHtml(entry.username)}</span>
-                        ${timeStr ? `<span class="leaderboard-date" style="font-size: 0.8rem; color: #999;">${timeStr}</span>` : ''}
+                    <div class="leaderboard-player-info">
+                        <div class="leaderboard-player-name">${escapeHtml(entry.username)}</div>
+                        ${timeStr ? `<div class="leaderboard-date">${timeStr}</div>` : ''}
                     </div>
                     <div class="leaderboard-player-score">
                         <span class="leaderboard-score">${entry.score}</span>
