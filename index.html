@@ -42,6 +42,7 @@
                 </div>
             </div>
             <button id="stats-btn" class="btn-secondary" aria-label="Statistiken anzeigen" title="Statistiken">📊 Statistiken</button>
+            <button id="leaderboard-btn" class="btn-secondary" aria-label="Rekorde anzeigen" title="Rekorde">🏆 Rekorde</button>
         </div>
 
         <div id="game-screen" class="screen hidden">
@@ -138,10 +139,41 @@
                 <button id="stats-back-btn" class="btn-primary" aria-label="Zur Statistikübersicht zurück">Zurück</button>
             </div>
         </div>
+
+        <div id="leaderboard-screen" class="screen hidden">
+            <h2>🏆 Rekorde</h2>
+            
+            <div class="leaderboard-level-selector" role="tablist" aria-label="Rekorde Level Wechsel">
+                <button class="leaderboard-level-btn active" data-level="0" role="tab" aria-selected="true" aria-controls="leaderboard-panel-0">Level 0</button>
+                <button class="leaderboard-level-btn" data-level="1" role="tab" aria-selected="false" aria-controls="leaderboard-panel-1">Level 1</button>
+                <button class="leaderboard-level-btn" data-level="2" role="tab" aria-selected="false" aria-controls="leaderboard-panel-2">Level 2</button>
+                <button class="leaderboard-level-btn" data-level="3" role="tab" aria-selected="false" aria-controls="leaderboard-panel-3">Level 3</button>
+                <button class="leaderboard-level-btn" data-level="4" role="tab" aria-selected="false" aria-controls="leaderboard-panel-4">Level 4</button>
+                <button class="leaderboard-level-btn" data-level="5" role="tab" aria-selected="false" aria-controls="leaderboard-panel-5">🌪️ Chaos</button>
+            </div>
+            
+            <div class="leaderboard-container" role="region" aria-label="Top 10 Scores">
+                <ol id="leaderboard-list" class="leaderboard-list" aria-label="Leaderboard Liste">
+                    <li class="leaderboard-loading">Lade Leaderboard...</li>
+                </ol>
+            </div>
+            
+            <div class="leaderboard-info" aria-live="polite">
+                <p>📝 Dein Name: <strong id="player-username">-</strong></p>
+                <button id="player-reset-name-btn" class="btn-secondary" aria-label="Neuen anonymen Namen generieren">🔄 Neuer Name</button>
+            </div>
+            
+            <div class="leaderboard-buttons">
+                <button id="leaderboard-back-btn" class="btn-primary" aria-label="Zurück zum Start">Zurück</button>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="weighting.js"></script>
+    <script src="leaderboard.js"></script>
     <script src="script.js"></script>
+    <script src="leaderboard-screen.js"></script>
 </body>
 </html>
