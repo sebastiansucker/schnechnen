@@ -1,51 +1,13 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Leaderboard Screen Tests', () => {
-  // Setup: Insert test records for each level (once per test suite run)
+  // Setup: Test data already exists in Supabase
+  // (Data is inserted once during first deployment, not on every test run)
+  // This prevents database pollution with duplicate test records
   test.beforeAll(async () => {
-    // Use hardcoded credentials from server.js (same as backend)
-    const supabaseUrl = 'https://buncjjcbmvwindpyhnhs.supabase.co';
-    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1bmNqamNibXZ3aW5kcHlobmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4ODQzMjUsImV4cCI6MjA3ODQ2MDMyNX0.sla1FQMlqpnoNq2ebjLBHJpvau_N6DzBw2i511uD2YI';
-    
-    console.log('[Test Setup] Inserting test leaderboard records for all levels...');
-    
-    // Insert one test record for each level (0-5)
-    for (let level = 0; level <= 5; level++) {
-      const testRecord = {
-        username: `Test-Level-${level}`,
-        level: level,
-        score: 1,
-        timestamp: new Date().toISOString()
-      };
-      
-      try {
-        const response = await fetch(`${supabaseUrl}/rest/v1/leaderboard?apikey=${supabaseAnonKey}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabaseAnonKey}`,
-            'apikey': supabaseAnonKey,
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify(testRecord)
-        });
-        
-        console.log(`[Test Setup] Level ${level} response status:`, response.status);
-        
-        if (response.ok) {
-          console.log(`[Test Setup] ✓ Inserted test record for Level ${level}`);
-        } else {
-          const error = await response.text();
-          console.warn(`[Test Setup] ✗ Failed to insert test record for Level ${level} (${response.status}):`, error.substring(0, 200));
-        }
-      } catch (e) {
-        console.warn(`[Test Setup] Error inserting test record for Level ${level}:`, e.message);
-      }
-    }
-    
-    // Wait a bit for records to be committed
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    console.log('[Test Setup] Setup complete, starting tests...');
+    console.log('[Test Setup] Leaderboard tests will use existing Supabase data');
+    // Existing test records with "Test-Level-*" usernames and score=1 will be used
+    // No new records are inserted to avoid database pollution
   });
 
   test.beforeEach(async ({ page }) => {
