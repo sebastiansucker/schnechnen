@@ -175,7 +175,13 @@
     <!-- Initialize Supabase client for direct frontend access -->
     <script>
         // Initialize Supabase client if config is available
-        if (typeof window !== 'undefined' && window.supabase) {
+        function initSupabaseClient() {
+            if (typeof window === 'undefined' || !window.supabase) {
+                // Try again in 100ms if supabase is not yet loaded
+                setTimeout(initSupabaseClient, 100);
+                return;
+            }
+            
             // Supabase config is injected by server.js for local development
             // For GitHub Pages, use hardcoded config
             const SUPABASE_URL = window.SUPABASE_CONFIG?.url || 'https://buncjjcbmvwindpyhnhs.supabase.co';
@@ -188,6 +194,9 @@
                 console.warn('[Init] Failed to initialize Supabase client:', e.message);
             }
         }
+        
+        // Start initialization immediately
+        initSupabaseClient();
     </script>
     
     <script src="weighting.js"></script>
