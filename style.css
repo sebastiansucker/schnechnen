@@ -110,6 +110,14 @@ body {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
     overflow-y: auto;
     overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+@supports (height: 100dvh) {
+    .container {
+        max-height: 100dvh;
+    }
 }
 
 .header {
@@ -796,6 +804,162 @@ button.btn-primary:hover {
         height: 64px;
         font-size: 1.4rem;
         margin: 0 2px;
+    }
+}
+
+@media (max-height: 600px) {
+    .screen {
+        padding: 15px 12px;
+    }
+    
+    .header {
+        margin: 0.5rem 0;
+    }
+    
+    .logo {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .logo-content {
+        font-size: 1.8rem;
+    }
+    
+    h1 {
+        font-size: 1.3rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    h2 {
+        font-size: 1rem;
+        margin-bottom: 10px;
+    }
+    
+    .problem {
+        font-size: 1.6rem;
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+    
+    .user-answer {
+        font-size: 1.6rem;
+    }
+    
+    .dial-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 1.3rem;
+        margin: 0 2px;
+    }
+    
+    .dial-row {
+        margin-bottom: 5px;
+    }
+    
+    .dial-row-bottom {
+        grid-template-columns: 60px 60px 60px;
+        gap: 6px;
+    }
+    
+    .game-header {
+        padding: 10px 12px;
+        margin-bottom: 10px;
+    }
+    
+    .timer {
+        font-size: 1rem;
+    }
+    
+    .level-btn {
+        padding: 12px;
+        font-size: 0.9rem;
+    }
+    
+    .level-buttons {
+        gap: 0.6rem;
+    }
+    
+    .result-stats, .highscore {
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    
+    #restart-btn {
+        padding: 12px 20px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-height: 500px) {
+    .screen {
+        padding: 12px 10px;
+    }
+    
+    .header {
+        margin: 0.3rem 0;
+    }
+    
+    .logo {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .logo-content {
+        font-size: 1.5rem;
+    }
+    
+    h1 {
+        font-size: 1.1rem;
+        margin-bottom: 0.3rem;
+    }
+    
+    h2 {
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+    }
+    
+    .problem {
+        font-size: 1.4rem;
+        padding: 10px;
+        margin-bottom: 8px;
+    }
+    
+    .user-answer {
+        font-size: 1.4rem;
+    }
+    
+    .dial-btn {
+        width: 52px;
+        height: 52px;
+        font-size: 1.2rem;
+        margin: 0 1px;
+    }
+    
+    .dial-row {
+        margin-bottom: 4px;
+    }
+    
+    .dial-row-bottom {
+        grid-template-columns: 52px 52px 52px;
+        gap: 4px;
+    }
+    
+    .game-header {
+        padding: 8px 10px;
+        margin-bottom: 8px;
+    }
+    
+    .timer {
+        font-size: 0.9rem;
+    }
+    
+    .level-btn {
+        padding: 10px;
+        font-size: 0.8rem;
+    }
+    
+    .level-buttons {
+        gap: 0.5rem;
     }
 }
 
