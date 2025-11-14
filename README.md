@@ -13,7 +13,8 @@ Ein kleines, responsives Mathe-Lernspiel (JavaScript) mit modernem Design.
 - 🧠 **Adaptives Lernen**: Häufige Fehler werden automatisch wiederholt (30% Chance)
 - ❌ **Fehleranalyse**: Anzeige häufig falsch gelöster Aufgaben
 - 📈 **Statistik-Seite**: Verlaufsdiagramm der letzten 50 Spiele mit Chart.js
-- ✅ **Umfassend getestet**: 11 Unit Tests + 215 E2E Tests (Playwright, 5 Browser-Engines)
+- 🏆 **Anonymes Leaderboard**: Mit Supabase integriert, Top 10 pro Level
+- ✅ **Umfassend getestet**: 11 Unit Tests + 480 E2E Tests (Playwright, 5 Browser-Engines)
 
 ## Projektstruktur
 
@@ -23,6 +24,9 @@ schnechnen/
 ├── style.css           # CSS-Styling
 ├── script.js           # Spiellogik
 ├── weighting.js        # Fehlertracking
+├── leaderboard.js      # Anonyme Benutzernamen-Verwaltung
+├── leaderboard-screen.js # Leaderboard-UI und Datenladung
+├── server.js           # Backend-API für Leaderboard
 ├── README.md           # Diese Datei
 ├── package.json        # Projekt-Abhängigkeiten
 ├── playwright.config.js # Playwright-Konfiguration
@@ -76,6 +80,7 @@ npm run test:unit
 - Score-Berechnung
 - Fehlertracking (Weighting)
 - Adaptive Learning mit wrongCount-Prioritisierung
+- Leaderboard-Integration
 
 ### End-to-end tests (Playwright)
 
@@ -86,11 +91,12 @@ npm run test:e2e         # Headless run
 npm run test:e2e:ui      # Interaktive UI
 ```
 
-**215 E2E Tests** über 5 Browser-Engines (Chromium, Firefox, WebKit, Mobile Chrome, Mobile Safari):
+**480 E2E Tests** über 5 Browser-Engines (Chromium, Firefox, WebKit, Mobile Chrome, Mobile Safari):
 - **Level 0 Tests** (10 Tests): Kompletter Spielablauf, Timer, Backspace, Multi-Digit-Eingabe, Persistierung
 - **Allgemeine Tests**: Navigation, Level-Wechsel, Highscores
 - **Statistik-Tests**: Verlauf, Charts, Level-Filter, Reset
 - **Adaptive Learning Tests**: Fehlertracking, wrongCount-Inkrementierung
+- **Leaderboard Tests** (65 Tests): Score-Submission, Top-10-Anzeige, Name-Generierung, Level-Filter
 
 Um den HTML-Report lokal zu öffnen (nach einem Testlauf):
 
@@ -103,7 +109,7 @@ npx playwright show-report
 ### Alle Tests
 
 ```bash
-npm test  # Führt Unit + E2E Tests aus (226 Tests gesamt)
+npm test  # Führt Unit + E2E Tests aus (491 Tests gesamt)
 ```
 
 **WICHTIG**: Vor dem Commit müssen alle Tests bestanden haben!
@@ -211,6 +217,70 @@ Eine GitHub Actions-Workflow-Datei ist vorhanden unter `.github/workflows/ci.yml
 - Führt Playwright-Tests aus und lädt den `playwright-report` als Artefakt hoch.
 - Nutzt Caching für npm und Playwright-Downloads zur Beschleunigung.
 
+## 🔒 Datenschutz & Datenspeicherung
+
+Schnechnen speichert Daten an drei Orten:
+
+### 🌐 Browser (localStorage)
+
+Lokal auf dem Gerät des Spielers — **nur lesbar vom Browser, nicht vom Server**:
+
+| Daten | Schlüssel | Inhalt | Lebensdauer |
+|-------|-----------|--------|------------|
+| **Highscores** | `schnechnen-highscores` | JSON `{ "0": 12, "1": 8, ... }` (Level → Max-Score) | Unbegrenzt |
+| **Fehlertracking** | `schnechnen-mistakes` | JSON mit häufig falsch gelösten Aufgaben für adaptives Lernen | Unbegrenzt |
+| **Tastatur-Modus** | `schnechnen-keyboard-mode` | Boolean (true = native Tastatur, false = Dial-Pad) | Unbegrenzt |
+| **Leaderboard-Name** | `schnechnen-username` | String (z.B. "BraveEagle42") | Unbegrenzt |
+
+**Sicherheit**: Diese Daten sind:
+- ✅ Nur auf dem lokalen Gerät
+- ✅ Nicht auf Servern gespeichert
+- ✅ Können jederzeit gelöscht werden (Browser → Einstellungen → Cookies/Cache löschen)
+- ⚠️ Werden verloren, wenn Browser-Daten gelöscht werden
+
+### 📊 Supabase (optional, nur für Leaderboard)
+
+Wenn der Leaderboard-Button genutzt wird, werden folgende Daten **an Supabase gesendet**:
+
+| Daten | Beispiel | Speicherort |
+|-------|----------|------------|
+| **Benutzername** | "SwiftPanda13" | Supabase Cloud DB |
+| **Level** | 2 | Supabase Cloud DB |
+| **Score** | 15 | Supabase Cloud DB |
+| **Zeitstempel** | 2024-11-14 10:30:00 | Supabase Cloud DB |
+
+**Sicherheit**:
+- ✅ **Anonym**: Kein Name, keine Email, keine Identifikation
+- ✅ **Nur Zufallsnamen**: Generiert lokal, nicht vom Server
+- ✅ **Nur für Highscores**: Nur der beste Score wird gesendet (nicht jedes Spiel)
+- ✅ **Keine Aktivitätsverfolgung**: IP-Adressen werden nicht geloggt
+- ✅ **GDPR-konform**: EU-Region (eu-central-1), nur öffentliche Leaderboard-Daten
+
+### 🔐 Server (Node.js, nur backend)
+
+Der Server (`server.js`) läuft nur lokal und speichert **keine Daten**. Er:
+- ✅ Lädt Leaderboard-Daten von Supabase (GET-Request)
+- ✅ Speichert keine Logs oder Benutzerinformationen
+
+### 📋 Zusammenfassung
+
+```
+Lokal (Browser)          → localStorage
+                         ├─ Highscores ✅
+                         ├─ Fehlertracking ✅
+                         └─ Einstellungen ✅
+
+Optional (Leaderboard)   → Supabase Cloud
+                         ├─ Zufallsname 🔒
+                         ├─ Level 🔒
+                         └─ Score 🔒
+
+Server (Node.js)         → Keine Speicherung
+                         └─ Nur Daten-Relay ⚡
+```
+
+Keine persönlichen Daten werden verarbeitet. Die App ist datenschutzfreundlich! 🛡️
+
 ## Developer notes & suggestions
 
 - **Dial-Pad Layout**: Backspace (links) → 0 (zentriert) → OK (rechts). Buttons verwenden `data-value` Attribute — Tests interagieren mit `.dial-btn[data-value]`.
@@ -230,6 +300,8 @@ Eine GitHub Actions-Workflow-Datei ist vorhanden unter `.github/workflows/ci.yml
 - [x] ARIA-Labels für bessere Accessibility
 - [x] Zoom verhindern auf Mobilgeräten
 - [x] npm test:e2e sollte den server starten
+- [x] Anonymes Leaderboard mit Supabase
+- [x] Leaderboard-Tests und Test-Mode-Protection
 - [ ] Weitere Level mit gemischten Operationen
 - [ ] Dark Mode Support
 - [ ] Internationalisierung (i18n) für mehrere Sprachen
