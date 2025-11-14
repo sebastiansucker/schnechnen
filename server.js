@@ -72,7 +72,6 @@ function parseJsonBody(req) {
 // Create custom HTTP server
 const server = http.createServer(async (req, res) => {
     const pathname = url.parse(req.url).pathname;
-    const query = url.parse(req.url, true).query;
     
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');

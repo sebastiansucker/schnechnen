@@ -1,5 +1,5 @@
 // test/e2e/responsive-tests.spec.js
-const { test, expect, devices } = require('@playwright/test');
+const { test, expect } = require('@playwright/test');
 
 test.describe('Responsive & Mobile Verhalten', () => {
   test.beforeEach(async ({ page }) => {

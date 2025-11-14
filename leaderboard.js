@@ -3,7 +3,6 @@
 
 const Leaderboard = (() => {
     const STORAGE_KEY = 'schnechnen-username';
-    const USERNAME_LENGTH = 50;
     
     // Adjectives for random name generation (German, cute, nominative singular)
     const adjectives = [

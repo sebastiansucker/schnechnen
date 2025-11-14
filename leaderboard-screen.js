@@ -3,7 +3,6 @@
 
 const LeaderboardScreen = (() => {
     let currentLevel = 0;
-    const LEADERBOARD_LIMIT = 10;
     
     /**
      * Initialize leaderboard screen event listeners

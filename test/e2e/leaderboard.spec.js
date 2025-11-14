@@ -117,7 +117,7 @@ test.describe('Leaderboard Screen Tests', () => {
     await page.click('#leaderboard-btn');
     
     // Loading text should appear briefly
-    const loadingText = page.locator('.leaderboard-loading');
+    page.locator('.leaderboard-loading');
     // Wait for it to load data or show empty state
     await page.waitForTimeout(2000);
   });
@@ -127,7 +127,7 @@ test.describe('Leaderboard Screen Tests', () => {
     await page.waitForSelector('#leaderboard-screen:not(.hidden)');
     
     const usernameEl = page.locator('#player-username');
-    const oldName = await usernameEl.textContent();
+    await usernameEl.textContent();
     
     // Click reset button
     await page.click('#player-reset-name-btn');
@@ -213,11 +213,10 @@ test.describe('Leaderboard Screen Tests', () => {
     
     const level1Entries = page.locator('.leaderboard-entry');
     const level1Count = await level1Entries.count();
-    let level1Username = null;
     
     if (level1Count > 0) {
       const level1FirstEntry = level1Entries.first();
-      level1Username = await level1FirstEntry.locator('.leaderboard-username').textContent();
+      await level1FirstEntry.locator('.leaderboard-username').textContent();
     }
     
     // Load Level 2

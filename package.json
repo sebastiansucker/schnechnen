@@ -11,6 +11,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
+    "lint": "npx eslint .",
+    "lint:fix": "npx eslint . --fix",
     "start": "node server.js",
     "start:simple": "http-server . -p 8080"
   },
@@ -24,8 +26,10 @@
   "author": "Schnechnen Team",
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
     "@playwright/test": "^1.56.1",
     "concurrently": "^8.2.2",
+    "eslint": "^9.39.1",
     "http-server": "^14.1.1",
     "nyc": "^15.1.0"
   },
