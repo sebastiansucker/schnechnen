@@ -132,6 +132,41 @@ test.describe('Responsive & Mobile Verhalten', () => {
       const timer = page.locator('.timer');
       await expect(timer).toBeVisible();
     });
+
+    test('Medium-Height Screen 375x700 (landscape mobile)', async ({ page }) => {
+      // Set medium-height viewport (landscape phones)
+      await page.setViewportSize({ width: 375, height: 700 });
+      
+      // Start screen should be visible
+      const h1 = page.locator('h1');
+      await expect(h1).toHaveText('Schnechnen');
+      
+      // Level buttons should be accessible
+      const levelButtons = page.locator('.level-btn');
+      await expect(levelButtons).toHaveCount(6);
+      
+      // Start a game
+      await page.click('button[data-level="1"]');
+      await page.waitForSelector('#dial-pad');
+      
+      // Problem should be visible without scrolling
+      const problem = page.locator('#problem');
+      await expect(problem).toBeVisible();
+      
+      // Dial pad should be visible without scrolling
+      const dialPad = page.locator('#dial-pad');
+      const isPadVisible = await dialPad.isVisible();
+      
+      if (!isPadVisible) {
+        await dialPad.scrollIntoViewIfNeeded();
+      }
+      
+      await expect(dialPad).toBeVisible();
+      
+      // Verify we can input
+      await page.click('.dial-btn[data-value="5"]');
+      await expect(page.locator('#user-answer')).toHaveText('5');
+    });
   });
 
   test.describe('Viewport Größenänderung während Spiel', () => {
