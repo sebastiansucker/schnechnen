@@ -92,6 +92,46 @@ test.describe('Responsive & Mobile Verhalten', () => {
       await page.click('.dial-btn[data-value="7"]');
       await expect(page.locator('#user-answer')).toHaveText('7');
     });
+
+    test('Mobile Viewport 375x667 (iPhone Mini)', async ({ page }) => {
+      // Set mobile viewport (iPhone Mini size - smallest iPhone)
+      await page.setViewportSize({ width: 375, height: 667 });
+      
+      // Start screen should be visible
+      const h1 = page.locator('h1');
+      await expect(h1).toHaveText('Schnechnen');
+      
+      // Level buttons should be accessible (may be stacked)
+      const levelButtons = page.locator('.level-btn');
+      await expect(levelButtons).toHaveCount(6);
+      
+      // Start a game
+      await page.click('button[data-level="1"]');
+      await page.waitForSelector('#dial-pad');
+      
+      // Problem should be visible
+      const problem = page.locator('#problem');
+      await expect(problem).toBeVisible();
+      
+      // Dial pad should be visible (may need scrolling on small screens)
+      const dialPad = page.locator('#dial-pad');
+      const isPadVisible = await dialPad.isVisible();
+      
+      if (!isPadVisible) {
+        // Try scrolling to dial pad
+        await dialPad.scrollIntoViewIfNeeded();
+      }
+      
+      await expect(dialPad).toBeVisible();
+      
+      // Should still be able to input
+      await page.click('.dial-btn[data-value="7"]');
+      await expect(page.locator('#user-answer')).toHaveText('7');
+      
+      // Verify timer is visible (important on small screens)
+      const timer = page.locator('.timer');
+      await expect(timer).toBeVisible();
+    });
   });
 
   test.describe('Viewport Größenänderung während Spiel', () => {
