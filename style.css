@@ -1230,10 +1230,11 @@ button.btn-primary:hover {
     background: white;
     border-radius: var(--border-radius);
     box-shadow: var(--card-shadow);
-    padding: 20px;
+    padding: 20px 10px;
     min-height: 300px;
     flex: 1;
     overflow-y: auto;
+    width: 100%;
 }
 
 .leaderboard-list {
