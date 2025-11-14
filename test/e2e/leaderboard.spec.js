@@ -1,13 +1,48 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Leaderboard Screen Tests', () => {
-  // Setup: Test data already exists in Supabase
-  // (Data is inserted once during first deployment, not on every test run)
-  // This prevents database pollution with duplicate test records
+  // Setup: Insert one test record per level (0-5) before tests run
+  // This ensures each test has at least one record to verify in the leaderboard
   test.beforeAll(async () => {
-    console.log('[Test Setup] Leaderboard tests will use existing Supabase data');
-    // Existing test records with "Test-Level-*" usernames and score=1 will be used
-    // No new records are inserted to avoid database pollution
+    const supabaseUrl = 'https://buncjjcbmvwindpyhnhs.supabase.co';
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1bmNqamNibXZ3aW5kcHlobmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4ODQzMjUsImV4cCI6MjA3ODQ2MDMyNX0.sla1FQMlqpnoNq2ebjLBHJpvau_N6DzBw2i511uD2YI';
+    
+    console.log('[Test Setup] Creating test leaderboard records for all levels...');
+    
+    // Create one test record for each level (0-5) with a unique timestamp
+    const timestamp = new Date().toISOString();
+    
+    for (let level = 0; level <= 5; level++) {
+      const testRecord = {
+        username: `Test-Level-${level}`,
+        level: level,
+        score: 1,
+        timestamp: timestamp
+      };
+      
+      try {
+        const response = await fetch(`${supabaseUrl}/rest/v1/leaderboard?apikey=${supabaseAnonKey}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'apikey': supabaseAnonKey,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(testRecord)
+        });
+        
+        if (response.ok) {
+          console.log(`[Test Setup] ✓ Created test record for Level ${level}`);
+        } else {
+          console.warn(`[Test Setup] ⚠ Failed to create test record for Level ${level} (${response.status})`);
+        }
+      } catch (e) {
+        console.warn(`[Test Setup] ⚠ Error creating test record for Level ${level}:`, e.message);
+      }
+    }
+    
+    console.log('[Test Setup] Setup complete');
   });
 
   test.beforeEach(async ({ page }) => {
