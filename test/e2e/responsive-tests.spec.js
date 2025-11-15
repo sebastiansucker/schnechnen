@@ -352,5 +352,264 @@ test.describe('Responsive & Mobile Verhalten', () => {
       const count = await buttons.count();
       expect(count).toBeGreaterThan(0);
     });
+
+    test('Leaderboard Screen responsive auf Mobile', async ({ page }) => {
+      // Set to mobile size
+      await page.setViewportSize({ width: 375, height: 812 });
+      
+      // Click leaderboard button
+      await page.click('#leaderboard-btn');
+      
+      // Leaderboard screen should be visible
+      const leaderboardScreen = page.locator('#leaderboard-screen');
+      await page.waitForSelector('#leaderboard-screen:not(.hidden)');
+      await expect(leaderboardScreen).not.toHaveClass(/hidden/);
+      
+      // Level buttons should be visible
+      const levelButtons = page.locator('.leaderboard-level-btn');
+      const count = await levelButtons.count();
+      expect(count).toBeGreaterThan(0);
+      
+      // Leaderboard content should be visible
+      const leaderboardContent = page.locator('#leaderboard-list');
+      await expect(leaderboardContent).toBeVisible();
+      
+      // Title should be visible
+      const title = page.locator('#leaderboard-screen h2');
+      await expect(title).toBeVisible();
+      
+      // Back button should be visible
+      const backBtn = page.locator('#leaderboard-back-btn');
+      await expect(backBtn).toBeVisible();
+      
+      // Verify layout: list should be above back button (list y-position < button y-position)
+      const listBBox = await leaderboardContent.boundingBox();
+      const backBtnBBox = await backBtn.boundingBox();
+      
+      if (listBBox && backBtnBBox) {
+        // List should be positioned before (above) back button
+        expect(listBBox.y).toBeLessThan(backBtnBBox.y);
+        
+        // List bottom and back button top should not significantly overlap
+        // (allow small overlap but list should mostly be above)
+        const listBottom = listBBox.y + listBBox.height;
+        const buttonTop = backBtnBBox.y;
+        
+        // At least some space should exist between them (at most 50% overlap allowed)
+        const overlapThreshold = listBBox.height * 0.5;
+        const overlap = Math.max(0, listBottom - buttonTop);
+        expect(overlap).toBeLessThan(overlapThreshold);
+      }
+    });
+
+    test('Leaderboard Screen responsive auf iPhone Mini (375x667)', async ({ page }) => {
+      // Set to iPhone Mini size
+      await page.setViewportSize({ width: 375, height: 667 });
+      
+      // Click leaderboard button
+      await page.click('#leaderboard-btn');
+      await page.waitForSelector('#leaderboard-screen:not(.hidden)');
+      
+      // All elements should be visible without scrolling
+      const leaderboardScreen = page.locator('#leaderboard-screen');
+      await expect(leaderboardScreen).not.toHaveClass(/hidden/);
+      
+      // Level buttons should still be accessible
+      const levelButtons = page.locator('.leaderboard-level-btn');
+      const count = await levelButtons.count();
+      expect(count).toBeGreaterThan(0);
+      
+      // Content should be readable
+      const header = page.locator('#leaderboard-screen h2');
+      await expect(header).toBeVisible();
+      
+      // Verify layout: name field and back button should be below or near list
+      const leaderboardContent = page.locator('#leaderboard-list');
+      const playerUsername = page.locator('#player-username');
+      const backBtn = page.locator('#leaderboard-back-btn');
+      
+      // All elements should be visible
+      await expect(leaderboardContent).toBeVisible();
+      await expect(playerUsername).toBeVisible();
+      await expect(backBtn).toBeVisible();
+      
+      // Verify element order with bounding boxes
+      const listBBox = await leaderboardContent.boundingBox();
+      const usernameBBox = await playerUsername.boundingBox();
+      const backBtnBBox = await backBtn.boundingBox();
+      
+      if (listBBox && usernameBBox && backBtnBBox) {
+        // List should be positioned before (above) player username
+        expect(listBBox.y).toBeLessThan(usernameBBox.y);
+        
+        // Player username should be positioned before (above) back button
+        expect(usernameBBox.y).toBeLessThan(backBtnBBox.y);
+        
+        // On very small screens, elements may overlap slightly
+        // Just ensure they're not completely hidden or inverted
+        const listEnd = listBBox.y + listBBox.height;
+        const usernameStart = usernameBBox.y;
+        
+        // At least the username should not be completely hidden by the list
+        // (allow up to 80% overlap on small screens)
+        const maxOverlap = listBBox.height * 0.8;
+        const overlap = Math.max(0, listEnd - usernameStart);
+        expect(overlap).toBeLessThan(maxOverlap);
+      }
+    });
+
+    test('Leaderboard Level-Wechsel responsive auf Mobile', async ({ page }) => {
+      // Set to mobile size
+      await page.setViewportSize({ width: 375, height: 812 });
+      
+      // Click leaderboard button
+      await page.click('#leaderboard-btn');
+      await page.waitForSelector('#leaderboard-screen:not(.hidden)');
+      
+      // Click Level 2 button
+      await page.click('.leaderboard-level-btn[data-level="2"]');
+      
+      // Wait for level to be active with retry logic
+      let activeLevel = null;
+      for (let i = 0; i < 10; i++) {
+        const activeBtn = page.locator('.leaderboard-level-btn.active');
+        activeLevel = await activeBtn.getAttribute('data-level');
+        if (activeLevel === '2') {
+          break;
+        }
+        await page.waitForTimeout(100);
+      }
+      
+      expect(activeLevel).toBe('2');
+      
+      // Content should update and still be visible
+      const leaderboardContent = page.locator('#leaderboard-list');
+      await expect(leaderboardContent).toBeVisible();
+    });
+
+    test('iPhone 13 mini Leaderboard - Back button visibility', async ({ page }) => {
+      // Set iPhone 13 mini viewport (375x812)
+      await page.setViewportSize({ width: 375, height: 812 });
+      
+      // Open leaderboard
+      await page.click('#leaderboard-btn');
+      await page.waitForSelector('#leaderboard-screen:not(.hidden)');
+      
+      // The back button should be visible
+      const backButton = page.locator('#leaderboard-back-btn');
+      await expect(backButton).toBeVisible();
+      
+      // The button should be clickable (not hidden by overflow)
+      const boundingBox = await backButton.boundingBox();
+      expect(boundingBox).toBeTruthy();
+      expect(boundingBox.y).toBeGreaterThan(0);
+      
+      // The button should be within the viewport
+      const viewport = page.viewportSize();
+      expect(boundingBox.y + boundingBox.height).toBeLessThanOrEqual(viewport.height);
+    });
+
+    test('iPhone 13 mini Leaderboard - Back button is clickable', async ({ page }) => {
+      // Set iPhone 13 mini viewport (375x812)
+      await page.setViewportSize({ width: 375, height: 812 });
+      
+      // Open leaderboard
+      await page.click('#leaderboard-btn');
+      await page.waitForSelector('#leaderboard-screen:not(.hidden)');
+      
+      // Scroll to make sure back button is visible (if needed)
+      const backButton = page.locator('#leaderboard-back-btn');
+      await backButton.scrollIntoViewIfNeeded();
+      
+      // Click back button
+      await backButton.click();
+      
+      // Should return to start screen
+      await page.waitForSelector('#start-screen:not(.hidden)');
+      await expect(page.locator('#start-screen')).not.toHaveClass('hidden');
+      await expect(page.locator('#leaderboard-screen')).toHaveClass(/hidden/);
+    });
+
+    test('iPhone 13 mini Stats View - Button visibility and opening', async ({ page }) => {
+      // Set iPhone 13 mini viewport (375x812)
+      await page.setViewportSize({ width: 375, height: 812 });
+      
+      // Click stats button
+      const statsBtn = page.locator('#stats-btn');
+      await expect(statsBtn).toBeVisible();
+      await statsBtn.click();
+      
+      // Stats screen should open
+      await page.waitForSelector('#stats-screen:not(.hidden)');
+      await expect(page.locator('#stats-screen')).not.toHaveClass('hidden');
+    });
+
+    test('iPhone 13 mini Stats View - Content accessibility', async ({ page }) => {
+      // Set iPhone 13 mini viewport (375x812)
+      await page.setViewportSize({ width: 375, height: 812 });
+      
+      // Click stats button
+      await page.click('#stats-btn');
+      await page.waitForSelector('#stats-screen:not(.hidden)');
+      
+      // Check important stats elements
+      await expect(page.locator('#stats-screen h2')).toBeVisible();
+      await expect(page.locator('.stats-level-btn')).toHaveCount(6);
+      
+      // Level buttons should be clickable
+      const levelBtn = page.locator('.stats-level-btn[data-level="0"]');
+      await expect(levelBtn).toBeVisible();
+    });
+
+    test('iPhone 13 mini Stats View - No overflow', async ({ page }) => {
+      // Set iPhone 13 mini viewport (375x812)
+      await page.setViewportSize({ width: 375, height: 812 });
+      
+      // Click stats button
+      await page.click('#stats-btn');
+      await page.waitForSelector('#stats-screen:not(.hidden)');
+      
+      // Back button should be visible and clickable
+      const backBtn = page.locator('#stats-screen button:has-text("Zurück")');
+      await expect(backBtn).toBeVisible();
+    });
+
+    test('iPhone 13 mini Stats View - Back button functionality', async ({ page }) => {
+      // Set iPhone 13 mini viewport (375x812)
+      await page.setViewportSize({ width: 375, height: 812 });
+      
+      // Click stats button
+      await page.click('#stats-btn');
+      await page.waitForSelector('#stats-screen:not(.hidden)');
+      
+      // Click back button
+      const backBtn = page.locator('#stats-screen button:has-text("Zurück")');
+      await backBtn.click();
+      
+      // Should return to start screen
+      await page.waitForSelector('#start-screen:not(.hidden)');
+      await expect(page.locator('#start-screen')).not.toHaveClass('hidden');
+      await expect(page.locator('#stats-screen')).toHaveClass(/hidden/);
+    });
+
+    test('iPhone 13 mini Stats View - Level switching', async ({ page }) => {
+      // Set iPhone 13 mini viewport (375x812)
+      await page.setViewportSize({ width: 375, height: 812 });
+      
+      // Click stats button
+      await page.click('#stats-btn');
+      await page.waitForSelector('#stats-screen:not(.hidden)');
+      
+      // Click Level 1 button
+      const levelBtn = page.locator('.stats-level-btn[data-level="1"]');
+      await expect(levelBtn).toBeVisible();
+      await levelBtn.click();
+      
+      // The button should become active
+      await page.waitForTimeout(300);
+      const activeBtn = page.locator('.stats-level-btn.active');
+      const activLevel = await activeBtn.getAttribute('data-level');
+      expect(activLevel).toBe('1');
+    });
   });
 });

@@ -1233,6 +1233,8 @@ button.btn-primary:hover {
     padding: 20px 10px;
     min-height: 200px;
     width: 100%;
+    overflow: auto;
+    flex: 1;
 }
 
 .leaderboard-list {
@@ -1388,23 +1390,60 @@ button.btn-primary:hover {
         font-size: 1.5rem;
     }
     
+    .leaderboard-container {
+        min-height: 100px;
+        padding: 15px 8px;
+    }
+    
     .leaderboard-item {
-        padding: 10px 0;
+        padding: 8px 0;
         flex-wrap: wrap;
     }
     
     .leaderboard-info {
         flex-direction: column;
         align-items: flex-start;
+        padding: 12px 15px;
+        margin: 8px 0;
+        gap: 8px;
+    }
+    
+    .leaderboard-info p {
+        margin: 0;
+        font-size: 0.9rem;
     }
     
     .leaderboard-buttons {
         flex-direction: column;
         padding: 0;
+        gap: 8px;
     }
     
     .leaderboard-buttons button {
         width: 100%;
+        padding: 12px 16px;
+    }
+}
+
+@media (max-height: 700px) {
+    #leaderboard-screen {
+        gap: 12px;
+    }
+    
+    .leaderboard-container {
+        min-height: 80px;
+        padding: 12px 8px;
+    }
+    
+    .leaderboard-info {
+        padding: 10px 12px;
+        margin: 6px 0;
+        gap: 6px;
+    }
+    
+    .leaderboard-buttons {
+        padding: 0;
+        gap: 6px;
     }
 }
 
