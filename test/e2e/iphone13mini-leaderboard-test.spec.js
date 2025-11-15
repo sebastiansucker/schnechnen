@@ -41,7 +41,7 @@ test.describe('iPhone 13 Mini - Leaderboard Back Button Visibility', () => {
     // Should return to start screen
     await page.waitForSelector('#start-screen:not(.hidden)');
     await expect(page.locator('#start-screen')).not.toHaveClass('hidden');
-    await expect(page.locator('#leaderboard-screen')).toHaveClass('hidden');
+    await expect(page.locator('#leaderboard-screen')).toHaveClass(/hidden/);
   });
 
   test('All leaderboard elements should be accessible on iPhone 13 mini', async ({ page }) => {

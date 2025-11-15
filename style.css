@@ -1181,8 +1181,8 @@ button.btn-primary:hover {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    height: 100%;
-    overflow: hidden;
+    min-height: 100%;
+    overflow: visible;
 }
 
 #leaderboard-screen h2 {
@@ -1231,9 +1231,7 @@ button.btn-primary:hover {
     border-radius: var(--border-radius);
     box-shadow: var(--card-shadow);
     padding: 20px 10px;
-    min-height: 300px;
-    flex: 1;
-    overflow-y: auto;
+    min-height: 200px;
     width: 100%;
 }
 
