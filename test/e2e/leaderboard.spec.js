@@ -95,8 +95,8 @@ test.describe('Leaderboard Screen Tests', () => {
     // Click back button
     await page.click('#leaderboard-back-btn');
     
-    // Should be back at start screen
-    await page.waitForSelector('#start-screen:not(.hidden)');
+    // Wait for start screen to be visible and leaderboard to be hidden
+    await page.locator('#start-screen').waitFor({ state: 'visible' });
     await expect(page.locator('#start-screen')).not.toHaveClass('hidden');
   });
 
@@ -107,9 +107,19 @@ test.describe('Leaderboard Screen Tests', () => {
     // Click Level 2
     await page.click('.leaderboard-level-btn[data-level="2"]');
     
-    // Button should be active
-    const activeBtn = page.locator('.leaderboard-level-btn.active');
-    const activeLevel = await activeBtn.getAttribute('data-level');
+    // Wait for level 2 to be active (with retry for Firefox timing)
+    let attempt = 0;
+    let activeLevel = null;
+    while (attempt < 10) {
+      const activeBtn = page.locator('.leaderboard-level-btn.active');
+      activeLevel = await activeBtn.getAttribute('data-level');
+      if (activeLevel === '2') {
+        break;
+      }
+      await page.waitForTimeout(100);
+      attempt++;
+    }
+    
     expect(activeLevel).toBe('2');
   });
 

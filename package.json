@@ -11,8 +11,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
-    "lint": "npx eslint .",
-    "lint:fix": "npx eslint . --fix",
+    "lint": "npx eslint . --config ./eslint.config.mjs",
+    "lint:fix": "npx eslint . --config ./eslint.config.mjs --fix",
     "start": "node server.js",
     "start:simple": "http-server . -p 8080"
   },
