@@ -8,14 +8,23 @@ const LeaderboardScreen = (() => {
      * Initialize leaderboard screen event listeners
      */
     function init() {
-        // Level selector buttons
-        const levelBtns = document.querySelectorAll('#leaderboard-screen .stats-level-btn');
-        levelBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const level = parseInt(e.target.dataset.level);
-                selectLevel(level);
+        // Level selector buttons - use event delegation on parent container
+        const leaderboardScreen = document.getElementById('leaderboard-screen');
+        if (leaderboardScreen) {
+            leaderboardScreen.addEventListener('click', (e) => {
+                // Check if clicked element or its parent is a level button
+                let target = e.target;
+                if (target.classList.contains('stats-level-btn')) {
+                    const level = parseInt(target.dataset.level);
+                    selectLevel(level);
+                } else if (target.closest && target.closest('.stats-level-btn')) {
+                    // In case the click is on a child element of the button
+                    const btn = target.closest('.stats-level-btn');
+                    const level = parseInt(btn.dataset.level);
+                    selectLevel(level);
+                }
             });
-        });
+        }
         
         // Back button
         const backBtn = document.getElementById('leaderboard-back-btn');
