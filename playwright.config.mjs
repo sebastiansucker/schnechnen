@@ -39,7 +39,7 @@ const config = {
     baseURL: 'http://localhost:8080', // Wird später angepasst
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: 'off',
   },
 
   /* Configure projects for major browsers */

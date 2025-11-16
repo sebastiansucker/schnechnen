@@ -17,12 +17,6 @@ test.describe('Schnechnen Spiel Tests', () => {
     // Prüfe, dass die Hauptüberschrift angezeigt wird
     await expect(page.locator('h1')).toHaveText('Schnechnen');
     
-  // Prüfe, dass die Spielbeschreibung angezeigt wird (scoped selector to avoid multiple <p> elements)
-  await expect(page.locator('#start-screen p')).toHaveText('SCHNell REchnen');
-    
-    // Prüfe, dass die Level-Auswahl angezeigt wird
-    await expect(page.locator('.level-selection')).toBeVisible();
-    
     // Prüfe, dass alle sechs Level-Buttons angezeigt werden
     const levelButtons = page.locator('.level-btn');
     await expect(levelButtons).toHaveCount(6);

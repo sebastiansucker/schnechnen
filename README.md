@@ -315,10 +315,10 @@ Keine persönlichen Daten werden verarbeitet. Die App ist datenschutzfreundlich!
 - [x] npm test:e2e sollte den server starten
 - [x] Anonymes Leaderboard mit Supabase
 - [x] Leaderboard-Tests und Test-Mode-Protection
-- [ ] Weitere Level mit gemischten Operationen
+- [x] Weitere Level mit gemischten Operationen
 - [ ] Dark Mode Support
 - [ ] Internationalisierung (i18n) für mehrere Sprachen
-- [ ] PWA-Funktionalität (Offline-Nutzung, Install-Prompt)
+- [x] PWA-Funktionalität (Offline-Nutzung, Install-Prompt)
 - [ ] ...
 
 ## License
