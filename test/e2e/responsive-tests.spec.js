@@ -316,7 +316,7 @@ test.describe('Responsive & Mobile Verhalten', () => {
       await expect(statsScreen).not.toHaveClass(/hidden/);
       
       // Stats buttons should be visible
-      const statsButtons = page.locator('.stats-level-btn');
+      const statsButtons = page.locator('#stats-screen .stats-level-btn');
       await expect(statsButtons).toHaveCount(6);
       
       // Content should not overflow horizontally
@@ -366,7 +366,7 @@ test.describe('Responsive & Mobile Verhalten', () => {
       await expect(leaderboardScreen).not.toHaveClass(/hidden/);
       
       // Level buttons should be visible
-      const levelButtons = page.locator('.leaderboard-level-btn');
+      const levelButtons = page.locator('#leaderboard-screen .stats-level-btn');
       const count = await levelButtons.count();
       expect(count).toBeGreaterThan(0);
       
@@ -415,7 +415,7 @@ test.describe('Responsive & Mobile Verhalten', () => {
       await expect(leaderboardScreen).not.toHaveClass(/hidden/);
       
       // Level buttons should still be accessible
-      const levelButtons = page.locator('.leaderboard-level-btn');
+      const levelButtons = page.locator('#leaderboard-screen .stats-level-btn');
       const count = await levelButtons.count();
       expect(count).toBeGreaterThan(0);
       
@@ -467,12 +467,12 @@ test.describe('Responsive & Mobile Verhalten', () => {
       await page.waitForSelector('#leaderboard-screen:not(.hidden)');
       
       // Click Level 2 button
-      await page.click('.leaderboard-level-btn[data-level="2"]');
+      await page.click('#leaderboard-screen .stats-level-btn[data-level="2"]');
       
       // Wait for level to be active with retry logic
       let activeLevel = null;
       for (let i = 0; i < 10; i++) {
-        const activeBtn = page.locator('.leaderboard-level-btn.active');
+        const activeBtn = page.locator('#leaderboard-screen .stats-level-btn.active');
         activeLevel = await activeBtn.getAttribute('data-level');
         if (activeLevel === '2') {
           break;
@@ -554,10 +554,10 @@ test.describe('Responsive & Mobile Verhalten', () => {
       
       // Check important stats elements
       await expect(page.locator('#stats-screen h2')).toBeVisible();
-      await expect(page.locator('.stats-level-btn')).toHaveCount(6);
+      await expect(page.locator('#stats-screen .stats-level-btn')).toHaveCount(6);
       
       // Level buttons should be clickable
-      const levelBtn = page.locator('.stats-level-btn[data-level="0"]');
+      const levelBtn = page.locator('#stats-screen .stats-level-btn[data-level="0"]');
       await expect(levelBtn).toBeVisible();
     });
 
@@ -601,13 +601,13 @@ test.describe('Responsive & Mobile Verhalten', () => {
       await page.waitForSelector('#stats-screen:not(.hidden)');
       
       // Click Level 1 button
-      const levelBtn = page.locator('.stats-level-btn[data-level="1"]');
+      const levelBtn = page.locator('#stats-screen .stats-level-btn[data-level="1"]');
       await expect(levelBtn).toBeVisible();
       await levelBtn.click();
       
       // The button should become active
       await page.waitForTimeout(300);
-      const activeBtn = page.locator('.stats-level-btn.active');
+      const activeBtn = page.locator('#stats-screen .stats-level-btn.active');
       const activLevel = await activeBtn.getAttribute('data-level');
       expect(activLevel).toBe('1');
     });

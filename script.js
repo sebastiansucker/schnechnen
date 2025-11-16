@@ -86,7 +86,7 @@ function createElements() {
             statsButton: document.getElementById('stats-btn'),
             statsBackButton: document.getElementById('stats-back-btn'),
             statsResetButton: document.getElementById('stats-reset-btn'),
-            statsLevelButtons: document.querySelectorAll('.stats-level-btn'),
+            statsLevelButtons: document.querySelectorAll('#stats-screen .stats-level-btn'),
             statHighscore: document.getElementById('stat-highscore'),
             statTotalGames: document.getElementById('stat-total-games'),
             statAvgScore: document.getElementById('stat-avg-score'),
@@ -810,7 +810,19 @@ function showScreen(screenName) {
             leaderboardScreen.classList.remove('hidden');
         }
     }
+    
+    // Update browser history
+    window.history.pushState({ screen: screenName }, '', `?screen=${screenName}`);
 }
+
+// Handle browser back button
+window.addEventListener('popstate', (event) => {
+    if (event.state && event.state.screen) {
+        showScreen(event.state.screen);
+    } else {
+        showScreen('start');
+    }
+});
 
 // ==================== Statistik-Funktionen ====================
 
@@ -857,6 +869,15 @@ let chartInstance = null; // Globale Variable für Chart-Instanz
 function showStatsScreen(level) {
     showScreen('stats');
     updateStatsForLevel(level);
+    
+    // Mark the active level button
+    if (elements.statsLevelButtons) {
+        elements.statsLevelButtons.forEach(btn => btn.classList.remove('active'));
+        const activeBtn = Array.from(elements.statsLevelButtons).find(btn => parseInt(btn.dataset.level) === level);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+    }
 }
 
 // Update Statistiken für ein Level

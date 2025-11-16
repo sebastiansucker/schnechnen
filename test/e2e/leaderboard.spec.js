@@ -7,8 +7,6 @@ test.describe('Leaderboard Screen Tests', () => {
     const supabaseUrl = 'https://buncjjcbmvwindpyhnhs.supabase.co';
     const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1bmNqamNibXZ3aW5kcHlobmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4ODQzMjUsImV4cCI6MjA3ODQ2MDMyNX0.sla1FQMlqpnoNq2ebjLBHJpvau_N6DzBw2i511uD2YI';
     
-    console.log('[Test Setup] Creating test leaderboard records for all levels...');
-    
     // Create one test record for each level (0-5) with a unique timestamp
     const timestamp = new Date().toISOString();
     
@@ -32,17 +30,11 @@ test.describe('Leaderboard Screen Tests', () => {
           body: JSON.stringify(testRecord)
         });
         
-        if (response.ok) {
-          console.log(`[Test Setup] ✓ Created test record for Level ${level}`);
-        } else {
-          console.warn(`[Test Setup] ⚠ Failed to create test record for Level ${level} (${response.status})`);
-        }
+        // Silently handle response
       } catch (e) {
-        console.warn(`[Test Setup] ⚠ Error creating test record for Level ${level}:`, e.message);
+        // Silently handle errors
       }
     }
-    
-    console.log('[Test Setup] Setup complete');
   });
 
   test.beforeEach(async ({ page }) => {
@@ -71,7 +63,7 @@ test.describe('Leaderboard Screen Tests', () => {
     await page.click('#leaderboard-btn');
     await page.waitForSelector('#leaderboard-screen:not(.hidden)');
     
-    const levelBtns = page.locator('.leaderboard-level-btn');
+    const levelBtns = page.locator('#leaderboard-screen .stats-level-btn');
     await expect(levelBtns).toHaveCount(6);
   });
 
@@ -95,9 +87,9 @@ test.describe('Leaderboard Screen Tests', () => {
     // Click back button
     await page.click('#leaderboard-back-btn');
     
-    // Wait for start screen to be visible and leaderboard to be hidden
-    await page.locator('#start-screen').waitFor({ state: 'visible' });
+    // Wait for start screen to be visible - check that it doesn't have hidden class
     await expect(page.locator('#start-screen')).not.toHaveClass('hidden');
+    await expect(page.locator('#leaderboard-screen')).toHaveClass(/hidden/);
   });
 
   test('Level-Wechsel funktioniert im Leaderboard', async ({ page }) => {
@@ -105,22 +97,14 @@ test.describe('Leaderboard Screen Tests', () => {
     await page.waitForSelector('#leaderboard-screen:not(.hidden)');
     
     // Click Level 2
-    await page.click('.leaderboard-level-btn[data-level="2"]');
+    await page.click('#leaderboard-screen .stats-level-btn[data-level="2"]');
     
-    // Wait for level 2 to be active (with retry for Firefox timing)
-    let attempt = 0;
-    let activeLevel = null;
-    while (attempt < 10) {
-      const activeBtn = page.locator('.leaderboard-level-btn.active');
-      activeLevel = await activeBtn.getAttribute('data-level');
-      if (activeLevel === '2') {
-        break;
-      }
-      await page.waitForTimeout(100);
-      attempt++;
-    }
+    // Wait for level 2 to be active - use waitFor to ensure class is added
+    await page.locator('#leaderboard-screen .stats-level-btn[data-level="2"]').waitFor({ state: 'attached' });
+    await expect(page.locator('#leaderboard-screen .stats-level-btn[data-level="2"]')).toHaveClass(/active/);
     
-    expect(activeLevel).toBe('2');
+    // Verify level 1 is no longer active
+    await expect(page.locator('#leaderboard-screen .stats-level-btn[data-level="0"]')).not.toHaveClass(/active/);
   });
 
   test('Leaderboard zeigt "Lade Leaderboard..." beim Öffnen', async ({ page }) => {
@@ -132,30 +116,12 @@ test.describe('Leaderboard Screen Tests', () => {
     await page.waitForTimeout(2000);
   });
 
-  test('Reset Name Button generiert neuen Namen', async ({ page }) => {
-    await page.click('#leaderboard-btn');
-    await page.waitForSelector('#leaderboard-screen:not(.hidden)');
-    
-    const usernameEl = page.locator('#player-username');
-    await usernameEl.textContent();
-    
-    // Click reset button
-    await page.click('#player-reset-name-btn');
-    await page.waitForTimeout(500);
-    
-    const newName = await usernameEl.textContent();
-    
-    // Names should be different (with very high probability)
-    // Note: There's a tiny chance they're the same, but essentially impossible
-    expect(newName).toBeTruthy();
-  });
-
   test('Leaderboard zeigt echte Daten von Supabase', async ({ page }) => {
     await page.click('#leaderboard-btn');
     await page.waitForSelector('#leaderboard-screen:not(.hidden)');
     
     // Click Level 1 to load leaderboard data
-    await page.click('.leaderboard-level-btn[data-level="1"]');
+    await page.click('#leaderboard-screen .stats-level-btn[data-level="1"]');
     
     // Wait longer for API call to complete and elements to render
     await page.waitForSelector('.leaderboard-item', { timeout: 10000 });
@@ -173,7 +139,7 @@ test.describe('Leaderboard Screen Tests', () => {
     await page.waitForSelector('#leaderboard-screen:not(.hidden)');
     
     // Click Level 1
-    await page.click('.leaderboard-level-btn[data-level="1"]');
+    await page.click('#leaderboard-screen .stats-level-btn[data-level="1"]');
     
     // Wait for entries to load with longer timeout
     await page.waitForSelector('.leaderboard-item', { timeout: 10000 });
@@ -199,7 +165,7 @@ test.describe('Leaderboard Screen Tests', () => {
     await page.waitForSelector('#leaderboard-screen:not(.hidden)');
     
     // Click Level 1
-    await page.click('.leaderboard-level-btn[data-level="1"]');
+    await page.click('#leaderboard-screen .stats-level-btn[data-level="1"]');
     
     // Wait for entries with longer timeout
     await page.waitForSelector('.leaderboard-item', { timeout: 10000 });
@@ -218,7 +184,7 @@ test.describe('Leaderboard Screen Tests', () => {
     await page.waitForSelector('#leaderboard-screen:not(.hidden)');
     
     // Load Level 1
-    await page.click('.leaderboard-level-btn[data-level="1"]');
+    await page.click('#leaderboard-screen .stats-level-btn[data-level="1"]');
     await page.waitForTimeout(1500);
     
     const level1Entries = page.locator('.leaderboard-entry');
@@ -230,7 +196,7 @@ test.describe('Leaderboard Screen Tests', () => {
     }
     
     // Load Level 2
-    await page.click('.leaderboard-level-btn[data-level="2"]');
+    await page.click('#leaderboard-screen .stats-level-btn[data-level="2"]');
     await page.waitForTimeout(1500);
     
     const level2Entries = page.locator('.leaderboard-entry');

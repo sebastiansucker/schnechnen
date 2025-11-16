@@ -25,8 +25,8 @@ test.describe('Statistik-Seite Tests', () => {
     await expect(page.locator('#stats-screen')).not.toHaveClass(/hidden/);
     
     // Prüfe, dass Level-Buttons vorhanden sind
-  const statsLevelButtons = page.locator('.stats-level-btn');
-  await expect(statsLevelButtons).toHaveCount(6);
+    const statsLevelButtons = page.locator('#stats-screen .stats-level-btn');
+    await expect(statsLevelButtons).toHaveCount(6);
     
     // Prüfe, dass Statistik-Karten vorhanden sind
     await expect(page.locator('.stat-card')).toHaveCount(2);
@@ -82,15 +82,18 @@ test.describe('Statistik-Seite Tests', () => {
     // Gehe zur Statistik-Seite
     await page.click('#stats-btn');
     
-    // Level 1 ist standardmäßig aktiv
-    await expect(page.locator('.stats-level-btn[data-level="1"]')).toHaveClass(/active/);
+    // Warte auf den Stats Screen
+    await page.waitForSelector('#stats-screen:not(.hidden)');
+    
+    // Warte, bis Level 1 das active Attribut hat (mit längerer Timeout für Sicherheit)
+    await expect(page.locator('#stats-screen .stats-level-btn[data-level="1"]')).toHaveClass(/active/, { timeout: 5000 });
     
     // Klicke auf Level 2
-    await page.click('.stats-level-btn[data-level="2"]');
+    await page.click('#stats-screen .stats-level-btn[data-level="2"]');
     
     // Prüfe, dass Level 2 jetzt aktiv ist
-    await expect(page.locator('.stats-level-btn[data-level="2"]')).toHaveClass(/active/);
-    await expect(page.locator('.stats-level-btn[data-level="1"]')).not.toHaveClass(/active/);
+    await expect(page.locator('#stats-screen .stats-level-btn[data-level="2"]')).toHaveClass(/active/);
+    await expect(page.locator('#stats-screen .stats-level-btn[data-level="1"]')).not.toHaveClass(/active/);
   });
 
   test('Chart.js wird korrekt geladen', async ({ page }) => {

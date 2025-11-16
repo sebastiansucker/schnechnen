@@ -9,7 +9,7 @@ const LeaderboardScreen = (() => {
      */
     function init() {
         // Level selector buttons
-        const levelBtns = document.querySelectorAll('.leaderboard-level-btn');
+        const levelBtns = document.querySelectorAll('#leaderboard-screen .stats-level-btn');
         levelBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const level = parseInt(e.target.dataset.level);
@@ -50,7 +50,7 @@ const LeaderboardScreen = (() => {
         currentLevel = level;
         
         // Update active button
-        document.querySelectorAll('.leaderboard-level-btn').forEach(btn => {
+        document.querySelectorAll('#leaderboard-screen .stats-level-btn').forEach(btn => {
             btn.classList.remove('active');
             if (parseInt(btn.dataset.level) === level) {
                 btn.classList.add('active');

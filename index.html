@@ -29,17 +29,13 @@
         
         <div id="start-screen" class="screen">
             <h1>Schnechnen</h1>
-            <p>SCHNell REchnen</p>
-            <div class="level-selection">
-                <h2>Level auswählen:</h2>
-                <div class="level-buttons" role="group" aria-label="Level Auswahl">
-                    <button class="level-btn" data-level="0" aria-pressed="false" aria-label="Level 0: Addition bis 10">Level 0: Addition bis 10</button>
-                    <button class="level-btn" data-level="1" aria-pressed="false" aria-label="Level 1: Addition und Subtraktion bis 10">Level 1: Addition & Subtraktion bis 10</button>
-                    <button class="level-btn" data-level="2" aria-pressed="false" aria-label="Level 2: Addition und Subtraktion bis 100">Level 2: Addition & Subtraktion bis 100</button>
-                    <button class="level-btn" data-level="3" aria-pressed="false" aria-label="Level 3: Multiplikation bis 100">Level 3: Multiplikation bis 100</button>
-                    <button class="level-btn" data-level="4" aria-pressed="false" aria-label="Level 4: Multiplikation und Division bis 100">Level 4: Multiplikation & Division bis 100</button>
-                    <button class="level-btn chaos-btn" data-level="5" aria-pressed="false" aria-label="Level 5: 🌪️ Chaos Mode - Alles durcheinander!">🌪️ Chaos Mode</button>
-                </div>
+            <div class="level-buttons" role="group" aria-label="Level Auswahl">
+                <button class="level-btn" data-level="0" aria-pressed="false" aria-label="Level 0: Addition bis 10">Level 0: Addition bis 10</button>
+                <button class="level-btn" data-level="1" aria-pressed="false" aria-label="Level 1: Addition und Subtraktion bis 10">Level 1: Addition & Subtraktion bis 10</button>
+                <button class="level-btn" data-level="2" aria-pressed="false" aria-label="Level 2: Addition und Subtraktion bis 100">Level 2: Addition & Subtraktion bis 100</button>
+                <button class="level-btn" data-level="3" aria-pressed="false" aria-label="Level 3: Multiplikation bis 100">Level 3: Multiplikation bis 100</button>
+                <button class="level-btn" data-level="4" aria-pressed="false" aria-label="Level 4: Multiplikation und Division bis 100">Level 4: Multiplikation & Division bis 100</button>
+                <button class="level-btn chaos-btn" data-level="5" aria-pressed="false" aria-label="Level 5: 🌪️ Chaos Mode - Alles durcheinander!">🌪️ Chaos Mode</button>
             </div>
             <button id="stats-btn" class="btn-secondary" aria-label="Statistiken anzeigen" title="Statistiken">📊 Statistiken</button>
             <button id="leaderboard-btn" class="btn-secondary" aria-label="Rekorde anzeigen" title="Rekorde">🏆 Rekorde</button>
@@ -143,13 +139,13 @@
         <div id="leaderboard-screen" class="screen hidden">
             <h2>🏆 Rekorde</h2>
             
-            <div class="leaderboard-level-selector" role="tablist" aria-label="Rekorde Level Wechsel">
-                <button class="leaderboard-level-btn active" data-level="0" role="tab" aria-selected="true" aria-controls="leaderboard-panel-0">Level 0</button>
-                <button class="leaderboard-level-btn" data-level="1" role="tab" aria-selected="false" aria-controls="leaderboard-panel-1">Level 1</button>
-                <button class="leaderboard-level-btn" data-level="2" role="tab" aria-selected="false" aria-controls="leaderboard-panel-2">Level 2</button>
-                <button class="leaderboard-level-btn" data-level="3" role="tab" aria-selected="false" aria-controls="leaderboard-panel-3">Level 3</button>
-                <button class="leaderboard-level-btn" data-level="4" role="tab" aria-selected="false" aria-controls="leaderboard-panel-4">Level 4</button>
-                <button class="leaderboard-level-btn" data-level="5" role="tab" aria-selected="false" aria-controls="leaderboard-panel-5">🌪️ Chaos</button>
+            <div class="stats-level-selector" role="tablist" aria-label="Rekorde Level Wechsel">
+                <button class="stats-level-btn active" data-level="0" role="tab" aria-selected="true" aria-controls="leaderboard-panel-0">Level 0</button>
+                <button class="stats-level-btn" data-level="1" role="tab" aria-selected="false" aria-controls="leaderboard-panel-1">Level 1</button>
+                <button class="stats-level-btn" data-level="2" role="tab" aria-selected="false" aria-controls="leaderboard-panel-2">Level 2</button>
+                <button class="stats-level-btn" data-level="3" role="tab" aria-selected="false" aria-controls="leaderboard-panel-3">Level 3</button>
+                <button class="stats-level-btn" data-level="4" role="tab" aria-selected="false" aria-controls="leaderboard-panel-4">Level 4</button>
+                <button class="stats-level-btn" data-level="5" role="tab" aria-selected="false" aria-controls="leaderboard-panel-5">🌪️ Chaos</button>
             </div>
             
             <div class="leaderboard-container" role="region" aria-label="Top 10 Scores">
@@ -159,11 +155,10 @@
             </div>
             
             <div class="leaderboard-info" aria-live="polite">
-                <p>📝 Dein Name: <strong id="player-username">-</strong></p>
-                <button id="player-reset-name-btn" class="btn-secondary" aria-label="Neuen anonymen Namen generieren">🔄 Neuer Name</button>
+                <p>Dein Name: <strong id="player-username">-</strong></p>
             </div>
             
-            <div class="leaderboard-buttons">
+            <div class="stats-buttons">
                 <button id="leaderboard-back-btn" class="btn-primary" aria-label="Zurück zum Start">Zurück</button>
             </div>
         </div>

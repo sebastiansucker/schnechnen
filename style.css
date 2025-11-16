@@ -423,7 +423,7 @@ button.btn-primary:hover {
     display: flex;
     gap: 15px;
     flex-direction: column;
-    margin-top: 30px;
+    margin-top: 10px;
 }
 
 .stats-buttons button {
@@ -999,15 +999,15 @@ button.btn-primary:hover {
 
 .stats-level-selector {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
     margin-bottom: 20px;
     width: 100%;
 }
 
 .stats-level-btn {
-    padding: 12px;
-    font-size: 0.95rem;
+    padding: 8px;
+    font-size: 0.8rem;
     font-weight: bold;
     border: 2px solid transparent;
     border-radius: var(--border-radius);
@@ -1293,7 +1293,7 @@ button.btn-primary:hover {
     background: linear-gradient(135deg, rgba(157, 78, 221, 0.1) 0%, rgba(6, 167, 125, 0.1) 100%);
     padding: 15px 20px;
     border-radius: var(--border-radius);
-    margin: 10px 0;
+    margin: 10px 0 5px 0;
     flex-shrink: 0;
 }
 
