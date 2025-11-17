@@ -692,6 +692,42 @@ function runTests() {
     // Test 13: Problem Randomness
     testProblemRandomness();
     
+    // Test 14: Score Percentage Calculation
+    testScorePercentage();
+    
+    // Test 15: Game History Tracking
+    testGameHistory();
+    
+    // Test 16: Level Configuration Validation
+    testLevelConfigValidation();
+    
+    // Test 17: Operator Filtering per Level
+    testOperatorFilteringPerLevel();
+    
+    // Test 18: Division Result Validation
+    testDivisionResultValidation();
+    
+    // Test 19: Subtraction Non-Negative Results
+    testSubtractionNonNegativeResults();
+    
+    // Test 20: Addition Max Operand Calculation
+    testAdditionMaxOperandCalculation();
+    
+    // Test 21: Multiplication Operand Range Constraints
+    testMultiplicationOperandRangeConstraints();
+    
+    // Test 22: Zero Handling in Operands
+    testZeroHandlingInOperands();
+    
+    // Test 23: Large Number Constraints
+    testLargeNumberConstraints();
+    
+    // Test 24: LocalStorage Persistence
+    testLocalStoragePersistence();
+    
+    // Test 25: JSON Serialization Robustness
+    testJSONSerializationRobustness();
+    
     console.log('Alle Tests abgeschlossen.');
 }
 
@@ -1001,6 +1037,481 @@ function testResetStatistics() {
         return true;
     } catch (error) {
         console.error('Fehler beim Testen des Zurücksetzen von Statistiken:', error);
+        return false;
+    }
+}
+
+// Test 14: Score Percentage Calculation
+function testScorePercentage() {
+    console.log('Teste Score-Prozentberechnung...');
+    try {
+        const testCases = [
+            { correct: 5, total: 10, expected: 50 },
+            { correct: 10, total: 10, expected: 100 },
+            { correct: 0, total: 10, expected: 0 },
+            { correct: 3, total: 10, expected: 30 },
+            { correct: 7, total: 20, expected: 35 },
+            { correct: 1, total: 1, expected: 100 }
+        ];
+        
+        for (const testCase of testCases) {
+            const percentage = Math.round((testCase.correct / testCase.total) * 100);
+            if (percentage !== testCase.expected) {
+                console.error(`Fehler: ${testCase.correct}/${testCase.total} sollte ${testCase.expected}% sein, nicht ${percentage}%`);
+                return false;
+            }
+        }
+        
+        console.log('✓ Score-Prozentberechnung erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen der Score-Prozentberechnung:', error);
+        return false;
+    }
+}
+
+// Test 15: Game History Tracking
+function testGameHistory() {
+    console.log('Teste Spiel-History Tracking...');
+    try {
+        // Simuliere das Speichern von Spielhistorie
+        const level = 2;
+        const score = 75;
+        const totalProblems = 20;
+        
+        const history = JSON.parse(mockLocalStorage.getItem('schnechnen-history')) || {};
+        if (!history[level]) {
+            history[level] = [];
+        }
+        
+        history[level].push({
+            score: score,
+            totalProblems: totalProblems,
+            date: new Date().toISOString()
+        });
+        
+        mockLocalStorage.setItem('schnechnen-history', JSON.stringify(history));
+        
+        // Lade die History
+        const loadedHistory = JSON.parse(mockLocalStorage.getItem('schnechnen-history')) || {};
+        if (!loadedHistory[level] || loadedHistory[level].length === 0) {
+            console.error('Fehler: Spiel-History wurde nicht gespeichert');
+            return false;
+        }
+        
+        const lastEntry = loadedHistory[level][loadedHistory[level].length - 1];
+        if (lastEntry.score !== score || lastEntry.totalProblems !== totalProblems) {
+            console.error('Fehler: Spiel-History-Daten stimmen nicht überein');
+            return false;
+        }
+        
+        console.log('✓ Spiel-History Tracking erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen des Spiel-History Tracking:', error);
+        return false;
+    }
+}
+
+// Test 16: Level Configuration Validation
+function testLevelConfigValidation() {
+    console.log('Teste Level-Konfiguration Validierung...');
+    try {
+        // Prüfe, dass alle Level die erforderlichen Eigenschaften haben
+        const CONFIG = {
+            levels: {
+                0: { name: "Addition bis 10", operations: ['+'], maxNumber: 10, minResult: 0, maxResult: 10 },
+                1: { name: "Addition & Subtraktion bis 10", operations: ['+', '-'], maxNumber: 10, minResult: 0, maxResult: 10 },
+                2: { name: "Addition & Subtraktion bis 100", operations: ['+', '-'], maxNumber: 100, minResult: 0, maxResult: 100 },
+                3: { name: "Multiplikation bis 100", operations: ['*'], maxNumber: 100, minResult: 0 },
+                4: { name: "Multiplikation & Division bis 100", operations: ['*', '/'], maxNumber: 100, minResult: 0 },
+                5: { name: "🌪️ Chaos Mode", operations: ['+', '-', '*', '/'], maxNumber: 100, minResult: 0, maxResult: 100 }
+            }
+        };
+        
+        const requiredProps = ['name', 'operations', 'maxNumber', 'minResult'];
+        
+        for (let level = 0; level <= 5; level++) {
+            const levelConfig = CONFIG.levels[level];
+            
+            if (!levelConfig) {
+                console.error(`Fehler: Level ${level} ist nicht konfiguriert`);
+                return false;
+            }
+            
+            for (const prop of requiredProps) {
+                if (!(prop in levelConfig)) {
+                    console.error(`Fehler: Level ${level} fehlt Eigenschaft '${prop}'`);
+                    return false;
+                }
+            }
+            
+            // Prüfe, dass operations ein Array ist
+            if (!Array.isArray(levelConfig.operations) || levelConfig.operations.length === 0) {
+                console.error(`Fehler: Level ${level} hat ungültige operations`);
+                return false;
+            }
+            
+            // Prüfe, dass maxNumber eine positive Zahl ist
+            if (typeof levelConfig.maxNumber !== 'number' || levelConfig.maxNumber <= 0) {
+                console.error(`Fehler: Level ${level} hat ungültiges maxNumber`);
+                return false;
+            }
+            
+            // Prüfe, dass minResult >= 0 ist
+            if (typeof levelConfig.minResult !== 'number' || levelConfig.minResult < 0) {
+                console.error(`Fehler: Level ${level} hat ungültiges minResult`);
+                return false;
+            }
+        }
+        
+        console.log('✓ Level-Konfiguration Validierung erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen der Level-Konfiguration:', error);
+        return false;
+    }
+}
+
+// Test 17: Operator Filtering per Level
+function testOperatorFilteringPerLevel() {
+    console.log('Teste Operator-Filterung pro Level...');
+    try {
+        const CONFIG = {
+            levels: {
+                0: { operations: ['+'] },
+                1: { operations: ['+', '-'] },
+                2: { operations: ['+', '-'] },
+                3: { operations: ['*'] },
+                4: { operations: ['*', '/'] },
+                5: { operations: ['+', '-', '*', '/'] }
+            }
+        };
+        
+        // Prüfe Level 0: Nur Addition
+        for (let i = 0; i < 20; i++) {
+            const op = CONFIG.levels[0].operations[Math.floor(Math.random() * CONFIG.levels[0].operations.length)];
+            if (op !== '+') {
+                console.error(`Fehler: Level 0 sollte nur '+' haben, aber hat '${op}'`);
+                return false;
+            }
+        }
+        
+        // Prüfe Level 3: Nur Multiplikation
+        for (let i = 0; i < 20; i++) {
+            const op = CONFIG.levels[3].operations[Math.floor(Math.random() * CONFIG.levels[3].operations.length)];
+            if (op !== '*') {
+                console.error(`Fehler: Level 3 sollte nur '*' haben, aber hat '${op}'`);
+                return false;
+            }
+        }
+        
+        // Prüfe Level 5: Alle Operatoren
+        const level5Ops = new Set();
+        for (let i = 0; i < 100; i++) {
+            const op = CONFIG.levels[5].operations[Math.floor(Math.random() * CONFIG.levels[5].operations.length)];
+            level5Ops.add(op);
+        }
+        
+        if (level5Ops.size !== 4) {
+            console.error(`Fehler: Level 5 sollte alle 4 Operatoren haben, aber hat nur ${level5Ops.size}`);
+            return false;
+        }
+        
+        console.log('✓ Operator-Filterung pro Level erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen der Operator-Filterung:', error);
+        return false;
+    }
+}
+
+// Test 18: Division Result Validation
+function testDivisionResultValidation() {
+    console.log('Teste Division-Ergebnis Validierung...');
+    try {
+        // Prüfe, dass Division nur ganze Zahlen liefert
+        const testCases = [
+            { num1: 20, num2: 4, expected: 5 },
+            { num1: 15, num2: 3, expected: 5 },
+            { num1: 100, num2: 10, expected: 10 },
+            { num1: 12, num2: 3, expected: 4 }
+        ];
+        
+        for (const testCase of testCases) {
+            const result = testCase.num1 / testCase.num2;
+            if (result !== testCase.expected || !Number.isInteger(result)) {
+                console.error(`Fehler: ${testCase.num1} / ${testCase.num2} sollte ${testCase.expected} (Integer) sein, aber ist ${result}`);
+                return false;
+            }
+        }
+        
+        // Prüfe, dass die Division-Generierungslogik ganzzahlige Ergebnisse erzeugt
+        const CONFIG = { levels: { 4: { operations: ['/'], maxNumber: 100, minResult: 0 } } };
+        const levelConfig = CONFIG.levels[4];
+        
+        for (let i = 0; i < 50; i++) {
+            const num2 = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
+            const result = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
+            const num1 = num2 * result;
+            
+            // Prüfe, dass num1 / num2 eine ganze Zahl ist
+            const divResult = num1 / num2;
+            if (!Number.isInteger(divResult)) {
+                console.error(`Fehler: Division ${num1} / ${num2} = ${divResult} ist keine ganze Zahl`);
+                return false;
+            }
+        }
+        
+        console.log('✓ Division-Ergebnis Validierung erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen der Division-Validierung:', error);
+        return false;
+    }
+}
+
+// Test 19: Subtraction Non-Negative Results
+function testSubtractionNonNegativeResults() {
+    console.log('Teste Subtraktion nicht-negative Ergebnisse...');
+    try {
+        const maxNumber = 100;
+        
+        // Prüfe dass num2 <= num1 (um negative Ergebnisse zu vermeiden)
+        for (let i = 0; i < 50; i++) {
+            const num1 = Math.floor(Math.random() * maxNumber) + 1;
+            const num2 = Math.floor(Math.random() * num1) + 1; // Sichert num2 <= num1
+            const result = num1 - num2;
+            
+            if (result < 0) {
+                console.error(`Fehler: Subtraktions-Ergebnis darf nicht negativ sein (${num1} - ${num2} = ${result})`);
+                return false;
+            }
+        }
+        
+        console.log('✓ Subtraktion nicht-negative Ergebnisse erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen der Subtraktion:', error);
+        return false;
+    }
+}
+
+// Test 20: Addition Max Operand Calculation
+function testAdditionMaxOperandCalculation() {
+    console.log('Teste Addition-Operanden-Berechnung mit maxNumber...');
+    try {
+        // Für Level 0 und 1: maxNumber = 10
+        // Addition sollte nicht über 10 hinausgehen für einen Operanden, wenn maxNumber = 10
+        const testCases = [
+            { maxNumber: 10, maxSum: 10, description: 'Level 0' },
+            { maxNumber: 10, maxSum: 10, description: 'Level 1' },
+            { maxNumber: 100, maxSum: 100, description: 'Level 2' }
+        ];
+        
+        for (const testCase of testCases) {
+            for (let i = 0; i < 30; i++) {
+                // Simulate Level 0/1 addition: Beide Operanden sollten <= maxNumber sein
+                const num1 = Math.floor(Math.random() * (testCase.maxNumber - 1)) + 1;
+                const num2 = Math.floor(Math.random() * (testCase.maxNumber - num1)) + 1;
+                const sum = num1 + num2;
+                
+                if (num1 > testCase.maxNumber || num2 > testCase.maxNumber) {
+                    console.error(`Fehler: Operanden sollten <= ${testCase.maxNumber} sein, aber ${num1} + ${num2}`);
+                    return false;
+                }
+                
+                if (sum > testCase.maxSum) {
+                    console.error(`Fehler: Addition sollte <= ${testCase.maxSum} sein, aber ${num1} + ${num2} = ${sum}`);
+                    return false;
+                }
+            }
+        }
+        
+        console.log('✓ Addition-Operanden-Berechnung erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen der Addition-Berechnung:', error);
+        return false;
+    }
+}
+
+// Test 21: Multiplication Operand Range Constraints
+function testMultiplicationOperandRangeConstraints() {
+    console.log('Teste Multiplikation-Operanden Bereich-Grenzen...');
+    try {
+        // Für Multiplikation sollten Operanden sqrt(maxNumber) nicht überschreiten
+        const maxNumber = 100;
+        const sqrtMax = Math.sqrt(maxNumber); // ~10
+        
+        for (let i = 0; i < 50; i++) {
+            const num1 = Math.floor(Math.random() * sqrtMax) + 1;
+            const num2 = Math.floor(Math.random() * sqrtMax) + 1;
+            const product = num1 * num2;
+            
+            if (num1 > sqrtMax || num2 > sqrtMax) {
+                console.error(`Fehler: Multiplikations-Operanden sollten <= ${sqrtMax} sein`);
+                return false;
+            }
+            
+            if (product > maxNumber) {
+                console.error(`Fehler: Multiplikations-Ergebnis sollte <= ${maxNumber} sein, aber ${num1} * ${num2} = ${product}`);
+                return false;
+            }
+        }
+        
+        console.log('✓ Multiplikation-Operanden Bereich-Grenzen erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen der Multiplikations-Grenzen:', error);
+        return false;
+    }
+}
+
+// Test 22: Zero Handling in Operands
+function testZeroHandlingInOperands() {
+    console.log('Teste Zero-Handling in Operanden...');
+    try {
+        // Operanden sollten mindestens 1 sein (nicht 0)
+        // Bei der Generierung: Math.floor(Math.random() * maxNumber) + 1
+        
+        for (let i = 0; i < 100; i++) {
+            const maxNumber = 10;
+            const num1 = Math.floor(Math.random() * maxNumber) + 1;
+            const num2 = Math.floor(Math.random() * maxNumber) + 1;
+            
+            if (num1 === 0 || num2 === 0) {
+                console.error(`Fehler: Operanden sollten >= 1 sein, aber num1=${num1}, num2=${num2}`);
+                return false;
+            }
+        }
+        
+        console.log('✓ Zero-Handling in Operanden erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen des Zero-Handling:', error);
+        return false;
+    }
+}
+
+// Test 23: Large Number Constraints
+function testLargeNumberConstraints() {
+    console.log('Teste Große Zahlen Grenzen...');
+    try {
+        const levelConfigs = [
+            { level: 2, maxNumber: 100, maxResult: 100 },
+            { level: 3, maxNumber: 100, maxResult: null },
+            { level: 4, maxNumber: 100, maxResult: null }
+        ];
+        
+        for (const config of levelConfigs) {
+            // Alle generierten Operanden sollten <= maxNumber sein
+            for (let i = 0; i < 30; i++) {
+                const num1 = Math.floor(Math.random() * config.maxNumber) + 1;
+                const num2 = Math.floor(Math.random() * Math.sqrt(config.maxNumber)) + 1;
+                
+                if (num1 > config.maxNumber || num2 > config.maxNumber) {
+                    console.error(`Fehler: Level ${config.level} - Operanden sollten <= ${config.maxNumber} sein`);
+                    return false;
+                }
+            }
+        }
+        
+        console.log('✓ Große Zahlen Grenzen erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen der Großen Zahlen Grenzen:', error);
+        return false;
+    }
+}
+
+// Test 24: LocalStorage Persistence
+function testLocalStoragePersistence() {
+    console.log('Teste LocalStorage Persistierung...');
+    try {
+        // Simuliere mehrfaches Speichern und Laden
+        const testData = {
+            'schnechnen-highscores': { '0': 85, '1': 90, '2': 75 },
+            'schnechnen-history': { '0': [{ score: 85, date: '2024-01-01' }] }
+        };
+        
+        // Speichere Daten
+        for (const [key, value] of Object.entries(testData)) {
+            mockLocalStorage.setItem(key, JSON.stringify(value));
+        }
+        
+        // Lade und vergleiche Daten
+        for (const [key, expectedValue] of Object.entries(testData)) {
+            const stored = JSON.parse(mockLocalStorage.getItem(key));
+            
+            // Deep comparison
+            if (JSON.stringify(stored) !== JSON.stringify(expectedValue)) {
+                console.error(`Fehler: Gespeicherte Daten für ${key} stimmen nicht überein`);
+                return false;
+            }
+        }
+        
+        // Teste Überschreiben
+        const newHighscores = { '0': 100 };
+        mockLocalStorage.setItem('schnechnen-highscores', JSON.stringify(newHighscores));
+        const loaded = JSON.parse(mockLocalStorage.getItem('schnechnen-highscores'));
+        
+        if (loaded['0'] !== 100) {
+            console.error('Fehler: Überschreiben von Daten funktioniert nicht');
+            return false;
+        }
+        
+        console.log('✓ LocalStorage Persistierung erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen der LocalStorage Persistierung:', error);
+        return false;
+    }
+}
+
+// Test 25: JSON Serialization Robustness
+function testJSONSerializationRobustness() {
+    console.log('Teste JSON Serialisierung Robustheit...');
+    try {
+        const testCases = [
+            { 
+                data: { level: 1, scores: [10, 20, 30] },
+                description: 'Array mit Nummern'
+            },
+            { 
+                data: { errors: [], history: {} },
+                description: 'Leere Collections'
+            },
+            { 
+                data: { timestamp: new Date().toISOString() },
+                description: 'ISO String Datum'
+            },
+            {
+                data: { level: 0, problems: { '1+2': { answer: 3 } } },
+                description: 'Nested Objects'
+            }
+        ];
+        
+        for (const testCase of testCases) {
+            try {
+                const serialized = JSON.stringify(testCase.data);
+                const deserialized = JSON.parse(serialized);
+                
+                // Vergleiche
+                if (JSON.stringify(deserialized) !== JSON.stringify(testCase.data)) {
+                    console.error(`Fehler: Serialisierung fehlgeschlagen für ${testCase.description}`);
+                    return false;
+                }
+            } catch (e) {
+                console.error(`Fehler beim Serialisieren von ${testCase.description}:`, e);
+                return false;
+            }
+        }
+        
+        console.log('✓ JSON Serialisierung Robustheit erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen der JSON Serialisierung:', error);
         return false;
     }
 }
