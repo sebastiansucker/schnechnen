@@ -49,9 +49,10 @@ const CONFIG = {
         5: {
             name: "🌪️ Chaos Mode",
             operations: ['+', '-', '*', '/'],
-            maxNumber: 100,
+            maxNumber: 1000,
             minResult: 0,
-            maxResult: 100,
+            maxResult: 1000,
+            multiplicationMaxResult: 100,  // Multiplikation nur bis 100
             chaosMode: true
         }
     }
@@ -303,6 +304,7 @@ function generateProblem() {
     if (gameState.currentLevel === null || gameState.currentLevel === undefined) return;
     
     const levelConfig = CONFIG.levels[gameState.currentLevel];
+    const isChaosMode = levelConfig.chaosMode;
     
     let num1, num2, operation, result;
     
@@ -324,26 +326,32 @@ function generateProblem() {
             
             if (operation === '+') {
                 // For addition: generate independently, let do-while enforce maxResult
-                num1 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
-                num2 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
+                const addMaxNumber = isChaosMode ? 1000 : levelConfig.maxNumber;
+                num1 = Math.floor(Math.random() * addMaxNumber) + 1;
+                num2 = Math.floor(Math.random() * addMaxNumber) + 1;
                 result = num1 + num2;
             } else if (operation === '-') {
                 // For subtraction: both operands must be <= maxNumber
                 // Generate num1 first between 1 and maxNumber
-                num1 = Math.floor(Math.random() * levelConfig.maxNumber) + 1;
+                const subMaxNumber = isChaosMode ? 1000 : levelConfig.maxNumber;
+                num1 = Math.floor(Math.random() * subMaxNumber) + 1;
                 // Generate num2 between 1 and num1 (to avoid negative results and keep <= maxNumber)
                 num2 = Math.floor(Math.random() * num1) + 1;
                 result = num1 - num2;
             } else if (operation === '*') {
-                num1 = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
-                num2 = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
+                // For multiplication in chaos mode: limit to multiplicationMaxResult
+                const multMaxResult = levelConfig.multiplicationMaxResult || levelConfig.maxResult;
+                num1 = Math.floor(Math.random() * Math.sqrt(multMaxResult)) + 1;
+                num2 = Math.floor(Math.random() * Math.sqrt(multMaxResult)) + 1;
                 result = num1 * num2;
             } else if (operation === '/') {
-                num2 = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
-                result = Math.floor(Math.random() * Math.sqrt(levelConfig.maxNumber)) + 1;
+                // For division in chaos mode: limit to multiplicationMaxResult
+                const divMaxResult = levelConfig.multiplicationMaxResult || levelConfig.maxResult;
+                num2 = Math.floor(Math.random() * Math.sqrt(divMaxResult)) + 1;
+                result = Math.floor(Math.random() * Math.sqrt(divMaxResult)) + 1;
                 num1 = num2 * result;
             }
-        } while (result < levelConfig.minResult || (levelConfig.maxResult && result > levelConfig.maxResult));
+        } while (result < levelConfig.minResult || (levelConfig.maxResult && result > levelConfig.maxResult) || (levelConfig.multiplicationMaxResult && (operation === '*' || operation === '/') && result > levelConfig.multiplicationMaxResult));
     }
     
     // Aufgabe speichern
