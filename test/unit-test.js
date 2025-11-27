@@ -745,7 +745,7 @@ function testConfig() {
 }
 
 function testProblemGeneration() {
-    console.log('Teste Problemgenerierung...');
+    console.log('Teste Problemgenerierung (1000 Iterationen pro Level)...');
     
     // Teste verschiedene Level (including Level 0)
     for (let level = 0; level <= 5; level++) {
@@ -754,47 +754,135 @@ function testProblemGeneration() {
             const config = mockConfig.levels[level];
             let num1, num2, operation, result;
             
-            // Generiere ein paar Aufgaben
-            for (let i = 0; i < 10; i++) {
+            // Generiere VIELE Aufgaben (1000x) um zufällige Fehler zu erkennen
+            for (let i = 0; i < 1000; i++) {
                 operation = config.operations[Math.floor(Math.random() * config.operations.length)];
                 
                 if (operation === '+') {
-                    num1 = Math.floor(Math.random() * (config.maxNumber - 1)) + 1;
-                    num2 = Math.floor(Math.random() * (config.maxNumber - num1)) + 1;
+                    const isChaosMode = config.chaosMode;
+                    const addMaxNumber = isChaosMode ? 1000 : config.maxNumber;
+                    const addMaxResult = config.maxResult || config.maxNumber;
+                    // Generate num1 first (must be at least 1, at most addMaxResult-1 to leave room for num2)
+                    num1 = Math.floor(Math.random() * Math.min(addMaxNumber, addMaxResult - 1)) + 1;
+                    // Generate num2 to ensure result <= maxResult (num2 must be at least 1)
+                    const num2Max = Math.min(addMaxNumber, addMaxResult - num1);
+                    num2 = Math.floor(Math.random() * num2Max) + 1;
                     result = num1 + num2;
                 } else if (operation === '-') {
-                    num1 = Math.floor(Math.random() * config.maxNumber) + 1;
-                    num2 = Math.floor(Math.random() * num1) + 1;
-                    result = num1 - num2;
+                    const isChaosMode = config.chaosMode;
+                    const subMaxNumber = isChaosMode ? 1000 : config.maxNumber;
+                    const subMaxResult = config.maxResult || config.maxNumber;
+                    // Generate result first to control outcome
+                    result = Math.floor(Math.random() * Math.min(subMaxResult, subMaxNumber)) + 0; // Can be 0
+                    // Generate num2 between 1 and min of (subMaxNumber, subMaxNumber - result)
+                    const num2Max = Math.min(subMaxNumber, subMaxNumber - result);
+                    num2 = Math.floor(Math.random() * num2Max) + 1;
+                    // Calculate num1
+                    num1 = result + num2;
                 } else if (operation === '*') {
-                    num1 = Math.floor(Math.random() * Math.sqrt(config.maxNumber)) + 1;
-                    num2 = Math.floor(Math.random() * Math.sqrt(config.maxNumber)) + 1;
+                    const multMaxResult = config.multiplicationMaxResult || config.maxResult || config.maxNumber;
+                    num1 = Math.floor(Math.random() * Math.sqrt(multMaxResult)) + 1;
+                    num2 = Math.floor(Math.random() * Math.sqrt(multMaxResult)) + 1;
                     result = num1 * num2;
                 } else if (operation === '/') {
-                    num2 = Math.floor(Math.random() * Math.sqrt(config.maxNumber)) + 1;
-                    result = Math.floor(Math.random() * Math.sqrt(config.maxNumber)) + 1;
+                    const divMaxResult = config.multiplicationMaxResult || config.maxResult || config.maxNumber;
+                    num2 = Math.floor(Math.random() * Math.sqrt(divMaxResult)) + 1;
+                    result = Math.floor(Math.random() * Math.sqrt(divMaxResult)) + 1;
                     num1 = num2 * result;
+                }
+                
+                // KRITISCH: Prüfe auf NaN
+                if (Number.isNaN(num1)) {
+                    console.error(`Fehler: num1 ist NaN für Level ${level}, Operation ${operation} (Iteration ${i})`);
+                    return false;
+                }
+                if (Number.isNaN(num2)) {
+                    console.error(`Fehler: num2 ist NaN für Level ${level}, Operation ${operation} (Iteration ${i})`);
+                    return false;
+                }
+                if (Number.isNaN(result)) {
+                    console.error(`Fehler: result ist NaN für Level ${level}, Operation ${operation} (Iteration ${i})`);
+                    return false;
+                }
+                
+                // KRITISCH: Prüfe auf null
+                if (num1 === null) {
+                    console.error(`Fehler: num1 ist null für Level ${level}, Operation ${operation} (Iteration ${i})`);
+                    return false;
+                }
+                if (num2 === null) {
+                    console.error(`Fehler: num2 ist null für Level ${level}, Operation ${operation} (Iteration ${i})`);
+                    return false;
+                }
+                if (result === null) {
+                    console.error(`Fehler: result ist null für Level ${level}, Operation ${operation} (Iteration ${i})`);
+                    return false;
+                }
+                
+                // KRITISCH: Prüfe auf undefined
+                if (num1 === undefined) {
+                    console.error(`Fehler: num1 ist undefined für Level ${level}, Operation ${operation} (Iteration ${i})`);
+                    return false;
+                }
+                if (num2 === undefined) {
+                    console.error(`Fehler: num2 ist undefined für Level ${level}, Operation ${operation} (Iteration ${i})`);
+                    return false;
+                }
+                if (result === undefined) {
+                    console.error(`Fehler: result ist undefined für Level ${level}, Operation ${operation} (Iteration ${i})`);
+                    return false;
+                }
+                
+                // Prüfe, dass alle Werte Zahlen sind
+                if (typeof num1 !== 'number' || typeof num2 !== 'number' || typeof result !== 'number') {
+                    console.error(`Fehler: Nicht alle Werte sind Zahlen für Level ${level}, Operation ${operation} (num1: ${typeof num1}, num2: ${typeof num2}, result: ${typeof result})`);
+                    return false;
                 }
                 
                 // Prüfe, dass das Ergebnis mindestens minResult ist
                 if (result < config.minResult) {
-                    console.error(`Fehler: Ergebnis ${result} ist kleiner als minResult ${config.minResult} für Level ${level}`);
+                    console.error(`Fehler: Ergebnis ${result} ist kleiner als minResult ${config.minResult} für Level ${level} (${num1} ${operation} ${num2})`);
                     return false;
                 }
                 
-                // Prüfe, dass das Ergebnis bei Addition nicht maxNumber überschreitet
-                if (operation === '+' && result > config.maxNumber) {
-                    console.error(`Fehler: Additions-Ergebnis ${result} überschreitet maxNumber ${config.maxNumber} für Level ${level} (${num1} + ${num2})`);
+                // Prüfe maxResult falls definiert
+                if (config.maxResult && result > config.maxResult) {
+                    console.error(`Fehler: Ergebnis ${result} überschreitet maxResult ${config.maxResult} für Level ${level} (${num1} ${operation} ${num2})`);
+                    return false;
+                }
+                
+                // Spezielle Prüfung für Multiplikation/Division im Chaos Mode
+                if (config.chaosMode && (operation === '*' || operation === '/')) {
+                    if (config.multiplicationMaxResult && result > config.multiplicationMaxResult) {
+                        console.error(`Fehler: Multiplikations-/Divisions-Ergebnis ${result} überschreitet multiplicationMaxResult ${config.multiplicationMaxResult} für Level ${level} (${num1} ${operation} ${num2})`);
+                        return false;
+                    }
+                }
+                
+                // Prüfe, dass Operanden im gültigen Bereich sind
+                if (num1 < 1) {
+                    console.error(`Fehler: num1 (${num1}) ist kleiner als 1 für Level ${level}, Operation ${operation}`);
+                    return false;
+                }
+                if (num2 < 1) {
+                    console.error(`Fehler: num2 (${num2}) ist kleiner als 1 für Level ${level}, Operation ${operation}`);
+                    return false;
+                }
+                
+                // Prüfe Division: Ergebnis muss ganzzahlig sein
+                if (operation === '/' && num1 / num2 !== result) {
+                    console.error(`Fehler: Division ${num1} / ${num2} ergibt nicht ${result} für Level ${level}`);
                     return false;
                 }
             }
+            console.log(`  ✓ Level ${level}: 1000 Probleme generiert, alle gültig`);
         } catch (error) {
             console.error(`Fehler bei Problemgenerierung für Level ${level}:`, error);
             return false;
         }
     }
     
-    console.log('✓ Problemgenerierung erfolgreich');
+    console.log('✓ Problemgenerierung erfolgreich (6000 Probleme getestet)');
     return true;
 }
 

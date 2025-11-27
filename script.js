@@ -327,17 +327,25 @@ function generateProblem() {
             if (operation === '+') {
                 // For addition: generate independently, let do-while enforce maxResult
                 const addMaxNumber = isChaosMode ? 1000 : levelConfig.maxNumber;
-                num1 = Math.floor(Math.random() * addMaxNumber) + 1;
-                num2 = Math.floor(Math.random() * addMaxNumber) + 1;
+                const addMaxResult = levelConfig.maxResult || levelConfig.maxNumber;
+                // Generate num1 first (must be at least 1, at most addMaxResult-1 to leave room for num2)
+                num1 = Math.floor(Math.random() * Math.min(addMaxNumber, addMaxResult - 1)) + 1;
+                // Generate num2 to ensure result <= maxResult (num2 must be at least 1)
+                const num2Max = Math.min(addMaxNumber, addMaxResult - num1);
+                num2 = Math.floor(Math.random() * num2Max) + 1;
                 result = num1 + num2;
             } else if (operation === '-') {
                 // For subtraction: both operands must be <= maxNumber
                 // Generate num1 first between 1 and maxNumber
                 const subMaxNumber = isChaosMode ? 1000 : levelConfig.maxNumber;
-                num1 = Math.floor(Math.random() * subMaxNumber) + 1;
-                // Generate num2 between 1 and num1 (to avoid negative results and keep <= maxNumber)
-                num2 = Math.floor(Math.random() * num1) + 1;
-                result = num1 - num2;
+                const subMaxResult = levelConfig.maxResult || levelConfig.maxNumber;
+                // Generate result first to control outcome
+                result = Math.floor(Math.random() * Math.min(subMaxResult, subMaxNumber)) + 0; // Can be 0
+                // Generate num2 between 1 and min of (subMaxNumber, subMaxNumber - result)
+                const num2Max = Math.min(subMaxNumber, subMaxNumber - result);
+                num2 = Math.floor(Math.random() * num2Max) + 1;
+                // Calculate num1
+                num1 = result + num2;
             } else if (operation === '*') {
                 // For multiplication: use multiplicationMaxResult (chaos mode) or maxResult or maxNumber
                 const multMaxResult = levelConfig.multiplicationMaxResult || levelConfig.maxResult || levelConfig.maxNumber;
@@ -1046,7 +1054,8 @@ try {
                     currentLevel: gameState.currentLevel,
                     score: gameState.score,
                     totalProblems: gameState.totalProblems,
-                    timeLeft: gameState.timeLeft
+                    timeLeft: gameState.timeLeft,
+                    currentProblem: gameState.currentProblem
                 };
             };
             // Helper to submit an answer programmatically in tests

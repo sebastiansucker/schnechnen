@@ -49,8 +49,9 @@ test.describe('Level 4 Test: Multiplikation & Division bis 100', () => {
     for (let i = 0; i < 5; i++) {
       const problemText = await page.locator('#problem').textContent();
       
-      // Validate that problem does not contain NaN
+      // Validate that problem does not contain NaN or null
       expect(problemText).not.toContain('NaN');
+      expect(problemText).not.toContain('null');
       
       // Extract operands and verify they are valid numbers
       const operands = await page.evaluate(() => {
