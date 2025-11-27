@@ -49,6 +49,29 @@ test.describe('Level 4 Test: Multiplikation & Division bis 100', () => {
     for (let i = 0; i < 5; i++) {
       const problemText = await page.locator('#problem').textContent();
       
+      // Validate that problem does not contain NaN
+      expect(problemText).not.toContain('NaN');
+      
+      // Extract operands and verify they are valid numbers
+      const operands = await page.evaluate(() => {
+        if (window.gameState && window.gameState.currentProblem) {
+          return {
+            num1: window.gameState.currentProblem.num1,
+            num2: window.gameState.currentProblem.num2,
+            result: window.gameState.currentProblem.result
+          };
+        }
+        return null;
+      });
+      
+      if (operands) {
+        expect(Number.isNaN(operands.num1)).toBe(false);
+        expect(Number.isNaN(operands.num2)).toBe(false);
+        expect(Number.isNaN(operands.result)).toBe(false);
+        expect(operands.num1).toBeGreaterThan(0);
+        expect(operands.num2).toBeGreaterThan(0);
+      }
+      
       // Should contain either × or ÷
       const hasMultiplication = problemText.includes('×');
       const hasDivision = problemText.includes('÷');

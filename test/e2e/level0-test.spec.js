@@ -57,6 +57,27 @@ test.describe('Level 0 Test', () => {
     // Get the first problem text
     const problemText = await page.locator('#problem').textContent();
     
+    // Validate that problem does not contain NaN
+    expect(problemText).not.toContain('NaN');
+    
+    // Extract operands and verify they are valid numbers
+    const operands = await page.evaluate(() => {
+      if (window.gameState && window.gameState.currentProblem) {
+        return {
+          num1: window.gameState.currentProblem.num1,
+          num2: window.gameState.currentProblem.num2,
+          result: window.gameState.currentProblem.result
+        };
+      }
+      return null;
+    });
+    
+    if (operands) {
+      expect(Number.isNaN(operands.num1)).toBe(false);
+      expect(Number.isNaN(operands.num2)).toBe(false);
+      expect(Number.isNaN(operands.result)).toBe(false);
+    }
+    
     // Verify it's an addition problem (contains + sign)
     expect(problemText).toContain(' + ');
     
