@@ -339,14 +339,14 @@ function generateProblem() {
                 num2 = Math.floor(Math.random() * num1) + 1;
                 result = num1 - num2;
             } else if (operation === '*') {
-                // For multiplication in chaos mode: limit to multiplicationMaxResult
-                const multMaxResult = levelConfig.multiplicationMaxResult || levelConfig.maxResult;
+                // For multiplication: use multiplicationMaxResult (chaos mode) or maxResult or maxNumber
+                const multMaxResult = levelConfig.multiplicationMaxResult || levelConfig.maxResult || levelConfig.maxNumber;
                 num1 = Math.floor(Math.random() * Math.sqrt(multMaxResult)) + 1;
                 num2 = Math.floor(Math.random() * Math.sqrt(multMaxResult)) + 1;
                 result = num1 * num2;
             } else if (operation === '/') {
-                // For division in chaos mode: limit to multiplicationMaxResult
-                const divMaxResult = levelConfig.multiplicationMaxResult || levelConfig.maxResult;
+                // For division: use multiplicationMaxResult (chaos mode) or maxResult or maxNumber
+                const divMaxResult = levelConfig.multiplicationMaxResult || levelConfig.maxResult || levelConfig.maxNumber;
                 num2 = Math.floor(Math.random() * Math.sqrt(divMaxResult)) + 1;
                 result = Math.floor(Math.random() * Math.sqrt(divMaxResult)) + 1;
                 num1 = num2 * result;
