@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Schnechnen</title>
     
     <!-- Apple Touch Icon für iOS Home Screen (PNG erforderlich) -->
@@ -95,12 +95,12 @@
             <h2>Statistiken</h2>
             
             <div class="stats-level-selector" role="tablist" aria-label="Statistik Level Wechsel">
-                <button class="stats-level-btn" data-level="0" role="tab" aria-selected="false" aria-controls="stats-panel-0">Level 0</button>
-                <button class="stats-level-btn active" data-level="1" role="tab" aria-selected="true" aria-controls="stats-panel-1">Level 1</button>
-                <button class="stats-level-btn" data-level="2" role="tab" aria-selected="false" aria-controls="stats-panel-2">Level 2</button>
-                <button class="stats-level-btn" data-level="3" role="tab" aria-selected="false" aria-controls="stats-panel-3">Level 3</button>
-                <button class="stats-level-btn" data-level="4" role="tab" aria-selected="false" aria-controls="stats-panel-4">Level 4</button>
-                <button class="stats-level-btn" data-level="5" role="tab" aria-selected="false" aria-controls="stats-panel-5">🌪️ Chaos</button>
+                <button class="stats-level-btn" data-level="0" role="tab" aria-selected="false">Level 0</button>
+                <button class="stats-level-btn active" data-level="1" role="tab" aria-selected="true">Level 1</button>
+                <button class="stats-level-btn" data-level="2" role="tab" aria-selected="false">Level 2</button>
+                <button class="stats-level-btn" data-level="3" role="tab" aria-selected="false">Level 3</button>
+                <button class="stats-level-btn" data-level="4" role="tab" aria-selected="false">Level 4</button>
+                <button class="stats-level-btn" data-level="5" role="tab" aria-selected="false">🌪️ Chaos</button>
             </div>
             
             <div class="stats-cards">
@@ -118,12 +118,6 @@
                 <canvas id="highscore-chart" role="img" aria-label="Highscore Chart"></canvas>
             </div>
 
-            <!-- Panel for Level 0 statistics -->
-            <div id="stats-panel-0" class="stats-panel hidden" role="region" aria-labelledby="stats-panel-0">
-                <h3>Level 0 Statistiken</h3>
-                <p>Zusammenfassung der Spiele im Level 0.</p>
-            </div>
-            
             <div class="stats-mistakes" role="region" aria-labelledby="stats-mistakes-heading">
                 <h3 id="stats-mistakes-heading">Häufigste Fehler</h3>
                 <p class="stats-mistakes-subtitle">Die 5 am häufigsten falsch beantworteten Aufgaben:</p>
@@ -140,12 +134,12 @@
             <h2>🏆 Rekorde</h2>
             
             <div class="stats-level-selector" role="tablist" aria-label="Rekorde Level Wechsel">
-                <button class="stats-level-btn active" data-level="0" role="tab" aria-selected="true" aria-controls="leaderboard-panel-0">Level 0</button>
-                <button class="stats-level-btn" data-level="1" role="tab" aria-selected="false" aria-controls="leaderboard-panel-1">Level 1</button>
-                <button class="stats-level-btn" data-level="2" role="tab" aria-selected="false" aria-controls="leaderboard-panel-2">Level 2</button>
-                <button class="stats-level-btn" data-level="3" role="tab" aria-selected="false" aria-controls="leaderboard-panel-3">Level 3</button>
-                <button class="stats-level-btn" data-level="4" role="tab" aria-selected="false" aria-controls="leaderboard-panel-4">Level 4</button>
-                <button class="stats-level-btn" data-level="5" role="tab" aria-selected="false" aria-controls="leaderboard-panel-5">🌪️ Chaos</button>
+                <button class="stats-level-btn active" data-level="0" role="tab" aria-selected="true">Level 0</button>
+                <button class="stats-level-btn" data-level="1" role="tab" aria-selected="false">Level 1</button>
+                <button class="stats-level-btn" data-level="2" role="tab" aria-selected="false">Level 2</button>
+                <button class="stats-level-btn" data-level="3" role="tab" aria-selected="false">Level 3</button>
+                <button class="stats-level-btn" data-level="4" role="tab" aria-selected="false">Level 4</button>
+                <button class="stats-level-btn" data-level="5" role="tab" aria-selected="false">🌪️ Chaos</button>
             </div>
             
             <div class="leaderboard-container" role="region" aria-label="Top 10 Scores">

@@ -115,6 +115,7 @@ function initEventListeners() {
     // Level-Auswahl
     elements.levelButtons.forEach(button => {
         button.addEventListener('click', () => {
+            markActiveLevelButton(parseInt(button.dataset.level));
             startGame(parseInt(button.dataset.level));
         });
     });
@@ -139,6 +140,7 @@ function initEventListeners() {
     // Neues Spiel-Button
     elements.restartButton.addEventListener('click', () => {
         resetGame();
+        markActiveLevelButton(null);
         showScreen('start');
     });
 
@@ -169,10 +171,14 @@ function initEventListeners() {
             button.addEventListener('click', () => {
                 const level = parseInt(button.dataset.level);
                 updateStatsForLevel(level);
-                
+
                 // Update active state
-                elements.statsLevelButtons.forEach(btn => btn.classList.remove('active'));
+                elements.statsLevelButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.setAttribute('aria-selected', 'false');
+                });
                 button.classList.add('active');
+                button.setAttribute('aria-selected', 'true');
             });
         });
     }
@@ -193,6 +199,7 @@ function initEventListeners() {
             gameState.currentProblem = null;
             // Show start screen
             resetGame();
+            markActiveLevelButton(null);
             showScreen('start');
         });
     }
@@ -210,6 +217,14 @@ function initEventListeners() {
             });
         }
     }
+}
+
+// aria-pressed der Level-Buttons auf den gewählten Level setzen (oder alle
+// zurücksetzen, wenn level null ist)
+function markActiveLevelButton(level) {
+    elements.levelButtons.forEach(btn => {
+        btn.setAttribute('aria-pressed', String(parseInt(btn.dataset.level) === level));
+    });
 }
 
 // Spiel starten
@@ -780,10 +795,14 @@ function showStatsScreen(level) {
     
     // Mark the active level button
     if (elements.statsLevelButtons) {
-        elements.statsLevelButtons.forEach(btn => btn.classList.remove('active'));
+        elements.statsLevelButtons.forEach(btn => {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-selected', 'false');
+        });
         const activeBtn = Array.from(elements.statsLevelButtons).find(btn => parseInt(btn.dataset.level) === level);
         if (activeBtn) {
             activeBtn.classList.add('active');
+            activeBtn.setAttribute('aria-selected', 'true');
         }
     }
 }
