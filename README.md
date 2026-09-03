@@ -180,12 +180,21 @@ services:
       - DB_PATH=/data/leaderboard.db
 ```
 
-**Berechtigungen**: Der Container läuft als nicht-privilegierter `node`-User (UID 1000). Falls das Volume mit Schreibfehlern startet, dem appdata-Ordner einmalig die passenden Rechte geben:
+**Berechtigungen (wichtig, vor dem ersten Start)**: Der Container läuft als nicht-privilegierter `node`-User (UID 1000). Der appdata-Ordner gehört auf einem frischen Unraid-System aber meist `nobody:users` (99:100) — damit kann der Container die SQLite-Datei nicht anlegen und bricht beim Start ab mit:
+
+```
+Error: unable to open database file
+    at openDatabase (/app/server.js:...)
+```
+
+Deshalb dem Ordner *vor* dem ersten Start des Containers einmalig die passenden Rechte geben:
 
 ```bash
 mkdir -p /mnt/user/appdata/schnechnen
 chown -R 1000:1000 /mnt/user/appdata/schnechnen
 ```
+
+Danach den Container (neu) starten. Kommt der Fehler trotzdem, prüfen, ob im Docker-Tab wirklich `/mnt/user/appdata/schnechnen` (nicht z.B. ein anderer, noch nicht angelegter Pfad) auf `/data` gemappt ist.
 
 **Updates**: Watchtower oder Unraids eigenes "Check for Updates" für automatische Image-Updates verwenden.
 
@@ -242,6 +251,10 @@ Ist das NAS aus, ist das Leaderboard nicht erreichbar. Das Spiel selbst funktion
 **„Scores werden nicht gespeichert"**
 - Prüfe die Server-Logs (`docker logs schnechnen`)
 - Prüfe, ob `/data` im Container beschreibbar ist (Berechtigungen, siehe oben)
+
+**Container startet gar nicht, Log zeigt `Error: unable to open database file`**
+- Das ist praktisch immer eine Berechtigungsfrage, siehe [Berechtigungen](#betrieb-auf-unraid) oben: `chown -R 1000:1000` auf den appdata-Ordner, dann Container neu starten
+- Der Server loggt vor diesem Fehler die verwendete `DB_PATH` sowie eine Erklärung — in `docker logs schnechnen` nachsehen
 
 ## Mobile keyboard behavior
 
