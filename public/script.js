@@ -108,6 +108,12 @@ let gameState = {
 document.addEventListener('DOMContentLoaded', () => {
     initEventListeners();
     loadHighscores();
+
+    // Initialen History-Eintrag explizit setzen (statt ihn implizit leer zu
+    // lassen), damit der erste Druck auf Browser-Zurück ein wohldefiniertes
+    // Ziel hat und nicht mit dem Fix in showScreen() kollidiert.
+    window.history.replaceState({ screen: 'start' }, '', '?screen=start');
+    currentScreenName = 'start';
 });
 
 // Ereignis-Listener initialisieren
@@ -183,16 +189,7 @@ function initEventListeners() {
     // Back button: leave current level and go back to level selection
     if (elements.backButton) {
         elements.backButton.addEventListener('click', () => {
-            if (gameState.timer) clearInterval(gameState.timer);
-            // Reset runtime state but keep highscores
-            gameState.currentLevel = null;
-            gameState.timeLeft = 60;
-            gameState.score = 0;
-            gameState.totalProblems = 0;
-            gameState.problems = [];
-            gameState.currentProblem = null;
-            // Show start screen
-            resetGame();
+            leaveGame();
             showScreen('start');
         });
     }
@@ -688,8 +685,15 @@ function resetGame() {
     }
 }
 
+// Merkt sich den aktuell angezeigten Screen, damit popstate/Zurück-Button
+// erkennen können, ob gerade der Game-Screen verlassen wird (siehe leaveGame()).
+let currentScreenName = null;
+
 // Bildschirm anzeigen
-function showScreen(screenName) {
+// pushHistory: false wird vom popstate-Handler übergeben, damit das
+// Nachvollziehen einer Browser-Navigation nicht selbst wieder einen neuen
+// History-Eintrag erzeugt (sonst History-Endlosschleife, siehe Issue #33).
+function showScreen(screenName, { pushHistory = true } = {}) {
     // Alle Screens ausblenden
     elements.startScreen.classList.add('hidden');
     elements.gameScreen.classList.add('hidden');
@@ -701,7 +705,7 @@ function showScreen(screenName) {
     if (leaderboardScreen) {
         leaderboardScreen.classList.add('hidden');
     }
-    
+
     // Angegebenen Screen anzeigen
     if (screenName === 'start') {
         elements.startScreen.classList.remove('hidden');
@@ -718,18 +722,35 @@ function showScreen(screenName) {
             leaderboardScreen.classList.remove('hidden');
         }
     }
-    
+
+    currentScreenName = screenName;
+
     // Update browser history
-    window.history.pushState({ screen: screenName }, '', `?screen=${screenName}`);
+    if (pushHistory) {
+        window.history.pushState({ screen: screenName }, '', `?screen=${screenName}`);
+    }
+}
+
+// Laufendes Spiel verlassen: Timer stoppen und Spielzustand zurücksetzen.
+// Wird sowohl vom Zurück-Button als auch vom popstate-Handler (Browser-Zurück)
+// aufgerufen, damit der Timer nicht im Hintergrund weiterläuft, wenn der
+// Game-Screen verlassen wird (siehe Issue #33).
+function leaveGame() {
+    resetGame();
 }
 
 // Handle browser back button
 window.addEventListener('popstate', (event) => {
-    if (event.state && event.state.screen) {
-        showScreen(event.state.screen);
-    } else {
-        showScreen('start');
+    const targetScreen = (event.state && event.state.screen) ? event.state.screen : 'start';
+
+    // Wird der Game-Screen per Browser-Zurück verlassen, muss dieselbe
+    // Aufräumlogik laufen wie beim Zurück-Button, sonst tickt der Timer im
+    // Hintergrund weiter und wertet das Spiel später unerwartet.
+    if (currentScreenName === 'game' && targetScreen !== 'game') {
+        leaveGame();
     }
+
+    showScreen(targetScreen, { pushHistory: false });
 });
 
 // ==================== Statistik-Funktionen ====================
