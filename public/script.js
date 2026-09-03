@@ -235,14 +235,18 @@ function initEventListeners() {
         });
     }
     
-    // Leaderboard-Button
+    // Leaderboard-Button (ausgeblendet, wenn window.LEADERBOARD_ENABLED === false, z.B. auf GitHub Pages)
     const leaderboardBtn = document.getElementById('leaderboard-btn');
     if (leaderboardBtn) {
-        leaderboardBtn.addEventListener('click', () => {
-            if (typeof LeaderboardScreen !== 'undefined' && LeaderboardScreen.show) {
-                LeaderboardScreen.show();
-            }
-        });
+        if (window.LEADERBOARD_ENABLED === false) {
+            leaderboardBtn.style.display = 'none';
+        } else {
+            leaderboardBtn.addEventListener('click', () => {
+                if (typeof LeaderboardScreen !== 'undefined' && LeaderboardScreen.show) {
+                    LeaderboardScreen.show();
+                }
+            });
+        }
     }
 }
 
@@ -426,59 +430,31 @@ async function submitScoreToLeaderboard(level, score) {
         console.log('[Leaderboard] Skipping score submission during test mode');
         return;
     }
-    
+
+    // Skip submission when the leaderboard is disabled (e.g. GitHub Pages, no backend)
+    if (window.LEADERBOARD_ENABLED === false) {
+        return;
+    }
+
     try {
-        // Try backend API first (for local development with Node.js server)
-        let submitted = false;
-        
-        try {
-            const response = await fetch('/api/leaderboard/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username: window.Leaderboard?.getUsername() || 'Anonymous',
-                    level,
-                    score
-                })
-            });
-            
-            if (response.ok) {
-                submitted = true;
-                console.log('[Leaderboard] Score submitted via backend API');
-            }
-        } catch (e) {
-            console.warn('[Leaderboard] Backend API not available:', e.message);
-        }
-        
-        // If backend didn't work, try direct Supabase submission
-        if (!submitted && window.supabaseClient) {
-            try {
-                const { error } = await window.supabaseClient
-                    .from('leaderboard')
-                    .insert([{
-                        username: window.Leaderboard?.getUsername() || 'Anonymous',
-                        level,
-                        score,
-                        timestamp: new Date().toISOString()
-                    }]);
-                
-                if (error) {
-                    console.warn('[Leaderboard] Supabase submit error:', error);
-                } else {
-                    submitted = true;
-                    console.log('[Leaderboard] Score submitted via Supabase');
-                }
-            } catch (e) {
-                console.warn('[Leaderboard] Supabase submission failed:', e.message);
-            }
-        }
-        
-        if (!submitted) {
-            console.warn('[Leaderboard] Could not submit score - no backend available');
+        const apiBase = window.API_BASE || '/api';
+        const response = await fetch(`${apiBase}/leaderboard/submit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: window.Leaderboard?.getUsername() || 'Anonymous',
+                level,
+                score
+            })
+        });
+
+        if (response.ok) {
+            console.log('[Leaderboard] Score submitted');
+        } else {
+            console.warn('[Leaderboard] Score submission rejected:', response.status);
         }
     } catch (e) {
-        console.error('[Leaderboard] Error submitting score:', e);
-        // Silently fail - submission errors should not break the game
+        console.warn('[Leaderboard] Could not submit score - server not reachable:', e.message);
     }
 }
 

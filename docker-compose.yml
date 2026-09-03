@@ -1,0 +1,11 @@
+services:
+  schnechnen:
+    image: ghcr.io/sebastiansucker/schnechnen:latest
+    container_name: schnechnen
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - /mnt/user/appdata/schnechnen:/data
+    environment:
+      - DB_PATH=/data/leaderboard.db

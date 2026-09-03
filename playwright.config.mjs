@@ -1,5 +1,7 @@
 // playwright.config.js
 import { devices } from '@playwright/test';
+import os from 'os';
+import path from 'path';
 
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 const config = {
@@ -78,7 +80,11 @@ const config = {
     command: 'npm run start',
     port: 8080,
     timeout: 60000,
-    reuseExistingServer: true
+    reuseExistingServer: true,
+    // Use a throwaway SQLite file so E2E runs never touch real leaderboard data.
+    env: {
+      DB_PATH: path.join(os.tmpdir(), `schnechnen-e2e-leaderboard-${process.pid}.db`)
+    }
   },
 };
 

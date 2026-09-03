@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run test:unit && npm run test:e2e",
-    "test:unit": "node test/unit-test.js",
+    "test:unit": "node test/unit-test.js && node test/server-test.js",
     "test:coverage": "nyc --reporter=text --reporter=html node test/unit-test.js",
     "test:coverage:report": "open coverage/index.html",
     "test:e2e": "playwright test",
@@ -16,7 +16,7 @@
     "lint": "npx eslint . --config ./eslint.config.mjs",
     "lint:fix": "npx eslint . --config ./eslint.config.mjs --fix",
     "start": "node server.js",
-    "start:simple": "http-server . -p 8080"
+    "start:simple": "http-server public -p 8080"
   },
   "keywords": [
     "math",
@@ -30,14 +30,12 @@
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@playwright/test": "^1.56.1",
-    "concurrently": "^9.0.0",
     "eslint": "^9.39.1",
     "http-server": "^14.1.1",
-    "nyc": "^17.0.0"
+    "nyc": "^17.0.0",
+    "playwright": "^1.56.1"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.81.1",
-    "chart.js": "^4.5.1",
-    "playwright": "^1.56.1"
+    "chart.js": "^4.5.1"
   }
 }
