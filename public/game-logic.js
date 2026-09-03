@@ -55,6 +55,9 @@ const CONFIG = {
     }
 };
 
+// Obergrenze für das Neuziehen bei der Addition (siehe generateProblemFor).
+const MAX_ADDITION_ATTEMPTS = 100;
+
 // Helper: map internal operator tokens to printable symbols
 function displayOperator(op) {
     if (op === '*') return '×';
@@ -80,15 +83,46 @@ function generateProblemFor(levelConfig, rng = Math.random) {
         operation = levelConfig.operations[Math.floor(rng() * levelConfig.operations.length)];
 
         if (operation === '+') {
-            // For addition: generate independently, let do-while enforce maxResult
+            // Beide Operanden unabhängig und gleichverteilt ziehen; Kombinationen
+            // über maxResult werden verworfen und neu gezogen.
+            //
+            // Früher wurde stattdessen num2 auf maxResult - num1 begrenzt. Das
+            // erzeugt bei maxNumber === maxResult (Level 0, 1, 2 sowie die
+            // Addition im Chaos Mode) eine deutliche Schieflage: ein kleines num1
+            // lässt num2 viel Spielraum, ein großes fast keinen mehr, wodurch die
+            // Summe systematisch zum Randwert maxResult gezogen wird. In Level 0
+            // kam so das Ergebnis 10 in ~31 % der Aufgaben vor, das Ergebnis 2
+            // dagegen nur in ~1 %, und "9 + 1" war mit ~11 % die mit Abstand
+            // häufigste Einzelaufgabe.
+            //
+            // Verwerfen statt Begrenzen macht jede gültige Aufgabe exakt gleich
+            // wahrscheinlich (Level 0: 45 mögliche Aufgaben zu je ~2,2 %).
             const addMaxNumber = isChaosMode ? 1000 : levelConfig.maxNumber;
             const addMaxResult = levelConfig.maxResult || levelConfig.maxNumber;
-            // Generate num1 first (must be at least 1, at most addMaxResult-1 to leave room for num2)
-            num1 = Math.floor(rng() * Math.min(addMaxNumber, addMaxResult - 1)) + 1;
-            // Generate num2 to ensure result <= maxResult (num2 must be at least 1)
-            const num2Max = Math.min(addMaxNumber, addMaxResult - num1);
-            num2 = Math.floor(rng() * num2Max) + 1;
-            result = num1 + num2;
+            // Ein Operand kann höchstens addMaxResult - 1 werden, damit für den
+            // anderen (mindestens 1) noch Platz bleibt.
+            const operandMax = Math.max(1, Math.min(addMaxNumber, addMaxResult - 1));
+
+            // Bewusst hier verwerfen und nicht in der äußeren do-while-Schleife:
+            // dort würde bei jedem Versuch neu ausgewürfelt, welche Rechenart
+            // drankommt. Da nur die Addition verworfen wird, verschöbe sich die
+            // Mischung in Level 1/2 spürbar zugunsten der Subtraktion.
+            let attempts = 0;
+            do {
+                num1 = Math.floor(rng() * operandMax) + 1;
+                num2 = Math.floor(rng() * operandMax) + 1;
+                result = num1 + num2;
+            } while (result > addMaxResult && ++attempts < MAX_ADDITION_ATTEMPTS);
+
+            if (result > addMaxResult) {
+                // Sicherheitsnetz gegen eine Endlosschleife. Bei allen echten
+                // Konfigurationen liegt die Trefferquote über 50 %, dieser Zweig
+                // ist also praktisch unerreichbar; er greift nur bei einer
+                // degenerierten Konfiguration mit maxResult < 2.
+                num1 = 1;
+                num2 = 1;
+                result = 2;
+            }
         } else if (operation === '-') {
             // For subtraction: both operands must be <= maxNumber
             const subMaxNumber = isChaosMode ? 1000 : levelConfig.maxNumber;
