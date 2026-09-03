@@ -76,7 +76,12 @@ const LeaderboardScreen = (() => {
     async function loadLeaderboard(level) {
         const list = document.getElementById('leaderboard-list');
         if (!list) return;
-        
+
+        if (window.LEADERBOARD_ENABLED === false) {
+            list.innerHTML = '<li class="leaderboard-empty">🏆 Leaderboard in dieser Version nicht verfügbar</li>';
+            return;
+        }
+
         // Show loading state
         list.innerHTML = '<li class="leaderboard-loading">Lade Rekorde...</li>';
         

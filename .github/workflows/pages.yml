@@ -1,0 +1,52 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Nur ein Pages-Deploy gleichzeitig, aber laufende Deploys nicht abbrechen
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      # GitHub Pages ist rein statisch und hat keinen Zugriff auf die Leaderboard-API
+      # (server.js/SQLite laufen nur im Docker-Container). Deshalb wird beim Pages-Build
+      # das Leaderboard-Flag auf "false" gesetzt - der Rest des Spiels bleibt unverändert.
+      - name: Build static site (Leaderboard deaktiviert)
+        run: |
+          mkdir -p _site
+          cp -r public/. _site/
+          cat > _site/leaderboard-config.js <<'EOF'
+          // Von .github/workflows/pages.yml beim Deploy überschrieben:
+          // GitHub Pages hat kein Backend für die Leaderboard-API.
+          window.LEADERBOARD_ENABLED = false;
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -235,14 +235,18 @@ function initEventListeners() {
         });
     }
     
-    // Leaderboard-Button
+    // Leaderboard-Button (ausgeblendet, wenn window.LEADERBOARD_ENABLED === false, z.B. auf GitHub Pages)
     const leaderboardBtn = document.getElementById('leaderboard-btn');
     if (leaderboardBtn) {
-        leaderboardBtn.addEventListener('click', () => {
-            if (typeof LeaderboardScreen !== 'undefined' && LeaderboardScreen.show) {
-                LeaderboardScreen.show();
-            }
-        });
+        if (window.LEADERBOARD_ENABLED === false) {
+            leaderboardBtn.style.display = 'none';
+        } else {
+            leaderboardBtn.addEventListener('click', () => {
+                if (typeof LeaderboardScreen !== 'undefined' && LeaderboardScreen.show) {
+                    LeaderboardScreen.show();
+                }
+            });
+        }
     }
 }
 
@@ -426,7 +430,12 @@ async function submitScoreToLeaderboard(level, score) {
         console.log('[Leaderboard] Skipping score submission during test mode');
         return;
     }
-    
+
+    // Skip submission when the leaderboard is disabled (e.g. GitHub Pages, no backend)
+    if (window.LEADERBOARD_ENABLED === false) {
+        return;
+    }
+
     try {
         const apiBase = window.API_BASE || '/api';
         const response = await fetch(`${apiBase}/leaderboard/submit`, {

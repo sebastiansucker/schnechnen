@@ -219,3 +219,36 @@ test.describe('Leaderboard Screen Tests', () => {
     expect(response.status()).toBe(400);
   });
 });
+
+test.describe('Leaderboard disabled (z.B. GitHub-Pages-Build ohne Backend)', () => {
+  test.beforeEach(async ({ page }) => {
+    // Simuliert den von .github/workflows/pages.yml überschriebenen leaderboard-config.js
+    await page.addInitScript(() => {
+      window.LEADERBOARD_ENABLED = false;
+    });
+    await page.goto('http://localhost:8080');
+  });
+
+  test('Rekorde-Button ist ausgeblendet', async ({ page }) => {
+    await page.waitForSelector('#leaderboard-btn', { state: 'attached' });
+    await expect(page.locator('#leaderboard-btn')).toBeHidden();
+  });
+
+  test('Score-Submission wird nicht ausgelöst', async ({ page }) => {
+    let submitCalled = false;
+    await page.route('**/api/leaderboard/submit', route => {
+      submitCalled = true;
+      route.continue();
+    });
+
+    // submitScoreToLeaderboard() is a global function in script.js (non-module script,
+    // so top-level function declarations end up on window)
+    await page.evaluate(() => {
+      window.__TEST_MODE__ = false; // sonst würde submitScoreToLeaderboard schon aus diesem Grund überspringen
+      return window.submitScoreToLeaderboard(1, 10);
+    });
+
+    await page.waitForTimeout(500);
+    expect(submitCalled).toBe(false);
+  });
+});

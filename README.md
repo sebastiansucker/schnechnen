@@ -26,7 +26,8 @@ schnechnen/
 │   ├── script.js        # Spiellogik
 │   ├── weighting.js     # Fehlertracking
 │   ├── leaderboard.js   # Anonyme Benutzernamen-Verwaltung
-│   └── leaderboard-screen.js # Leaderboard-UI und Datenladung
+│   ├── leaderboard-screen.js # Leaderboard-UI und Datenladung
+│   └── leaderboard-config.js # Flag LEADERBOARD_ENABLED (aus für GitHub Pages)
 ├── server.js            # Backend: Static-File-Server + Leaderboard-API (node:sqlite)
 ├── Dockerfile           # Container-Image (node:24-alpine)
 ├── docker-compose.yml   # Referenz-Compose-Datei für Unraid
@@ -45,7 +46,8 @@ schnechnen/
 └── .github/
     └── workflows/
         ├── ci.yml       # GitHub Actions CI (Lint + Tests)
-        └── docker.yml   # Baut und pusht das Image nach ghcr.io
+        ├── docker.yml   # Baut und pusht das Image nach ghcr.io
+        └── pages.yml    # Deployt public/ nach GitHub Pages (ohne Leaderboard)
 ```
 
 ## Quick start (development)
@@ -191,8 +193,25 @@ chown -R 1000:1000 /mnt/user/appdata/schnechnen
 
 ### Szenarien für den Zugriff
 
-- **Nur im Heimnetz (Standardfall)**: Spiel läuft komplett vom NAS unter `http://<NAS-IP>:8080`. GitHub Pages wird nicht mehr gebraucht, kein HTTPS oder Port-Forwarding nötig.
-- **Zusätzlich von außen, oder Spiel bleibt auf GitHub Pages**: Die API muss dann per HTTPS erreichbar sein (GitHub Pages blockt sonst Mixed Content). Empfohlen: [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) als zweiter Container, kein offener Port im Router nötig. `CORS_ORIGIN` auf die Pages-URL setzen. Falls GitHub Pages weiter aus dem Repository-Root ausgeliefert wird, muss die Pages-Quelle auf den `public/`-Ordner umgestellt werden (Settings → Pages), da die statischen Dateien jetzt dort liegen.
+- **Nur im Heimnetz (Standardfall)**: Spiel läuft komplett vom NAS unter `http://<NAS-IP>:8080`, inklusive Leaderboard. Kein HTTPS oder Port-Forwarding nötig.
+- **GitHub Pages weiterhin nutzen, ohne Leaderboard**: `.github/workflows/pages.yml` baut und deployt bei jedem Push auf `main` automatisch die `public/`-Dateien nach GitHub Pages — mit deaktiviertem Leaderboard (siehe unten). Das ist der einfachste Weg, das Spiel zusätzlich öffentlich unter der Pages-URL anzubieten, ohne einen Server im Internet erreichbar machen zu müssen.
+- **GitHub Pages zusätzlich mit funktionierendem Leaderboard**: Die API muss dann per HTTPS erreichbar sein (GitHub Pages blockt sonst Mixed Content). Empfohlen: [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) als zweiter Container, kein offener Port im Router nötig. `CORS_ORIGIN` auf die Pages-URL setzen, `window.API_BASE` im Pages-Build auf die Tunnel-URL zeigen lassen und in `.github/workflows/pages.yml` das `LEADERBOARD_ENABLED = false` in `leaderboard-config.js` weglassen bzw. auf `true` setzen. Kann als Folge-Ticket kommen.
+
+### GitHub Pages ohne Datenbank-Funktionalität
+
+Das Spiel selbst (Level, Statistiken, Fehlertracking) läuft komplett im Browser und braucht keinen Server. Nur das Leaderboard braucht eine erreichbare API — die gibt es auf GitHub Pages standardmäßig nicht.
+
+Dafür gibt es ein Flag in `public/leaderboard-config.js`:
+
+```js
+window.LEADERBOARD_ENABLED = true; // Default: an (Docker/npm start)
+```
+
+Ist es `false`, wird der 🏆-Rekorde-Button ausgeblendet und es werden keine Scores mehr an eine API gesendet.
+
+`.github/workflows/pages.yml` deployt bei jedem Push auf `main` den Inhalt von `public/` nach GitHub Pages und überschreibt dabei `leaderboard-config.js` mit `LEADERBOARD_ENABLED = false` — der Rest des Spiels bleibt unverändert nutzbar, nur eben ohne Rekorde-Button. Die Docker/Unraid-Variante (`npm start` bzw. `server.js`) bleibt davon unberührt und liefert das Leaderboard ganz normal aus, da dort die Original-Datei aus `public/` mit `LEADERBOARD_ENABLED = true` verwendet wird.
+
+**Einmalige Einrichtung**: Damit dieser Workflow greift, muss die Pages-Quelle des Repositories einmalig auf "GitHub Actions" umgestellt werden: **Settings → Pages → Build and deployment → Source → GitHub Actions**. Ohne diese Umstellung liefert GitHub Pages weiterhin die alte, klassische Root-Deployment-Variante aus (die nach dem Umzug der Dateien nach `public/` nicht mehr funktioniert, da `index.html` nicht mehr im Repository-Root liegt).
 
 ### Bekannte Einschränkung
 
@@ -245,6 +264,8 @@ Eine GitHub Actions-Workflow-Datei ist vorhanden unter `.github/workflows/ci.yml
 - Nutzt Caching für npm und Playwright-Downloads zur Beschleunigung.
 
 Zusätzlich baut `.github/workflows/docker.yml` bei jedem Push auf `main` das Docker-Image und pusht es nach `ghcr.io/sebastiansucker/schnechnen` (Tags `latest` und Commit-SHA). Es wird nur das eingebaute `GITHUB_TOKEN` benötigt, kein zusätzliches Secret.
+
+Und `.github/workflows/pages.yml` deployt bei jedem Push auf `main` `public/` nach GitHub Pages (Leaderboard dort deaktiviert, siehe [GitHub Pages ohne Datenbank-Funktionalität](#github-pages-ohne-datenbank-funktionalität)). Dafür muss die Pages-Quelle des Repositories einmalig auf "GitHub Actions" umgestellt sein.
 
 ### Automatische Dependency Updates (Renovate Bot)
 
