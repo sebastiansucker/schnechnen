@@ -2,7 +2,8 @@
   "all": true,
   "include": [
     "public/script.js",
-    "public/weighting.js"
+    "public/weighting.js",
+    "public/game-logic.js"
   ],
   "exclude": [
     "test/**",
