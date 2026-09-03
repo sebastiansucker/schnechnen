@@ -10,53 +10,15 @@ if (typeof window !== 'undefined' && !window.__TEST_MODE__) {
     );
 }
 
-// Spielkonfiguration
-const CONFIG = {
-    levels: {
-        0: {
-            name: "Addition bis 10",
-            operations: ['+'],
-            maxNumber: 10,
-            minResult: 0,
-            maxResult: 10
-        },
-        1: {
-            name: "Addition & Subtraktion bis 10",
-            operations: ['+', '-'],
-            maxNumber: 10,
-            minResult: 0,
-            maxResult: 10
-        },
-        2: {
-            name: "Addition & Subtraktion bis 100",
-            operations: ['+', '-'],
-            maxNumber: 100,
-            minResult: 0,
-            maxResult: 100
-        },
-        3: {
-            name: "Multiplikation bis 100",
-            operations: ['*'],
-            maxNumber: 100,
-            minResult: 0
-        },
-        4: {
-            name: "Multiplikation & Division bis 100",
-            operations: ['*', '/'],
-            maxNumber: 100,
-            minResult: 0
-        },
-        5: {
-            name: "🌪️ Chaos Mode",
-            operations: ['+', '-', '*', '/'],
-            maxNumber: 1000,
-            minResult: 0,
-            maxResult: 1000,
-            multiplicationMaxResult: 100,  // Multiplikation nur bis 100
-            chaosMode: true
-        }
-    }
-};
+// Reine Spiellogik (CONFIG, Aufgabengenerierung, Anzeige-Helfer) lebt in
+// game-logic.js, damit sie ohne DOM-Mocks direkt und unverfälscht getestet
+// werden kann. script.js kümmert sich nur noch um DOM und Spielzustand.
+// (Kein Destructuring von CONFIG/etc. hier: script.js und game-logic.js sind
+// im Browser beides klassische <script>-Tags im selben globalen Scope -
+// eigene "const CONFIG" würde mit der in game-logic.js kollidieren.)
+const GameLogic = (typeof module !== 'undefined' && module.exports)
+    ? require('./game-logic.js')
+    : window.GameLogic;
 
 // Create a safe elements object when running under Node (unit tests) or real DOM when in browser
 function createElements() {
@@ -252,7 +214,7 @@ function initEventListeners() {
 
 // Spiel starten
 function startGame(level) {
-    if (!CONFIG.levels[level]) {
+    if (!GameLogic.CONFIG.levels[level]) {
         console.error('Ungültiges Level:', level);
         return;
     }
@@ -307,16 +269,15 @@ function startTimer() {
 function generateProblem() {
     if (gameState.currentLevel === null || gameState.currentLevel === undefined) return;
     
-    const levelConfig = CONFIG.levels[gameState.currentLevel];
-    const isChaosMode = levelConfig.chaosMode;
-    
+    const levelConfig = GameLogic.CONFIG.levels[gameState.currentLevel];
+
     let num1, num2, operation, result;
-    
+
     // Adaptive Problemgenerierung: 30% Chance, ein häufiges Fehlerproblem zu wiederholen
     const MISTAKE_REPEAT_CHANCE = 0.3;
     const shouldRepeatMistake = Math.random() < MISTAKE_REPEAT_CHANCE;
     const mistakeProblem = window.Weighting ? window.Weighting.peekMistake(gameState.currentLevel) : null;
-    
+
     if (shouldRepeatMistake && mistakeProblem) {
         // Wiederverwende ein Problem aus der Fehlerliste
         num1 = mistakeProblem.num1;
@@ -324,48 +285,10 @@ function generateProblem() {
         operation = mistakeProblem.operation;
         result = mistakeProblem.result;
     } else {
-        // Generiere ein neues zufälliges Problem
-        do {
-            operation = levelConfig.operations[Math.floor(Math.random() * levelConfig.operations.length)];
-            
-            if (operation === '+') {
-                // For addition: generate independently, let do-while enforce maxResult
-                const addMaxNumber = isChaosMode ? 1000 : levelConfig.maxNumber;
-                const addMaxResult = levelConfig.maxResult || levelConfig.maxNumber;
-                // Generate num1 first (must be at least 1, at most addMaxResult-1 to leave room for num2)
-                num1 = Math.floor(Math.random() * Math.min(addMaxNumber, addMaxResult - 1)) + 1;
-                // Generate num2 to ensure result <= maxResult (num2 must be at least 1)
-                const num2Max = Math.min(addMaxNumber, addMaxResult - num1);
-                num2 = Math.floor(Math.random() * num2Max) + 1;
-                result = num1 + num2;
-            } else if (operation === '-') {
-                // For subtraction: both operands must be <= maxNumber
-                // Generate num1 first between 1 and maxNumber
-                const subMaxNumber = isChaosMode ? 1000 : levelConfig.maxNumber;
-                const subMaxResult = levelConfig.maxResult || levelConfig.maxNumber;
-                // Generate result first to control outcome
-                result = Math.floor(Math.random() * Math.min(subMaxResult, subMaxNumber)) + 0; // Can be 0
-                // Generate num2 between 1 and min of (subMaxNumber, subMaxNumber - result)
-                const num2Max = Math.min(subMaxNumber, subMaxNumber - result);
-                num2 = Math.floor(Math.random() * num2Max) + 1;
-                // Calculate num1
-                num1 = result + num2;
-            } else if (operation === '*') {
-                // For multiplication: use multiplicationMaxResult (chaos mode) or maxResult or maxNumber
-                const multMaxResult = levelConfig.multiplicationMaxResult || levelConfig.maxResult || levelConfig.maxNumber;
-                num1 = Math.floor(Math.random() * Math.sqrt(multMaxResult)) + 1;
-                num2 = Math.floor(Math.random() * Math.sqrt(multMaxResult)) + 1;
-                result = num1 * num2;
-            } else if (operation === '/') {
-                // For division: use multiplicationMaxResult (chaos mode) or maxResult or maxNumber
-                const divMaxResult = levelConfig.multiplicationMaxResult || levelConfig.maxResult || levelConfig.maxNumber;
-                num2 = Math.floor(Math.random() * Math.sqrt(divMaxResult)) + 1;
-                result = Math.floor(Math.random() * Math.sqrt(divMaxResult)) + 1;
-                num1 = num2 * result;
-            }
-        } while (result < levelConfig.minResult || (levelConfig.maxResult && result > levelConfig.maxResult) || (levelConfig.multiplicationMaxResult && (operation === '*' || operation === '/') && result > levelConfig.multiplicationMaxResult));
+        // Generiere ein neues zufälliges Problem über die geteilte Spiellogik
+        ({ num1, num2, operation, result } = GameLogic.generateProblemFor(levelConfig));
     }
-    
+
     // Aufgabe speichern
     gameState.currentProblem = {
         num1: num1,
@@ -377,7 +300,7 @@ function generateProblem() {
     };
     
     // Aufgabe anzeigen (use printable operator symbols)
-    elements.problemElement.innerHTML = `${num1} ${displayOperator(operation)} ${num2} = <span id="user-answer" class="user-answer">?</span>`;
+    elements.problemElement.innerHTML = `${num1} ${GameLogic.displayOperator(operation)} ${num2} = <span id="user-answer" class="user-answer">?</span>`;
     
     // User-Answer Element neu holen (weil innerHTML neu gesetzt wurde)
     elements.userAnswerElement = document.getElementById('user-answer');
@@ -708,7 +631,7 @@ function displayMistakes() {
     
     sortedMistakes.forEach(problem => {
         const li = document.createElement('li');
-        li.textContent = `${problem.num1} ${displayOperator(problem.operation)} ${problem.num2} = ${problem.result} (${problem.wrongCount}× falsch)`;
+        li.textContent = `${problem.num1} ${GameLogic.displayOperator(problem.operation)} ${problem.num2} = ${problem.result} (${problem.wrongCount}× falsch)`;
         elements.mistakeList.appendChild(li);
     });
 }
@@ -735,18 +658,11 @@ function displayStatsMistakes(level) {
     
     sortedMistakes.forEach(problem => {
         const li = document.createElement('li');
-        const problemText = `${problem.num1} ${displayOperator(problem.operation)} ${problem.num2} = ${problem.result}`;
+        const problemText = `${problem.num1} ${GameLogic.displayOperator(problem.operation)} ${problem.num2} = ${problem.result}`;
         const countBadge = `<span class="mistake-count">${problem.wrongCount}× falsch</span>`;
         li.innerHTML = `${problemText} ${countBadge}`;
         elements.statsMistakeList.appendChild(li);
     });
-}
-
-// Helper: map internal operator tokens to printable symbols
-function displayOperator(op) {
-    if (op === '*') return '×';
-    if (op === '/') return '÷';
-    return op;
 }
 
 // Spiel zurücksetzen
@@ -1004,7 +920,7 @@ function renderChart(level, history) {
 // Exportiere Funktionen für Tests
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
-        CONFIG,
+        CONFIG: GameLogic.CONFIG,
         generateProblem,
         checkAnswer,
         startGame,
@@ -1069,7 +985,7 @@ if (typeof module !== 'undefined' && module.exports) {
         // Core game logic functions
         generateProblem: typeof generateProblem !== 'undefined' ? generateProblem : null,
         checkAnswer: typeof checkAnswer !== 'undefined' ? checkAnswer : null,
-        displayOperator: typeof displayOperator !== 'undefined' ? displayOperator : null,
+        displayOperator: GameLogic.displayOperator,
         startGame: typeof startGame !== 'undefined' ? startGame : null,
         endGame: typeof endGame !== 'undefined' ? endGame : null,
         startTimer: typeof startTimer !== 'undefined' ? startTimer : null,
@@ -1092,7 +1008,7 @@ if (typeof module !== 'undefined' && module.exports) {
         displayStatsMistakes: typeof displayStatsMistakes !== 'undefined' ? displayStatsMistakes : null,
         
         // Config and state
-        CONFIG: CONFIG,
+        CONFIG: GameLogic.CONFIG,
         getGameState: function() { return typeof gameState !== 'undefined' ? gameState : null; },
         resetGameState: function() { 
             if (typeof gameState === 'undefined') return;
