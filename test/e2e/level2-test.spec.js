@@ -4,6 +4,10 @@ const { test, expect } = require('@playwright/test');
 test.describe('Level 2 Test: Addition & Subtraktion bis 100', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:8080');
+    // Enable test mode to prevent scores from being submitted to leaderboard
+    await page.evaluate(() => {
+      window.__TEST_MODE__ = true;
+    });
   });
 
   test('Level 2 ist verfügbar und funktional', async ({ page }) => {
