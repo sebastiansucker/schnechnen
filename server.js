@@ -361,7 +361,21 @@ if (require.main === module) {
         console.error('[UnhandledRejection]', reason);
     });
 
-    const db = openDatabase(DB_PATH);
+    console.log(`[Config] DB_PATH: ${DB_PATH}`);
+
+    let db;
+    try {
+        db = openDatabase(DB_PATH);
+    } catch (err) {
+        console.error(`\n❌ Konnte die SQLite-Datenbank nicht öffnen: ${DB_PATH}`);
+        console.error(`   ${err.message}`);
+        console.error(`\nMeist liegt das daran, dass "${path.dirname(DB_PATH)}" nicht existiert oder für den`);
+        console.error('Container-User "node" (UID 1000) nicht beschreibbar ist - z.B. weil ein');
+        console.error('gemountetes Host-Verzeichnis einem anderen User gehört. Auf dem Host beheben mit:');
+        console.error(`   chown -R 1000:1000 <host-verzeichnis>\n`);
+        process.exit(1);
+    }
+
     const server = http.createServer(createRequestListener(db));
 
     server.listen(PORT, () => {
