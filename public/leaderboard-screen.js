@@ -60,10 +60,9 @@ const LeaderboardScreen = (() => {
         
         // Update active button
         document.querySelectorAll('#leaderboard-screen .stats-level-btn').forEach(btn => {
-            btn.classList.remove('active');
-            if (parseInt(btn.dataset.level) === level) {
-                btn.classList.add('active');
-            }
+            const isActive = parseInt(btn.dataset.level) === level;
+            btn.classList.toggle('active', isActive);
+            btn.setAttribute('aria-selected', String(isActive));
         });
         
         // Load and display leaderboard
@@ -164,8 +163,7 @@ const LeaderboardScreen = (() => {
     function updatePlayerName() {
         const usernameEl = document.getElementById('player-username');
         if (usernameEl && window.Leaderboard) {
-            const username = window.Leaderboard.getUsername();
-            usernameEl.textContent = escapeHtml(username);
+            usernameEl.textContent = window.Leaderboard.getUsername();
         }
     }
     
