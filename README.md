@@ -13,35 +13,39 @@ Ein kleines, responsives Mathe-Lernspiel (JavaScript) mit modernem Design.
 - 🧠 **Adaptives Lernen**: Häufige Fehler werden automatisch wiederholt (30% Chance)
 - ❌ **Fehleranalyse**: Anzeige häufig falsch gelöster Aufgaben
 - 📈 **Statistik-Seite**: Verlaufsdiagramm der letzten 50 Spiele mit Chart.js
-- 🏆 **Anonymes Leaderboard**: Mit Supabase integriert, Top 10 pro Level
+- 🏆 **Anonymes Leaderboard**: Selbst gehostet mit SQLite (kein Cloud-Dienst), Top 10 pro Level
 - ✅ **Umfassend getestet**: 11 Unit Tests + 480 E2E Tests (Playwright, 5 Browser-Engines)
 
 ## Projektstruktur
 
 ```
 schnechnen/
-├── index.html          # Haupt-HTML-Datei
-├── style.css           # CSS-Styling
-├── script.js           # Spiellogik
-├── weighting.js        # Fehlertracking
-├── leaderboard.js      # Anonyme Benutzernamen-Verwaltung
-├── leaderboard-screen.js # Leaderboard-UI und Datenladung
-├── server.js           # Backend-API für Leaderboard
-├── README.md           # Diese Datei
-├── package.json        # Projekt-Abhängigkeiten
-├── playwright.config.js # Playwright-Konfiguration
+├── public/              # Statische Dateien, ausschließlich diese werden ausgeliefert
+│   ├── index.html       # Haupt-HTML-Datei
+│   ├── style.css        # CSS-Styling
+│   ├── script.js        # Spiellogik
+│   ├── weighting.js     # Fehlertracking
+│   ├── leaderboard.js   # Anonyme Benutzernamen-Verwaltung
+│   └── leaderboard-screen.js # Leaderboard-UI und Datenladung
+├── server.js            # Backend: Static-File-Server + Leaderboard-API (node:sqlite)
+├── Dockerfile           # Container-Image (node:24-alpine)
+├── docker-compose.yml   # Referenz-Compose-Datei für Unraid
+├── README.md            # Diese Datei
+├── package.json         # Projekt-Abhängigkeiten
+├── playwright.config.mjs # Playwright-Konfiguration
 ├── test/
-│   ├── unit-test.js    # Unit-Tests (11 Tests)
+│   ├── unit-test.js     # Unit-Tests für Spiellogik
+│   ├── server-test.js   # Unit-Tests für Leaderboard-Validierung und SQLite-Zugriff
 │   └── e2e/
-│       ├── level0-test.spec.js      # Level 0 Tests (10 Tests)
+│       ├── level0-test.spec.js      # Level 0 Tests
 │       ├── schnechnen-tests.spec.js # Allgemeine E2E-Tests
-│       ├── check-buttons.spec.js    # Button-Tests
+│       ├── leaderboard.spec.js      # Leaderboard Tests
 │       ├── stats.spec.js            # Statistik-Tests
 │       └── weighting-integration.spec.js # Adaptive Learning Tests
 └── .github/
-    ├── copilot-instructions.md # Copilot-Anweisungen
     └── workflows/
-        └── ci.yml      # GitHub Actions CI
+        ├── ci.yml       # GitHub Actions CI (Lint + Tests)
+        └── docker.yml   # Baut und pusht das Image nach ghcr.io
 ```
 
 ## Quick start (development)
@@ -116,64 +120,87 @@ npm test  # Führt Unit + E2E Tests aus (491 Tests gesamt)
 
 ## 🏆 Leaderboard
 
-Das Spiel verfügt über ein anonymes Leaderboard, das mit Supabase integriert ist.
+Das Spiel verfügt über ein anonymes Leaderboard. Es läuft komplett selbst gehostet: `server.js` schreibt die Scores über das eingebaute [`node:sqlite`](https://nodejs.org/api/sqlite.html)-Modul in eine einzelne SQLite-Datei. Kein Cloud-Dienst, keine API-Keys, kein Vendor-Lock-in — Backup ist eine Datei kopieren.
 
-### Setup
-
-Das Leaderboard erfordert Supabase (kostenlos). Hier ist die Setup-Anleitung:
-
-#### 1. Supabase-Projekt erstellen
-
-1. Gehe zu [supabase.com](https://supabase.com)
-2. Melde dich an (Google/GitHub)
-3. Erstelle ein neues Projekt:
-   - **Name**: `schnechnen` (beliebig)
-   - **Region**: `eu-central-1` (GDPR-konform)
-   - **Password**: Notieren/speichern
-
-#### 2. Leaderboard-Tabelle erstellen
-
-Nach der Erstellung, öffne den **SQL Editor** und führe folgende Query aus:
-
-```sql
-CREATE TABLE leaderboard (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  username VARCHAR(50) NOT NULL,
-  level INT NOT NULL CHECK (level >= 0 AND level <= 5),
-  score INT NOT NULL,
-  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT valid_score CHECK (score >= 0)
-);
-
-CREATE INDEX idx_leaderboard_level_score ON leaderboard(level, score DESC);
-
-ALTER TABLE leaderboard ENABLE ROW LEVEL SECURITY;
-
--- RLS Policy: Jeder kann lesen, Inserts durch API
-CREATE POLICY "Allow public read" ON leaderboard FOR SELECT USING (true);
-```
-
-#### 3. API-Keys kopieren
-
-1. Gehe zu **Settings → API**
-2. Kopiere:
-   - **Project URL** (z.B. `https://xxxxx.supabase.co`)
-   - **anon public** Key (lange alphanumerische Zeichenkette)
-   - **service_role** Key (für Backend-API auf dem Server)
-
-#### 4. Konfiguration
-
-Die Keys sind bereits in `server.js` hardcoded und in der HTML injiziert. Der Server (Node.js) lädt die Leaderboard-Daten sicher vom Backend:
+### Lokal starten
 
 ```bash
+npm ci
 npm run start
 ```
 
-Öffne http://localhost:8080 → der 🏆 **Leaderboard-Button** sollte sichtbar sein!
+Der Server legt beim ersten Start die Tabelle in der SQLite-Datenbank automatisch an (`CREATE TABLE IF NOT EXISTS`). Öffne http://localhost:8080 → der 🏆 **Leaderboard-Button** sollte sichtbar sein!
+
+### Konfiguration (Umgebungsvariablen)
+
+| Variable | Default | Beschreibung |
+|----------|---------|--------------|
+| `PORT` | `8080` | Port, auf dem der Server lauscht |
+| `DB_PATH` | `/data/leaderboard.db` | Pfad zur SQLite-Datei |
+| `CORS_ORIGIN` | *(leer, kein CORS)* | Optional: Origin, die per CORS auf die API zugreifen darf (z.B. wenn das Spiel weiterhin über GitHub Pages läuft, siehe Szenario B unten) |
+
+### API-Endpunkte
+
+- `GET /api/leaderboard/:level` — Top 10 Scores für ein Level (0-5)
+- `GET /api/leaderboard` — Top 50 Scores über alle Level
+- `POST /api/leaderboard/submit` — Score einreichen (`{ "username": "...", "level": 0-5, "score": 0-200 }`)
+- `GET /healthz` — Health-Check für Docker
+
+Die Submission wird serverseitig validiert (Level 0-5, Score 0-200 als Ganzzahl, Username max. 40 Zeichen) und ist pro IP rate-limitiert.
+
+### Betrieb auf Unraid
+
+Das Image wird bei jedem Push auf `main` automatisch nach `ghcr.io/sebastiansucker/schnechnen` gebaut und gepusht (siehe `.github/workflows/docker.yml`).
+
+**Variante 1: Docker-Tab (empfohlen für den Einstieg)**
+
+1. Unraid-WebUI → **Docker** → **Add Container**
+2. **Repository**: `ghcr.io/sebastiansucker/schnechnen:latest`
+3. **Port**: Container `8080` → Host `8080` (oder frei wählbar)
+4. **Path**: Container `/data` → Host `/mnt/user/appdata/schnechnen`
+5. Container starten, danach `http://<NAS-IP>:8080` öffnen
+
+**Variante 2: Compose Manager Plugin**
+
+Mit dem Unraid-Plugin "Compose Manager" die im Repo mitgelieferte [`docker-compose.yml`](./docker-compose.yml) verwenden:
+
+```yaml
+services:
+  schnechnen:
+    image: ghcr.io/sebastiansucker/schnechnen:latest
+    container_name: schnechnen
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - /mnt/user/appdata/schnechnen:/data
+    environment:
+      - DB_PATH=/data/leaderboard.db
+```
+
+**Berechtigungen**: Der Container läuft als nicht-privilegierter `node`-User (UID 1000). Falls das Volume mit Schreibfehlern startet, dem appdata-Ordner einmalig die passenden Rechte geben:
+
+```bash
+mkdir -p /mnt/user/appdata/schnechnen
+chown -R 1000:1000 /mnt/user/appdata/schnechnen
+```
+
+**Updates**: Watchtower oder Unraids eigenes "Check for Updates" für automatische Image-Updates verwenden.
+
+**Backup**: Der appdata-Ordner (`/mnt/user/appdata/schnechnen`) liegt im normalen Unraid-Backup-Umfang (z.B. Appdata Backup Plugin) — es ist nur die eine Datei `leaderboard.db`.
+
+### Szenarien für den Zugriff
+
+- **Nur im Heimnetz (Standardfall)**: Spiel läuft komplett vom NAS unter `http://<NAS-IP>:8080`. GitHub Pages wird nicht mehr gebraucht, kein HTTPS oder Port-Forwarding nötig.
+- **Zusätzlich von außen, oder Spiel bleibt auf GitHub Pages**: Die API muss dann per HTTPS erreichbar sein (GitHub Pages blockt sonst Mixed Content). Empfohlen: [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) als zweiter Container, kein offener Port im Router nötig. `CORS_ORIGIN` auf die Pages-URL setzen. Falls GitHub Pages weiter aus dem Repository-Root ausgeliefert wird, muss die Pages-Quelle auf den `public/`-Ordner umgestellt werden (Settings → Pages), da die statischen Dateien jetzt dort liegen.
+
+### Bekannte Einschränkung
+
+Ist das NAS aus, ist das Leaderboard nicht erreichbar. Das Spiel selbst funktioniert weiter, das Frontend zeigt "🌐 Rekord-Server nicht erreichbar". Highscores und Statistiken liegen ohnehin im Browser (`localStorage`).
 
 ### Funktionen
 
-- 👤 **Anonyme Spieler**: Zufällige Namen (BraveEagle42, SwiftPanda13, etc.)
+- 👤 **Anonyme Spieler**: Zufällige Namen (Süßer Panda42, Flauschiger Häschen15, etc.)
 - 🎮 **Auto-Submission**: Score wird nach jedem Spiel automatisch gesendet
 - 🏅 **Top 10 pro Level**: Leaderboard zeigt die besten 10 Scores pro Level
 - 📱 **Mobile-freundlich**: Responsive Design für alle Geräte
@@ -181,21 +208,21 @@ npm run start
 
 ### Sicherheit
 
-- ✅ **Keys auf Server**: `server.js` hat Zugriff auf `SERVICE_ROLE_KEY` (sicher)
-- ✅ **Frontend-API**: Browser kommuniziert mit `/api/leaderboard/:level` (nicht direkt mit Supabase)
+- ✅ **Keine Keys im Code**: Es gibt keine externen Zugangsdaten mehr — der Server hat exklusiven Zugriff auf seine eigene SQLite-Datei
+- ✅ **Path-Traversal-Schutz**: Statische Dateien werden ausschließlich aus `public/` ausgeliefert, Pfade werden aufgelöst und geprüft
+- ✅ **Validierung serverseitig**: Level, Score und Username werden vor dem Insert geprüft, Requests sind pro IP rate-limitiert
 - ✅ **Keine privaten Daten**: Nur anonyme Namen, Level, Score gespeichert
-- ✅ **Supabase RLS**: Nur SELECT public, INSERT blockiert ohne Auth (API-only)
 
 ### Troubleshooting
 
 **„Leaderboard lädt nicht"**
 - Prüfe Browser-Konsole (F12 → Console) auf Fehler
-- Überprüfe, ob die Tabelle in Supabase erstellt wurde
-- Prüfe die Network-Tab: GET `/api/leaderboard/1` sollte 200 sein
+- Prüfe den Network-Tab: GET `/api/leaderboard/1` sollte 200 sein
+- Prüfe `GET /healthz` — sollte `{"status":"ok"}` liefern
 
 **„Scores werden nicht gespeichert"**
-- Prüfe die Supabase Logs (Project → Logs)
-- Stellt sicher, dass RLS aktiviert ist
+- Prüfe die Server-Logs (`docker logs schnechnen`)
+- Prüfe, ob `/data` im Container beschreibbar ist (Berechtigungen, siehe oben)
 
 ## Mobile keyboard behavior
 
@@ -216,6 +243,8 @@ Eine GitHub Actions-Workflow-Datei ist vorhanden unter `.github/workflows/ci.yml
 - Installiert Playwright-Browser via `npx playwright install --with-deps`.
 - Führt Playwright-Tests aus und lädt den `playwright-report` als Artefakt hoch.
 - Nutzt Caching für npm und Playwright-Downloads zur Beschleunigung.
+
+Zusätzlich baut `.github/workflows/docker.yml` bei jedem Push auf `main` das Docker-Image und pusht es nach `ghcr.io/sebastiansucker/schnechnen` (Tags `latest` und Commit-SHA). Es wird nur das eingebaute `GITHUB_TOKEN` benötigt, kein zusätzliches Secret.
 
 ### Automatische Dependency Updates (Renovate Bot)
 
@@ -243,7 +272,7 @@ Lokal auf dem Gerät des Spielers — **nur lesbar vom Browser, nicht vom Server
 | **Highscores** | `schnechnen-highscores` | JSON `{ "0": 12, "1": 8, ... }` (Level → Max-Score) | Unbegrenzt |
 | **Fehlertracking** | `schnechnen-mistakes` | JSON mit häufig falsch gelösten Aufgaben für adaptives Lernen | Unbegrenzt |
 | **Tastatur-Modus** | `schnechnen-keyboard-mode` | Boolean (true = native Tastatur, false = Dial-Pad) | Unbegrenzt |
-| **Leaderboard-Name** | `schnechnen-username` | String (z.B. "BraveEagle42") | Unbegrenzt |
+| **Leaderboard-Name** | `schnechnen-username` | String (z.B. "Süßer Panda42") | Unbegrenzt |
 
 **Sicherheit**: Diese Daten sind:
 - ✅ Nur auf dem lokalen Gerät
@@ -251,29 +280,29 @@ Lokal auf dem Gerät des Spielers — **nur lesbar vom Browser, nicht vom Server
 - ✅ Können jederzeit gelöscht werden (Browser → Einstellungen → Cookies/Cache löschen)
 - ⚠️ Werden verloren, wenn Browser-Daten gelöscht werden
 
-### 📊 Supabase (optional, nur für Leaderboard)
+### 🖥️ Eigener Server (Node.js + SQLite, nur für Leaderboard)
 
-Wenn der Leaderboard-Button genutzt wird, werden folgende Daten **an Supabase gesendet**:
+Wenn der Leaderboard-Button genutzt wird, werden folgende Daten an den **eigenen** Server gesendet (kein Drittanbieter):
 
 | Daten | Beispiel | Speicherort |
 |-------|----------|------------|
-| **Benutzername** | "SwiftPanda13" | Supabase Cloud DB |
-| **Level** | 2 | Supabase Cloud DB |
-| **Score** | 15 | Supabase Cloud DB |
-| **Zeitstempel** | 2024-11-14 10:30:00 | Supabase Cloud DB |
+| **Benutzername** | "Süßer Panda42" | SQLite-Datei auf dem eigenen NAS |
+| **Level** | 2 | SQLite-Datei auf dem eigenen NAS |
+| **Score** | 15 | SQLite-Datei auf dem eigenen NAS |
+| **Zeitstempel** | 2024-11-14 10:30:00 | SQLite-Datei auf dem eigenen NAS |
 
 **Sicherheit**:
 - ✅ **Anonym**: Kein Name, keine Email, keine Identifikation
 - ✅ **Nur Zufallsnamen**: Generiert lokal, nicht vom Server
 - ✅ **Nur für Highscores**: Nur der beste Score wird gesendet (nicht jedes Spiel)
-- ✅ **Keine Aktivitätsverfolgung**: IP-Adressen werden nicht geloggt
-- ✅ **GDPR-konform**: EU-Region (eu-central-1), nur öffentliche Leaderboard-Daten
+- ✅ **Keine Aktivitätsverfolgung**: IP-Adressen werden nur kurzzeitig für das Rate-Limiting im Speicher gehalten, nicht geloggt oder gespeichert
+- ✅ **Kein Cloud-Dienst**: Die Daten verlassen das eigene Netzwerk nicht (Standardfall, siehe Szenario A oben)
 
-### 🔐 Server (Node.js, nur backend)
+### 🔐 Server (Node.js + SQLite)
 
-Der Server (`server.js`) läuft nur lokal und speichert **keine Daten**. Er:
-- ✅ Lädt Leaderboard-Daten von Supabase (GET-Request)
-- ✅ Speichert keine Logs oder Benutzerinformationen
+Der Server (`server.js`) läuft auf dem eigenen NAS und ist die einzige Stelle, an der Leaderboard-Daten dauerhaft gespeichert werden. Er:
+- ✅ Speichert Leaderboard-Einträge in einer lokalen SQLite-Datei (`DB_PATH`, Standard `/data/leaderboard.db`)
+- ✅ Speichert keine weiteren Logs oder Benutzerinformationen
 
 ### 📋 Zusammenfassung
 
@@ -283,13 +312,10 @@ Lokal (Browser)          → localStorage
                          ├─ Fehlertracking ✅
                          └─ Einstellungen ✅
 
-Optional (Leaderboard)   → Supabase Cloud
+Optional (Leaderboard)   → eigener Server (SQLite)
                          ├─ Zufallsname 🔒
                          ├─ Level 🔒
                          └─ Score 🔒
-
-Server (Node.js)         → Keine Speicherung
-                         └─ Nur Daten-Relay ⚡
 ```
 
 Keine persönlichen Daten werden verarbeitet. Die App ist datenschutzfreundlich! 🛡️
@@ -313,7 +339,7 @@ Keine persönlichen Daten werden verarbeitet. Die App ist datenschutzfreundlich!
 - [x] ARIA-Labels für bessere Accessibility
 - [x] Zoom verhindern auf Mobilgeräten
 - [x] npm test:e2e sollte den server starten
-- [x] Anonymes Leaderboard mit Supabase
+- [x] Anonymes Leaderboard (selbst gehostet, SQLite via Docker)
 - [x] Leaderboard-Tests und Test-Mode-Protection
 - [x] Weitere Level mit gemischten Operationen
 - [ ] Dark Mode Support

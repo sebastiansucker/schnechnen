@@ -14,7 +14,7 @@ try {
         };
     }
     
-    scriptExports = require('../script.js');
+    scriptExports = require('../public/script.js');
 } catch (e) {
     // Falls script.js nicht vollständig geladen werden kann, nutze lokale Mocks
     // Dies ist normal, da script.js DOM-Abhängigkeiten hat
@@ -954,7 +954,7 @@ function testScoreCalculation() {
 function testWeighting() {
     console.log('Teste Gewichtung/Fehlerwiederholung...');
     try {
-        const weighting = require('../weighting');
+        const weighting = require('../public/weighting');
         // clear any previous data
         weighting.clear();
 
@@ -987,7 +987,7 @@ function testWeighting() {
 function testAdaptiveProblemGeneration() {
     console.log('Teste Adaptive Problemgenerierung...');
     try {
-        const weighting = require('../weighting');
+        const weighting = require('../public/weighting');
         weighting.clear();
 
         const level = 1;
@@ -1053,7 +1053,7 @@ function testAdaptiveProblemGeneration() {
 function testResetStatistics() {
     console.log('Teste Zurücksetzen von Statistiken...');
     try {
-        const weighting = require('../weighting');
+        const weighting = require('../public/weighting');
 
         const level = 1;
         const problem = { num1: 7, num2: 3, operation: '+', result: 10 };

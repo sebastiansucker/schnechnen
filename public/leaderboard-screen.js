@@ -82,63 +82,33 @@ const LeaderboardScreen = (() => {
         
         try {
             let scores = [];
-            
-            // Try backend API first (for local development with Node.js server)
-            // Use AbortController with 2 second timeout
+            let reachable = false;
+
+            const apiBase = window.API_BASE || '/api';
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 2000);
-            
+
             try {
-                const response = await fetch(`/api/leaderboard/${level}`, {
+                const response = await fetch(`${apiBase}/leaderboard/${level}`, {
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
-                
+
                 if (response.ok) {
                     scores = await response.json();
+                    reachable = true;
                     console.log('[Leaderboard] Loaded from backend API');
                 }
             } catch (e) {
                 clearTimeout(timeoutId);
-                // Backend not available, try direct Supabase
-                console.warn('[Leaderboard] Backend API not available, using direct Supabase:', e.message);
+                console.warn('[Leaderboard] Backend API not available:', e.message);
             }
-            
-            // If backend didn't work, try direct Supabase connection
-            if (!scores || scores.length === 0) {
-                // Wait a moment for Supabase client to be ready
-                let retries = 0;
-                while (!window.supabaseClient && retries < 50) {
-                    await new Promise(resolve => setTimeout(resolve, 10));
-                    retries++;
-                }
-                
-                if (window.supabaseClient) {
-                    try {
-                        console.log('[Leaderboard] Fetching from Supabase for level', level);
-                        const { data, error } = await window.supabaseClient
-                            .from('leaderboard')
-                            .select('username, level, score, timestamp')
-                            .eq('level', level)
-                            .order('score', { ascending: false })
-                            .limit(10);
-                        
-                        if (error) {
-                            console.warn('[Leaderboard] Supabase error:', error);
-                            scores = [];
-                        } else {
-                            scores = data || [];
-                            console.log('[Leaderboard] Loaded from Supabase:', scores.length, 'scores');
-                        }
-                    } catch (e) {
-                        console.warn('[Leaderboard] Supabase connection failed:', e.message);
-                        scores = [];
-                    }
-                } else {
-                    console.warn('[Leaderboard] Supabase client not available after retry');
-                }
+
+            if (!reachable) {
+                list.innerHTML = '<li class="leaderboard-empty">🌐 Rekord-Server nicht erreichbar. Bitte später versuchen.</li>';
+                return;
             }
-            
+
             // Render results
             if (!scores || scores.length === 0) {
                 list.innerHTML = '<li class="leaderboard-empty">📭 Noch keine Scores für dieses Level</li>';

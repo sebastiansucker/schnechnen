@@ -1,291 +1,396 @@
 #!/usr/bin/env node
 /**
- * Server with Supabase config injection and secure API routes
- * Reads SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY from environment
- * - ANON_KEY: Used by frontend for INSERT (visible in browser, but only for writes)
- * - SERVICE_ROLE_KEY: Used by backend for SELECT (secret, never exposed to browser)
+ * Self-hosted server: static file server + leaderboard API backed by node:sqlite.
+ * No external services, no API keys - a single SQLite file is the whole database.
  */
 
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const url = require('url');
-const { createClient } = require('@supabase/supabase-js');
+const { DatabaseSync } = require('node:sqlite');
 
 const PORT = process.env.PORT || 8080;
+const DB_PATH = process.env.DB_PATH || '/data/leaderboard.db';
+const CORS_ORIGIN = process.env.CORS_ORIGIN || '';
+const PUBLIC_DIR = path.join(__dirname, 'public');
 
-// Supabase configuration (hardcoded for development)
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://buncjjcbmvwindpyhnhs.supabase.co';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1bmNqamNibXZ3aW5kcHlobmhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4ODQzMjUsImV4cCI6MjA3ODQ2MDMyNX0.sla1FQMlqpnoNq2ebjLBHJpvau_N6DzBw2i511uD2YI';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1bmNqamNibXZ3aW5kcHlobmhzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mjg4NDMyNSwiZXhwIjoyMDc4NDYwMzI1fQ.IQxP-qEVgspURphRJg0o6do_U2KsfJOz7Lh9uBdfr9k';
+const MAX_BODY_SIZE = 10 * 1024; // 10 KB is plenty for a leaderboard submission
+const MAX_USERNAME_LENGTH = 40;
+const MIN_LEVEL = 0;
+const MAX_LEVEL = 5;
+const MIN_SCORE = 0;
+const MAX_SCORE = 200;
 
-console.log('[Config] Supabase configuration:');
-console.log(`[Config] SUPABASE_URL: ${SUPABASE_URL ? '✓ Set' : '✗ Not set'}`);
-console.log(`[Config] SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY ? '✓ Set' : '✗ Not set'}`);
-console.log(`[Config] SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY ? '✓ Set' : '✗ Not set'}`);
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 10;
 
-// Initialize Supabase client with SERVICE_ROLE_KEY for backend operations
-let supabaseServer = null;
-if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
-    supabaseServer = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    console.log('[Supabase] ✓ Server client initialized with SERVICE_ROLE_KEY');
-} else {
-    console.warn('[Supabase] ✗ Service Role Key missing - leaderboard reads will not work');
+const CONTENT_TYPES = {
+    '.html': 'text/html',
+    '.js': 'application/javascript',
+    '.css': 'text/css',
+    '.json': 'application/json',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.svg': 'image/svg+xml',
+    '.ico': 'image/x-icon',
+    '.woff': 'font/woff',
+    '.woff2': 'font/woff2'
+};
+
+// ==================== Database ====================
+
+function ensureDbDirectory(dbPath) {
+    if (dbPath === ':memory:') return;
+    const dir = path.dirname(dbPath);
+    if (dir && dir !== '.' && !fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
 }
 
-// Read index.html once at startup
-const indexHtmlPath = path.join(__dirname, 'index.html');
-let indexHtmlContent = fs.readFileSync(indexHtmlPath, 'utf8');
+function openDatabase(dbPath) {
+    ensureDbDirectory(dbPath);
+    const db = new DatabaseSync(dbPath);
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS leaderboard (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            level INTEGER NOT NULL,
+            score INTEGER NOT NULL,
+            timestamp TEXT NOT NULL
+        )
+    `);
+    db.exec('CREATE INDEX IF NOT EXISTS idx_leaderboard_level_score ON leaderboard(level, score DESC)');
+    return db;
+}
 
-// Inject Supabase config directly into the HTML (ANON_KEY only - for writes)
-const configScript = `<script>
-        window.SUPABASE_CONFIG = {
-            url: "${SUPABASE_URL.replace(/"/g, '\\"')}",
-            anonKey: "${SUPABASE_ANON_KEY.replace(/"/g, '\\"')}"
-        };
-        console.log('[Init] Supabase config injected:', window.SUPABASE_CONFIG);
-    </script>`;
+function getTopScores(db, level, limit) {
+    const stmt = db.prepare(
+        'SELECT username, level, score, timestamp FROM leaderboard WHERE level = ? ORDER BY score DESC, timestamp ASC LIMIT ?'
+    );
+    return stmt.all(level, limit);
+}
 
-// Insert config script right after the opening <head> tag
-indexHtmlContent = indexHtmlContent.replace(
-    /(<head[^>]*>)/i,
-    '$1\n    ' + configScript
-);
+function getTopScoresAllLevels(db, limit) {
+    const stmt = db.prepare(
+        'SELECT username, level, score, timestamp FROM leaderboard ORDER BY score DESC, timestamp ASC LIMIT ?'
+    );
+    return stmt.all(limit);
+}
 
-// Helper function to parse JSON request body
-function parseJsonBody(req) {
+function insertScore(db, { username, level, score }) {
+    const timestamp = new Date().toISOString();
+    const stmt = db.prepare(
+        'INSERT INTO leaderboard (username, level, score, timestamp) VALUES (?, ?, ?, ?)'
+    );
+    stmt.run(username, level, score, timestamp);
+    return { username, level, score, timestamp };
+}
+
+// ==================== Validation ====================
+
+function validateSubmission(body) {
+    if (!body || typeof body !== 'object') {
+        return { error: 'Ungültiger Request-Body' };
+    }
+
+    const { username, level, score } = body;
+
+    if (typeof username !== 'string' || username.trim().length === 0) {
+        return { error: 'username muss ein nicht-leerer String sein' };
+    }
+    if (username.length > MAX_USERNAME_LENGTH) {
+        return { error: `username darf maximal ${MAX_USERNAME_LENGTH} Zeichen lang sein` };
+    }
+    if (!Number.isInteger(level) || level < MIN_LEVEL || level > MAX_LEVEL) {
+        return { error: `level muss eine ganze Zahl zwischen ${MIN_LEVEL} und ${MAX_LEVEL} sein` };
+    }
+    if (!Number.isInteger(score) || score < MIN_SCORE || score > MAX_SCORE) {
+        return { error: `score muss eine ganze Zahl zwischen ${MIN_SCORE} und ${MAX_SCORE} sein` };
+    }
+
+    return { value: { username: username.trim(), level, score } };
+}
+
+// ==================== Request body parsing ====================
+
+function parseJsonBody(req, maxSize) {
     return new Promise((resolve, reject) => {
         let body = '';
+        let size = 0;
+        let rejected = false;
+
         req.on('data', chunk => {
-            body += chunk.toString();
+            if (rejected) return;
+            size += chunk.length;
+            if (size > maxSize) {
+                rejected = true;
+                const err = new Error('Payload too large');
+                err.statusCode = 413;
+                req.destroy();
+                reject(err);
+                return;
+            }
+            body += chunk;
         });
         req.on('end', () => {
+            if (rejected) return;
+            if (!body) {
+                resolve({});
+                return;
+            }
             try {
-                resolve(body ? JSON.parse(body) : {});
+                resolve(JSON.parse(body));
             } catch (e) {
+                const err = new Error('Invalid JSON');
+                err.statusCode = 400;
+                reject(err);
+            }
+        });
+        req.on('error', (e) => {
+            if (!rejected) {
+                rejected = true;
                 reject(e);
             }
         });
     });
 }
 
-// Create custom HTTP server
-const server = http.createServer(async (req, res) => {
-    const pathname = url.parse(req.url).pathname;
-    
-    // CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    
-    // Handle OPTIONS requests
-    if (req.method === 'OPTIONS') {
-        res.writeHead(200);
-        res.end();
+// ==================== Rate limiting ====================
+
+function createRateLimiter(windowMs, maxRequests) {
+    const hits = new Map();
+    return function isRateLimited(key) {
+        const now = Date.now();
+        const entry = hits.get(key);
+        if (!entry || now - entry.windowStart > windowMs) {
+            hits.set(key, { windowStart: now, count: 1 });
+            return false;
+        }
+        entry.count += 1;
+        return entry.count > maxRequests;
+    };
+}
+
+// ==================== Static files ====================
+
+function resolveStaticPath(pathname) {
+    const publicRoot = path.resolve(PUBLIC_DIR);
+    let decoded;
+    try {
+        decoded = decodeURIComponent(pathname);
+    } catch (e) {
+        return null;
+    }
+    const requested = path.resolve(publicRoot, '.' + decoded);
+    if (requested !== publicRoot && !requested.startsWith(publicRoot + path.sep)) {
+        return null;
+    }
+    return requested;
+}
+
+function serveStaticFile(pathname, res) {
+    let filePath = resolveStaticPath(pathname === '/' ? '/index.html' : pathname);
+
+    if (!filePath) {
+        res.writeHead(403, { 'Content-Type': 'text/plain' });
+        res.end('Forbidden');
         return;
     }
-    
-    // ==================== API ROUTES ====================
-    
-    // GET /api/leaderboard/:level - Get top scores for a level
-    if (pathname.match(/^\/api\/leaderboard\/\d+$/) && req.method === 'GET') {
-        const level = parseInt(pathname.split('/')[3]);
-        
-        if (!supabaseServer) {
-            console.warn('[API] Supabase not configured - returning empty leaderboard');
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify([]));
-            return;
-        }
-        
-        try {
-            const { data, error } = await supabaseServer
-                .from('leaderboard')
-                .select('username, level, score, timestamp')
-                .eq('level', level)
-                .order('score', { ascending: false })
-                .limit(10);
-            
-            if (error) {
-                console.error('[API] Leaderboard read error:', error);
-                // Return empty list instead of error - graceful fallback
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify([]));
-                return;
-            }
-            
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(data || []));
-        } catch (e) {
-            console.error('[API] Error:', e);
-            // Return empty list instead of error - graceful fallback
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify([]));
-        }
-        return;
-    }
-    
-    // GET /api/leaderboard - Get top scores for all levels
-    if (pathname === '/api/leaderboard' && req.method === 'GET') {
-        if (!supabaseServer) {
-            console.warn('[API] Supabase not configured - returning empty leaderboard');
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify([]));
-            return;
-        }
-        
-        try {
-            const { data, error } = await supabaseServer
-                .from('leaderboard')
-                .select('username, level, score, timestamp')
-                .order('score', { ascending: false })
-                .limit(50);
-            
-            if (error) {
-                console.error('[API] Leaderboard read error:', error);
-                // Return empty list instead of error - graceful fallback
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify([]));
-                return;
-            }
-            
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(data || []));
-        } catch (e) {
-            console.error('[API] Error:', e);
-            // Return empty list instead of error - graceful fallback
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify([]));
-        }
-        return;
-    }
-    
-    // POST /api/leaderboard/submit - Submit a score to the leaderboard
-    if (pathname === '/api/leaderboard/submit' && req.method === 'POST') {
-        const body = await parseJsonBody(req);
-        
-        if (!supabaseServer) {
-            console.warn('[API] Supabase not configured - cannot submit score');
-            res.writeHead(503, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Service not configured' }));
-            return;
-        }
-        
-        try {
-            const { username, level, score } = body;
-            
-            if (!username || level === undefined || score === undefined) {
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'Missing required fields: username, level, score' }));
-                return;
-            }
-            
-            const { data, error } = await supabaseServer
-                .from('leaderboard')
-                .insert([{
-                    username,
-                    level,
-                    score,
-                    timestamp: new Date().toISOString()
-                }]);
-            
-            if (error) {
-                console.error('[API] Leaderboard submit error:', error);
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: error.message }));
-                return;
-            }
-            
-            res.writeHead(201, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: true, data }));
-        } catch (e) {
-            console.error('[API] Submit error:', e);
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: e.message }));
-        }
-        return;
-    }
-    
-    // ==================== STATIC FILES ====================
-    
-    // Serve index.html with injected config
-    if (pathname === '/' || pathname === '/index.html') {
-        res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-cache' });
-        res.end(indexHtmlContent);
-        return;
-    }
-    
-    // Also serve supabase-config.js for backward compatibility
-    if (pathname === '/supabase-config.js') {
-        const configContent = `const SUPABASE_CONFIG = {
-  url: "${SUPABASE_URL.replace(/"/g, '\\"')}",
-  anonKey: "${SUPABASE_ANON_KEY.replace(/"/g, '\\"')}"
-};`;
-        res.writeHead(200, { 'Content-Type': 'application/javascript', 'Access-Control-Allow-Origin': '*' });
-        res.end(configContent);
-        return;
-    }
-    
-    // For all other files, serve them normally
-    let filePath = path.join(__dirname, pathname);
-    
-    // Handle directory requests
+
     if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
         filePath = path.join(filePath, 'index.html');
     }
-    
-    // Read and serve the file
+
     fs.readFile(filePath, (err, data) => {
         if (err) {
             res.writeHead(404, { 'Content-Type': 'text/html' });
             res.end('<h1>404 Not Found</h1>');
             return;
         }
-        
-        // Get content type
+
         const ext = path.extname(filePath);
-        const contentTypes = {
-            '.html': 'text/html',
-            '.js': 'application/javascript',
-            '.css': 'text/css',
-            '.json': 'application/json',
-            '.png': 'image/png',
-            '.jpg': 'image/jpeg',
-            '.gif': 'image/gif',
-            '.svg': 'image/svg+xml',
-            '.ico': 'image/x-icon',
-            '.woff': 'font/woff',
-            '.woff2': 'font/woff2'
-        };
-        const contentType = contentTypes[ext] || 'application/octet-stream';
-        
-        res.writeHead(200, {
-            'Content-Type': contentType,
-            'Access-Control-Allow-Origin': '*',
-            'Cache-Control': 'no-cache'
-        });
+        const contentType = CONTENT_TYPES[ext] || 'application/octet-stream';
+
+        res.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': 'no-cache' });
         res.end(data);
     });
-});
+}
 
-server.listen(PORT, () => {
-    console.log(`\n🚀 Server running on http://localhost:${PORT}\n`);
-    console.log('📝 API Routes:');
-    console.log(`   GET  /api/leaderboard/:level    - Top 10 scores for level`);
-    console.log(`   GET  /api/leaderboard           - Top 50 scores all levels\n`);
-});
+// ==================== Request handling ====================
 
-server.on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-        console.error(`Port ${PORT} is already in use`);
-    } else {
-        console.error('Server error:', err);
-    }
-    process.exit(1);
-});
+function createRequestListener(db) {
+    const isRateLimited = createRateLimiter(RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX_REQUESTS);
 
-process.on('SIGINT', () => {
-    console.log('\nServer stopped');
-    process.exit(0);
-});
+    return async function requestListener(req, res) {
+        let pathname;
+        try {
+            pathname = new URL(req.url, 'http://localhost').pathname;
+        } catch (e) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Ungültige URL' }));
+            return;
+        }
 
+        if (CORS_ORIGIN) {
+            res.setHeader('Access-Control-Allow-Origin', CORS_ORIGIN);
+            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+            res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        }
+
+        if (req.method === 'OPTIONS') {
+            res.writeHead(204);
+            res.end();
+            return;
+        }
+
+        // ---------- Health check ----------
+        if (pathname === '/healthz' && req.method === 'GET') {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ status: 'ok' }));
+            return;
+        }
+
+        // ---------- GET /api/leaderboard/:level ----------
+        const levelMatch = pathname.match(/^\/api\/leaderboard\/(\d+)$/);
+        if (levelMatch && req.method === 'GET') {
+            const level = parseInt(levelMatch[1], 10);
+            if (level < MIN_LEVEL || level > MAX_LEVEL) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: `level muss zwischen ${MIN_LEVEL} und ${MAX_LEVEL} liegen` }));
+                return;
+            }
+            try {
+                const scores = getTopScores(db, level, 10);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(scores));
+            } catch (e) {
+                console.error('[API] Leaderboard read error:', e);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Interner Serverfehler' }));
+            }
+            return;
+        }
+
+        // ---------- GET /api/leaderboard ----------
+        if (pathname === '/api/leaderboard' && req.method === 'GET') {
+            try {
+                const scores = getTopScoresAllLevels(db, 50);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(scores));
+            } catch (e) {
+                console.error('[API] Leaderboard read error:', e);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Interner Serverfehler' }));
+            }
+            return;
+        }
+
+        // ---------- POST /api/leaderboard/submit ----------
+        if (pathname === '/api/leaderboard/submit' && req.method === 'POST') {
+            const ip = req.socket.remoteAddress || 'unknown';
+            if (isRateLimited(ip)) {
+                res.writeHead(429, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Zu viele Anfragen, bitte später erneut versuchen' }));
+                return;
+            }
+
+            let body;
+            try {
+                body = await parseJsonBody(req, MAX_BODY_SIZE);
+            } catch (e) {
+                const statusCode = e.statusCode || 400;
+                res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: statusCode === 413 ? 'Payload zu groß' : 'Ungültiges JSON' }));
+                return;
+            }
+
+            const { error, value } = validateSubmission(body);
+            if (error) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error }));
+                return;
+            }
+
+            try {
+                const entry = insertScore(db, value);
+                res.writeHead(201, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true, data: entry }));
+            } catch (e) {
+                console.error('[API] Leaderboard submit error:', e);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Interner Serverfehler' }));
+            }
+            return;
+        }
+
+        // ---------- Static files ----------
+        if (req.method === 'GET' || req.method === 'HEAD') {
+            serveStaticFile(pathname, res);
+            return;
+        }
+
+        res.writeHead(405, { 'Content-Type': 'text/plain' });
+        res.end('Method Not Allowed');
+    };
+}
+
+// ==================== Exports (for tests) ====================
+
+module.exports = {
+    openDatabase,
+    getTopScores,
+    getTopScoresAllLevels,
+    insertScore,
+    validateSubmission,
+    parseJsonBody,
+    createRateLimiter,
+    resolveStaticPath,
+    createRequestListener,
+    MIN_LEVEL,
+    MAX_LEVEL,
+    MIN_SCORE,
+    MAX_SCORE,
+    MAX_USERNAME_LENGTH
+};
+
+// ==================== Bootstrap ====================
+
+if (require.main === module) {
+    process.on('unhandledRejection', (reason) => {
+        console.error('[UnhandledRejection]', reason);
+    });
+
+    const db = openDatabase(DB_PATH);
+    const server = http.createServer(createRequestListener(db));
+
+    server.listen(PORT, () => {
+        console.log(`\n🚀 Server running on http://localhost:${PORT}`);
+        console.log(`📁 Datenbank: ${DB_PATH}`);
+        console.log('📝 API Routes:');
+        console.log('   GET  /api/leaderboard/:level    - Top 10 scores for level');
+        console.log('   GET  /api/leaderboard           - Top 50 scores all levels');
+        console.log('   POST /api/leaderboard/submit     - Submit a score');
+        console.log('   GET  /healthz                    - Health check\n');
+    });
+
+    server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+            console.error(`Port ${PORT} is already in use`);
+        } else {
+            console.error('Server error:', err);
+        }
+        process.exit(1);
+    });
+
+    process.on('SIGINT', () => {
+        console.log('\nServer stopped');
+        db.close();
+        process.exit(0);
+    });
+
+    process.on('SIGTERM', () => {
+        db.close();
+        process.exit(0);
+    });
+}
