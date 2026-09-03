@@ -364,37 +364,43 @@ function testProblemRandomness() {
             const resultDistribution = {};
             const operand1Distribution = {};
             const operand2Distribution = {};
+            const problemDistribution = {};
 
             mockGameState.currentLevel = level;
             const levelConfig = CONFIG.levels[level];
 
             for (let i = 0; i < numProblems; i++) {
                 // Nutze die echte Aufgabengenerierung aus game-logic.js
-                const { num1, num2, result } = generateProblemFor(levelConfig);
+                const { num1, num2, operation, result } = generateProblemFor(levelConfig);
 
                 resultDistribution[result] = (resultDistribution[result] || 0) + 1;
                 operand1Distribution[num1] = (operand1Distribution[num1] || 0) + 1;
                 operand2Distribution[num2] = (operand2Distribution[num2] || 0) + 1;
+                const key = `${num1}${operation}${num2}`;
+                problemDistribution[key] = (problemDistribution[key] || 0) + 1;
             }
-            
+
             return {
                 resultDistribution,
                 operand1Distribution,
                 operand2Distribution,
+                problemDistribution,
                 uniqueResults: Object.keys(resultDistribution).length
             };
         }
-        
+
         // Test Level 0: Addition sollte ausreichend vielfältig sein
-        // Höhere Stichprobenzahl als bei den anderen Levels: bei Level 0 ist maxNumber === maxResult,
-        // wodurch Randwerte wie Ergebnis 2 (nur num1=1, num2=1) sehr selten sind und bei nur 200
-        // Versuchen gelegentlich fehlen würden (falsch-positiver Test-Flake).
+        // Höhere Stichprobenzahl als bei den anderen Levels: Level 0 hat nur 45 mögliche
+        // Aufgaben, und erst ab ~1500 Ziehungen sind die Anteile stabil genug, um die
+        // engen Grenzen unten ohne falsch-positive Test-Flakes zu prüfen.
         const LEVEL0_SAMPLE_SIZE = 1500;
         const level0Results = analyzeRandomness(0, LEVEL0_SAMPLE_SIZE);
         const level0MostCommon = Math.max(...Object.values(level0Results.resultDistribution)) / LEVEL0_SAMPLE_SIZE;
-        
+        const level0MostCommonProblem = Math.max(...Object.values(level0Results.problemDistribution)) / LEVEL0_SAMPLE_SIZE;
+
         console.log(`  Level 0: ${level0Results.uniqueResults} einzigartige Ergebnisse`);
         console.log(`  Level 0: Häufigstes Ergebnis = ${(level0MostCommon * 100).toFixed(1)}%`);
+        console.log(`  Level 0: Häufigste Einzelaufgabe = ${(level0MostCommonProblem * 100).toFixed(1)}%`);
         
         // Prüfungen
         let allGood = true;
@@ -407,17 +413,35 @@ function testProblemRandomness() {
             console.log(`  ✓ Level 0: Ausreichende Ergebnis-Vielfalt (${level0Results.uniqueResults} Ergebnisse)`);
         }
         
-        // Prüfung 2: Kein Ergebnis sollte zu häufig vorkommen (> 50% - erlaubt statistische Schwankungen)
-        // Bei Level 0 ist maxNumber === maxResult (10), wodurch die echte Generierungslogik
-        // (num2 wird auf maxResult - num1 begrenzt) das Ergebnis 10 systematisch bevorzugt.
-        // Über 200 Stichproben liegt der beobachtete Anteil für 10 typischerweise bei 25-40%.
-        if (level0MostCommon > 0.5) {
-            console.error(`  ❌ Level 0: Häufigstes Ergebnis zu oft (${(level0MostCommon * 100).toFixed(1)}%, max 50%)`);
+        // Prüfung 2: Kein Ergebnis sollte zu häufig vorkommen.
+        // Bei Level 0 ist maxNumber === maxResult (10). Die Generierung zieht beide
+        // Operanden unabhängig aus [1, 9] und verwirft Summen über 10, wodurch jede der
+        // 45 möglichen Aufgaben gleich wahrscheinlich ist. Die Ergebnisse sind dadurch
+        // dreieckig verteilt: 2 kommt in ~2,2 % vor, 10 in ~20 %.
+        // Grenze 27 %: über 4000 simulierten Läufen à 1500 Ziehungen lag der höchste
+        // beobachtete Anteil bei 23,3 %. Die frühere Logik (num2 auf maxResult - num1
+        // begrenzt) landete bei ~31 % und würde hier zuverlässig auffallen.
+        const LEVEL0_MAX_RESULT_SHARE = 0.27;
+        if (level0MostCommon > LEVEL0_MAX_RESULT_SHARE) {
+            console.error(`  ❌ Level 0: Häufigstes Ergebnis zu oft (${(level0MostCommon * 100).toFixed(1)}%, max ${LEVEL0_MAX_RESULT_SHARE * 100}%)`);
             allGood = false;
         } else {
-            console.log(`  ✓ Level 0: Ergebnisse gut verteilt (max ${(level0MostCommon * 100).toFixed(1)}%, Grenze 50%)`);
+            console.log(`  ✓ Level 0: Ergebnisse gut verteilt (max ${(level0MostCommon * 100).toFixed(1)}%, Grenze ${LEVEL0_MAX_RESULT_SHARE * 100}%)`);
         }
-        
+
+        // Prüfung 2b: Keine einzelne Aufgabe sollte sich zu oft wiederholen.
+        // Das ist die Größe, die Kinder tatsächlich merken: nicht "wie oft kommt 10 raus",
+        // sondern "wie oft kommt exakt dieselbe Aufgabe". Erwartung ~2,2 % (1/45).
+        // Grenze 6 %: höchster beobachteter Wert in 4000 Läufen war 4,1 %. Die frühere
+        // Logik erzeugte "9 + 1" in ~11 % der Fälle und würde hier auffallen.
+        const LEVEL0_MAX_PROBLEM_SHARE = 0.06;
+        if (level0MostCommonProblem > LEVEL0_MAX_PROBLEM_SHARE) {
+            console.error(`  ❌ Level 0: Einzelne Aufgabe wiederholt sich zu oft (${(level0MostCommonProblem * 100).toFixed(1)}%, max ${LEVEL0_MAX_PROBLEM_SHARE * 100}%)`);
+            allGood = false;
+        } else {
+            console.log(`  ✓ Level 0: Keine Aufgabe dominiert (max ${(level0MostCommonProblem * 100).toFixed(1)}%, Grenze ${LEVEL0_MAX_PROBLEM_SHARE * 100}%)`);
+        }
+
         // Prüfung 3: Operanden-Spanne sollte gut genutzt werden (min-max Bereich)
         const level0Op1Values = Object.keys(level0Results.operand1Distribution).map(Number);
         const level0Op2Values = Object.keys(level0Results.operand2Distribution).map(Number);
@@ -506,83 +530,66 @@ function testProblemRandomness() {
 
 function runTests() {
     console.log('Starte Unit Tests für Schnechnen Spiel...');
-    
-    // Test 1: Konfiguration prüfen
-    testConfig();
-    
-    // Test 2: Problemgenerierung
-    testProblemGeneration();
-    
-    // Test 3: Highscore-Funktionen
-    testHighscore();
-    
-    // Test 4: Ergebnisberechnung
-    testScoreCalculation();
-    
-    // Test 5: Gewichtung / Fehlerwiederholung
-    testWeighting();
-    
-    // Test 6: Adaptive Problemgenerierung
-    testAdaptiveProblemGeneration();
-    
-    // Test 7: Reset Statistiken
-    testResetStatistics();
-    
-    // Test 8: Input-Handling (Dial-Pad)
-    testInputHandling();
-    
-    // Test 9: Answer-Checking Logic
-    testAnswerChecking();
-    
-    // Test 10: Timer Logic
-    testTimerLogic();
-    
-    // Test 11: Display Operator Conversion
-    testDisplayOperator();
-    
-    // Test 12: Problem Boundaries (Edge Cases)
-    testProblemBoundaries();
-    
-    // Test 13: Problem Randomness
-    testProblemRandomness();
-    
-    // Test 14: Score Percentage Calculation
-    testScorePercentage();
-    
-    // Test 15: Game History Tracking
-    testGameHistory();
-    
-    // Test 16: Level Configuration Validation
-    testLevelConfigValidation();
-    
-    // Test 17: Operator Filtering per Level
-    testOperatorFilteringPerLevel();
-    
-    // Test 18: Division Result Validation
-    testDivisionResultValidation();
-    
-    // Test 19: Subtraction Non-Negative Results
-    testSubtractionNonNegativeResults();
-    
-    // Test 20: Addition Max Operand Calculation
-    testAdditionMaxOperandCalculation();
-    
-    // Test 21: Multiplication Operand Range Constraints
-    testMultiplicationOperandRangeConstraints();
-    
-    // Test 22: Zero Handling in Operands
-    testZeroHandlingInOperands();
-    
-    // Test 23: Large Number Constraints
-    testLargeNumberConstraints();
-    
-    // Test 24: LocalStorage Persistence
-    testLocalStoragePersistence();
-    
-    // Test 25: JSON Serialization Robustness
-    testJSONSerializationRobustness();
-    
-    console.log('Alle Tests abgeschlossen.');
+
+    // Konvention: Jede Testfunktion gibt true bei Erfolg und false bei einem
+    // Fehler zurück. Die Rückgabewerte wurden früher verworfen, wodurch der
+    // Prozess selbst bei fehlgeschlagenen Tests mit Exit-Code 0 endete und die
+    // CI grün blieb. Deshalb hier einsammeln und den Exit-Code entsprechend setzen.
+    const tests = [
+        ['Konfiguration', testConfig],
+        ['Problemgenerierung', testProblemGeneration],
+        ['Highscore-Funktionen', testHighscore],
+        ['Ergebnisberechnung', testScoreCalculation],
+        ['Gewichtung / Fehlerwiederholung', testWeighting],
+        ['Adaptive Problemgenerierung', testAdaptiveProblemGeneration],
+        ['Reset Statistiken', testResetStatistics],
+        ['Input-Handling (Dial-Pad)', testInputHandling],
+        ['Answer-Checking Logic', testAnswerChecking],
+        ['Timer Logic', testTimerLogic],
+        ['Display Operator Conversion', testDisplayOperator],
+        ['Problem Boundaries (Edge Cases)', testProblemBoundaries],
+        ['Problem Randomness', testProblemRandomness],
+        ['Score Percentage Calculation', testScorePercentage],
+        ['Game History Tracking', testGameHistory],
+        ['Level Configuration Validation', testLevelConfigValidation],
+        ['Operator Filtering per Level', testOperatorFilteringPerLevel],
+        ['Division Result Validation', testDivisionResultValidation],
+        ['Subtraction Non-Negative Results', testSubtractionNonNegativeResults],
+        ['Addition Max Operand Calculation', testAdditionMaxOperandCalculation],
+        ['Multiplication Operand Range Constraints', testMultiplicationOperandRangeConstraints],
+        ['Zero Handling in Operands', testZeroHandlingInOperands],
+        ['Large Number Constraints', testLargeNumberConstraints],
+        ['LocalStorage Persistence', testLocalStoragePersistence],
+        ['JSON Serialization Robustness', testJSONSerializationRobustness]
+    ];
+
+    const failed = [];
+
+    for (const [name, testFn] of tests) {
+        let passed;
+        try {
+            passed = testFn();
+        } catch (error) {
+            console.error(`Unerwarteter Fehler in "${name}":`, error);
+            passed = false;
+        }
+
+        if (passed === false) {
+            failed.push(name);
+        }
+    }
+
+    if (failed.length > 0) {
+        console.error(`\n❌ ${failed.length} von ${tests.length} Tests fehlgeschlagen:`);
+        for (const name of failed) {
+            console.error(`   - ${name}`);
+        }
+        process.exitCode = 1;
+        return false;
+    }
+
+    console.log(`\nAlle Tests abgeschlossen: ${tests.length} von ${tests.length} erfolgreich.`);
+    return true;
 }
 
 function testConfig() {
@@ -1188,33 +1195,53 @@ function testSubtractionNonNegativeResults() {
 function testAdditionMaxOperandCalculation() {
     console.log('Teste Addition-Operanden-Berechnung mit maxNumber...');
     try {
-        // Für Level 0 und 1: maxNumber = 10
-        // Addition sollte nicht über 10 hinausgehen für einen Operanden, wenn maxNumber = 10
+        // Prüft die echte Additions-Generierung aus game-logic.js gegen die
+        // Level-Grenzen (früher rechnete dieser Test eine eigene Kopie der Formel
+        // nach und konnte deshalb gar nicht fehlschlagen, siehe #30).
         const testCases = [
-            { maxNumber: 10, maxSum: 10, description: 'Level 0' },
-            { maxNumber: 10, maxSum: 10, description: 'Level 1' },
-            { maxNumber: 100, maxSum: 100, description: 'Level 2' }
+            { level: 0, maxNumber: 10, maxSum: 10, description: 'Level 0' },
+            { level: 1, maxNumber: 10, maxSum: 10, description: 'Level 1' },
+            { level: 2, maxNumber: 100, maxSum: 100, description: 'Level 2' }
         ];
-        
+
         for (const testCase of testCases) {
-            for (let i = 0; i < 30; i++) {
-                // Simulate Level 0/1 addition: Beide Operanden sollten <= maxNumber sein
-                const num1 = Math.floor(Math.random() * (testCase.maxNumber - 1)) + 1;
-                const num2 = Math.floor(Math.random() * (testCase.maxNumber - num1)) + 1;
-                const sum = num1 + num2;
-                
+            const levelConfig = CONFIG.levels[testCase.level];
+            let additionsSeen = 0;
+
+            // Genug Ziehungen, damit auch in den gemischten Levels 1 und 2
+            // ausreichend Additionen anfallen.
+            for (let i = 0; i < 300; i++) {
+                const { num1, num2, operation, result } = generateProblemFor(levelConfig);
+                if (operation !== '+') continue;
+                additionsSeen++;
+
                 if (num1 > testCase.maxNumber || num2 > testCase.maxNumber) {
-                    console.error(`Fehler: Operanden sollten <= ${testCase.maxNumber} sein, aber ${num1} + ${num2}`);
+                    console.error(`Fehler (${testCase.description}): Operanden sollten <= ${testCase.maxNumber} sein, aber ${num1} + ${num2}`);
                     return false;
                 }
-                
-                if (sum > testCase.maxSum) {
-                    console.error(`Fehler: Addition sollte <= ${testCase.maxSum} sein, aber ${num1} + ${num2} = ${sum}`);
+
+                if (num1 < 1 || num2 < 1) {
+                    console.error(`Fehler (${testCase.description}): Operanden sollten >= 1 sein, aber ${num1} + ${num2}`);
+                    return false;
+                }
+
+                if (result > testCase.maxSum) {
+                    console.error(`Fehler (${testCase.description}): Addition sollte <= ${testCase.maxSum} sein, aber ${num1} + ${num2} = ${result}`);
+                    return false;
+                }
+
+                if (num1 + num2 !== result) {
+                    console.error(`Fehler (${testCase.description}): Ergebnis passt nicht zu den Operanden (${num1} + ${num2} = ${result})`);
                     return false;
                 }
             }
+
+            if (additionsSeen === 0) {
+                console.error(`Fehler (${testCase.description}): keine Additionsaufgabe erzeugt`);
+                return false;
+            }
         }
-        
+
         console.log('✓ Addition-Operanden-Berechnung erfolgreich');
         return true;
     } catch (error) {
