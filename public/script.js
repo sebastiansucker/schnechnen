@@ -94,6 +94,7 @@ elements.highscoreAnimation = document.getElementById('highscore-animation');
 let gameState = {
     currentLevel: null,
     timeLeft: 60,
+    timerEndAt: null,
     score: 0,
     totalProblems: 0,
     problems: [],
@@ -118,6 +119,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Ereignis-Listener initialisieren
 function initEventListeners() {
+    // Timer-Anzeige beim Zurückkehren aus einem Hintergrund-Tab sofort auffrischen,
+    // statt auf das nächste (gedrosselte) Interval-Tick zu warten
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && gameState.timer) {
+            if (updateTimerDisplay() <= 0) {
+                endGame();
+            }
+        }
+    });
+
     // Level-Auswahl
     elements.levelButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -244,22 +255,31 @@ function startGame(level) {
     // elements.answerInput.focus();
 }
 
+// Timer-Anzeige aus dem Zielzeitpunkt neu berechnen (statt herunterzuzählen),
+// damit gedrosselte Hintergrund-Tabs nicht zu einer zu langen Spielzeit führen
+function updateTimerDisplay() {
+    const left = Math.max(0, Math.ceil((gameState.timerEndAt - Date.now()) / 1000));
+    gameState.timeLeft = left;
+    elements.timeElement.textContent = left;
+    return left;
+}
+
 // Timer starten
 function startTimer() {
     // Timer stoppen, falls bereits aktiv
     if (gameState.timer) {
         clearInterval(gameState.timer);
     }
-    
+
+    gameState.timerEndAt = Date.now() + 60000;
+    updateTimerDisplay();
+
     // Timer starten
     gameState.timer = setInterval(() => {
-        gameState.timeLeft--;
-        elements.timeElement.textContent = gameState.timeLeft;
-        
-        if (gameState.timeLeft <= 0) {
+        if (updateTimerDisplay() <= 0) {
             endGame();
         }
-    }, 1000);
+    }, 250);
 }
 
 // Neue Aufgabe generieren
@@ -671,6 +691,7 @@ function resetGame() {
     gameState = {
         currentLevel: null,
         timeLeft: 60,
+        timerEndAt: null,
         score: 0,
         totalProblems: 0,
         problems: [],
@@ -1035,6 +1056,7 @@ if (typeof module !== 'undefined' && module.exports) {
             if (typeof gameState === 'undefined') return;
             gameState.currentLevel = null;
             gameState.timeLeft = 60;
+            gameState.timerEndAt = null;
             gameState.score = 0;
             gameState.totalProblems = 0;
             gameState.problems = [];
