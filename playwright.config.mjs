@@ -38,6 +38,10 @@ const config = {
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'off',
+
+    /* Service Worker registration is already skipped in test mode by script.js,
+       but block it at the browser level too so it can never interfere with tests. */
+    serviceWorkers: 'block',
   },
 
   /* Configure projects for major browsers */
