@@ -6,7 +6,7 @@ Ein kleines, responsives Mathe-Lernspiel (JavaScript) mit modernem Design.
 
 - 🎨 **Modernes Design**: Gradient-basiertes UI mit Orange/Türkis/Violett-Farbpalette
 - 🐌 **Logo**: Schnecken-Emoji in rundem, gradienten Rahmen
-- 📊 **5 Lern-Level**: Level 0 (Addition 1-10), Addition/Subtraktion, Multiplikation, Division
+- 📊 **6 Lern-Level**: Level 0 (Addition 1-10), Addition/Subtraktion, Multiplikation, Division, 🌪️ Chaos Mode (alle Operationen gemischt)
 - ⏱️ **60-Sekunden-Spielmodus** mit visueller Feedback-Animation
 - 📱 **Mobile-First**: Eingabe per Dial-Pad (Backspace ← 0 → OK), optimiert für Touch-Geräte
 - 🏆 **Highscore pro Level**: Anzahl richtiger Antworten (localStorage)
@@ -14,7 +14,7 @@ Ein kleines, responsives Mathe-Lernspiel (JavaScript) mit modernem Design.
 - ❌ **Fehleranalyse**: Anzeige häufig falsch gelöster Aufgaben
 - 📈 **Statistik-Seite**: Verlaufsdiagramm der letzten 50 Spiele mit Chart.js
 - 🏆 **Anonymes Leaderboard**: Selbst gehostet mit SQLite (kein Cloud-Dienst), Top 10 pro Level
-- ✅ **Umfassend getestet**: 11 Unit Tests + 480 E2E Tests (Playwright, 5 Browser-Engines)
+- ✅ **Umfassend getestet**: 25 Unit Tests + 546 E2E Tests (Playwright, 6 Browser-Engines)
 
 ## Projektstruktur
 
@@ -23,7 +23,8 @@ schnechnen/
 ├── public/              # Statische Dateien, ausschließlich diese werden ausgeliefert
 │   ├── index.html       # Haupt-HTML-Datei
 │   ├── style.css        # CSS-Styling
-│   ├── script.js        # Spiellogik
+│   ├── script.js        # DOM/Spielzustand, lädt game-logic.js
+│   ├── game-logic.js    # Reine Spiellogik ohne DOM-Abhängigkeiten (CONFIG, Aufgabengenerierung)
 │   ├── weighting.js     # Fehlertracking
 │   ├── leaderboard.js   # Anonyme Benutzernamen-Verwaltung
 │   ├── leaderboard-screen.js # Leaderboard-UI und Datenladung
@@ -35,11 +36,17 @@ schnechnen/
 ├── package.json         # Projekt-Abhängigkeiten
 ├── playwright.config.mjs # Playwright-Konfiguration
 ├── test/
-│   ├── unit-test.js     # Unit-Tests für Spiellogik
+│   ├── unit-test.js     # Unit-Tests für Spiellogik (game-logic.js, weighting.js)
 │   ├── server-test.js   # Unit-Tests für Leaderboard-Validierung und SQLite-Zugriff
 │   └── e2e/
 │       ├── level0-test.spec.js      # Level 0 Tests
+│       ├── level1-test.spec.js      # Level 1 Tests
+│       ├── level2-test.spec.js      # Level 2 Tests
+│       ├── level3-test.spec.js      # Level 3 Tests
+│       ├── level4-test.spec.js      # Level 4 Tests
 │       ├── schnechnen-tests.spec.js # Allgemeine E2E-Tests
+│       ├── back-navigation.spec.js  # Zurück-Button und Navigations-Tests
+│       ├── browser-edge-cases.spec.js # Browser-Sonderfälle (z.B. Tab-Wechsel, Reload)
 │       ├── leaderboard.spec.js      # Leaderboard Tests
 │       ├── stats.spec.js            # Statistik-Tests
 │       └── weighting-integration.spec.js # Adaptive Learning Tests
@@ -58,17 +65,17 @@ schnechnen/
 npm ci
 ```
 
-2. Starte einen statischen Server (lokal, Port 8080):
+2. Starte den Server (lokal, Port 8080):
 
 ```bash
 npm run start
 # öffne dann http://localhost:8080
 ```
 
-3. Öffne die Seite im Browser oder starte im Dev mode (öffnet Playwright UI):
+Alternativ ohne Leaderboard-API, nur als statischer Server:
 
 ```bash
-npm run dev
+npm run start:simple
 ```
 
 ## Tests
@@ -79,7 +86,7 @@ npm run dev
 npm run test:unit
 ```
 
-**11 Unit Tests** für:
+**25 Unit Tests** (`test/unit-test.js`) für:
 - CONFIG-Struktur-Validierung
 - Problem-Generierung und Constraints
 - Highscore-Persistierung
@@ -87,6 +94,8 @@ npm run test:unit
 - Fehlertracking (Weighting)
 - Adaptive Learning mit wrongCount-Prioritisierung
 - Leaderboard-Integration
+
+Dazu **10 weitere Tests** (`test/server-test.js`) für den Server: JSON-Body-Parsing, Rate-Limiting und Path-Traversal-Schutz.
 
 ### End-to-end tests (Playwright)
 
@@ -97,12 +106,14 @@ npm run test:e2e         # Headless run
 npm run test:e2e:ui      # Interaktive UI
 ```
 
-**480 E2E Tests** über 5 Browser-Engines (Chromium, Firefox, WebKit, Mobile Chrome, Mobile Safari):
-- **Level 0 Tests** (10 Tests): Kompletter Spielablauf, Timer, Backspace, Multi-Digit-Eingabe, Persistierung
-- **Allgemeine Tests**: Navigation, Level-Wechsel, Highscores
+**546 E2E Tests** über 6 Browser-Engines (Chromium, Firefox, WebKit, Mobile Chrome, Mobile Safari, iPhone 13 Mini):
+- **Level 0-4 Tests**: Kompletter Spielablauf pro Level, Timer, Backspace, Multi-Digit-Eingabe, Persistierung
+- **Allgemeine Tests** (`schnechnen-tests.spec.js`): Navigation, Level-Wechsel, Highscores
+- **Zurück-Navigation** (`back-navigation.spec.js`): Zurück-Button-Verhalten
+- **Browser-Sonderfälle** (`browser-edge-cases.spec.js`): z.B. Tab-Wechsel, Reload
 - **Statistik-Tests**: Verlauf, Charts, Level-Filter, Reset
 - **Adaptive Learning Tests**: Fehlertracking, wrongCount-Inkrementierung
-- **Leaderboard Tests** (65 Tests): Score-Submission, Top-10-Anzeige, Name-Generierung, Level-Filter
+- **Leaderboard Tests**: Score-Submission, Top-10-Anzeige, Name-Generierung, Level-Filter
 
 Um den HTML-Report lokal zu öffnen (nach einem Testlauf):
 
@@ -115,7 +126,7 @@ npx playwright show-report
 ### Alle Tests
 
 ```bash
-npm test  # Führt Unit + E2E Tests aus (491 Tests gesamt)
+npm test  # Führt Unit + E2E Tests aus (581 Tests gesamt)
 ```
 
 **WICHTIG**: Vor dem Commit müssen alle Tests bestanden haben!
@@ -378,7 +389,7 @@ Keine persönlichen Daten werden verarbeitet. Die App ist datenschutzfreundlich!
 - [x] Weitere Level mit gemischten Operationen
 - [ ] Dark Mode Support
 - [ ] Internationalisierung (i18n) für mehrere Sprachen
-- [x] PWA-Funktionalität (Offline-Nutzung, Install-Prompt)
+- [ ] PWA-Funktionalität (Offline-Nutzung, Install-Prompt)
 - [ ] ...
 
 ## License
