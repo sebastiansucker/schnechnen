@@ -922,13 +922,13 @@ function testResetStatistics() {
         history[level] = [{ score: 90, totalProblems: 100, date: new Date().toISOString() }];
         mockLocalStorage.setItem('schnechnen-history', JSON.stringify(history));
 
-        // 4. Rufe resetAll auf (Weighting)
-        weighting.resetAll();
+        // 4. Rufe clear auf (Weighting)
+        weighting.clear();
 
         // 5. Prüfe, dass Fehler gelöscht sind
         peeked = weighting.peekMistake(level);
         if (peeked !== null) {
-            console.error('Fehler: Nach resetAll sollten keine Fehler mehr vorhanden sein.');
+            console.error('Fehler: Nach clear sollten keine Fehler mehr vorhanden sein.');
             return false;
         }
 

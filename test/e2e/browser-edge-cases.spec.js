@@ -45,8 +45,8 @@ test.describe('Browser Edge Cases & Fehlerbehandlung', () => {
         
         // Next problem should appear
         await expect(page.locator('#problem')).toBeVisible();
-      } catch (e) {
-        // If localStorage isn't truly disabled or causes issues, 
+      } catch (_e) {
+        // If localStorage isn't truly disabled or causes issues,
         // fallback: just verify the game loaded
         await expect(page.locator('#start-screen')).toBeVisible();
       }
@@ -212,7 +212,7 @@ test.describe('Browser Edge Cases & Fehlerbehandlung', () => {
       expect(count).toBeGreaterThan(0);
     });
 
-    test('Spiel ist resilient bei Slow Network', async ({ page, context }) => {
+    test('Spiel ist resilient bei Slow Network', async ({ context }) => {
       // Create a new page with slow network
       const slowPage = await context.newPage();
       await slowPage.route('**/*', route => {

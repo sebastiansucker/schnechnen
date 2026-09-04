@@ -75,8 +75,6 @@ function displayOperator(op) {
  * @returns {{num1: number, num2: number, operation: string, result: number}}
  */
 function generateProblemFor(levelConfig, rng = Math.random) {
-    const isChaosMode = levelConfig.chaosMode;
-
     let num1, num2, operation, result;
 
     do {
@@ -97,7 +95,7 @@ function generateProblemFor(levelConfig, rng = Math.random) {
             //
             // Verwerfen statt Begrenzen macht jede gültige Aufgabe exakt gleich
             // wahrscheinlich (Level 0: 45 mögliche Aufgaben zu je ~2,2 %).
-            const addMaxNumber = isChaosMode ? 1000 : levelConfig.maxNumber;
+            const addMaxNumber = levelConfig.maxNumber;
             const addMaxResult = levelConfig.maxResult || levelConfig.maxNumber;
             // Ein Operand kann höchstens addMaxResult - 1 werden, damit für den
             // anderen (mindestens 1) noch Platz bleibt.
@@ -125,7 +123,7 @@ function generateProblemFor(levelConfig, rng = Math.random) {
             }
         } else if (operation === '-') {
             // For subtraction: both operands must be <= maxNumber
-            const subMaxNumber = isChaosMode ? 1000 : levelConfig.maxNumber;
+            const subMaxNumber = levelConfig.maxNumber;
             const subMaxResult = levelConfig.maxResult || levelConfig.maxNumber;
             // Generate result first to control outcome
             result = Math.floor(rng() * Math.min(subMaxResult, subMaxNumber)) + 0; // Can be 0
