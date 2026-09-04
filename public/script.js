@@ -114,6 +114,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ziel hat und nicht mit dem Fix in showScreen() kollidiert.
     window.history.replaceState({ screen: 'start' }, '', '?screen=start');
     currentScreenName = 'start';
+
+    // Beim Zurückkehren aus einem gedrosselten Hintergrund-Tab sofort die
+    // korrekte Restzeit anzeigen, statt bis zum nächsten Interval-Tick zu warten.
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && gameState.timer && gameState.timerEndAt) {
+            const remaining = Math.max(0, Math.ceil((gameState.timerEndAt - Date.now()) / 1000));
+            gameState.timeLeft = remaining;
+            elements.timeElement.textContent = remaining;
+            if (remaining <= 0) {
+                endGame();
+            }
+        }
+    });
 });
 
 // Ereignis-Listener initialisieren
@@ -265,16 +278,21 @@ function startTimer() {
     if (gameState.timer) {
         clearInterval(gameState.timer);
     }
-    
-    // Timer starten
+
+    // Restzeit über den tatsächlichen Endzeitpunkt berechnen statt zu zählen:
+    // setInterval wird von Browsern in Hintergrund-Tabs auf bis zu einmal pro
+    // Minute gedrosselt, ein reines Dekrementieren würde dort massiv nachgehen.
+    gameState.timerEndAt = Date.now() + gameState.timeLeft * 1000;
+
     gameState.timer = setInterval(() => {
-        gameState.timeLeft--;
-        elements.timeElement.textContent = gameState.timeLeft;
-        
-        if (gameState.timeLeft <= 0) {
+        const remaining = Math.max(0, Math.ceil((gameState.timerEndAt - Date.now()) / 1000));
+        gameState.timeLeft = remaining;
+        elements.timeElement.textContent = remaining;
+
+        if (remaining <= 0) {
             endGame();
         }
-    }, 1000);
+    }, 250);
 }
 
 // Neue Aufgabe generieren
