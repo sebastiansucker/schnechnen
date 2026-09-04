@@ -134,7 +134,7 @@ const LeaderboardScreen = (() => {
                     try {
                         const date = new Date(entry.timestamp);
                         timeStr = date.toLocaleDateString('de-DE', { month: 'short', day: 'numeric' });
-                    } catch (e) {
+                    } catch (_e) {
                         timeStr = '';
                     }
                 }
@@ -189,7 +189,7 @@ const LeaderboardScreen = (() => {
             '"': '&quot;',
             "'": '&#039;'
         };
-        return text.replace(/[&<>"']/g, m => map[m]);
+        return String(text ?? '').replace(/[&<>"']/g, m => map[m]);
     }
     
     // Public API
@@ -205,20 +205,15 @@ const LeaderboardScreen = (() => {
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        // Delay initialization slightly to ensure showScreen is defined
-        setTimeout(() => {
-            if (typeof LeaderboardScreen !== 'undefined') {
-                LeaderboardScreen.init();
-            }
-        }, 100);
-    });
-} else {
-    // DOM already loaded - delay to ensure showScreen is defined
-    setTimeout(() => {
         if (typeof LeaderboardScreen !== 'undefined') {
             LeaderboardScreen.init();
         }
-    }, 100);
+    });
+} else {
+    // DOM already loaded
+    if (typeof LeaderboardScreen !== 'undefined') {
+        LeaderboardScreen.init();
+    }
 }
 
 // Make available globally

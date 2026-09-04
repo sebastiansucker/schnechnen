@@ -76,9 +76,8 @@ test.describe('Leaderboard Screen Tests', () => {
     await page.click('#leaderboard-btn');
     await page.waitForSelector('#leaderboard-screen:not(.hidden)');
 
-    // Get initial list content
+    // Wait for the initial list content to render
     await page.waitForSelector('#leaderboard-list li', { timeout: 10000 });
-    const initialContent = await page.locator('#leaderboard-list').innerHTML();
 
     // Click on level 2 button
     const level2Btn = page.locator('#leaderboard-screen .stats-level-btn[data-level="2"]');

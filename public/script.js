@@ -1,12 +1,13 @@
 /**
  * Detect if running in test mode
- * - E2E tests run on localhost with ?e2e-test or ?test query parameter
+ * - E2E tests run on localhost with an explicit ?e2e-test query parameter
  * - Unit tests set window.__TEST_MODE__ = true
  */
 if (typeof window !== 'undefined' && !window.__TEST_MODE__) {
+    const testModeParams = new URLSearchParams(window.location.search);
     window.__TEST_MODE__ = (
         window.location.hostname === 'localhost' &&
-        (window.location.search.includes('e2e-test') || window.location.search.includes('test'))
+        testModeParams.has('e2e-test')
     );
 }
 
@@ -33,6 +34,9 @@ function createElements() {
             scoreElement: document.getElementById('score'),
             currentLevelElement: document.getElementById('current-level'),
             problemElement: document.getElementById('problem'),
+            problemNum1Element: document.getElementById('problem-num1'),
+            problemOperatorElement: document.getElementById('problem-operator'),
+            problemNum2Element: document.getElementById('problem-num2'),
             userAnswerElement: document.getElementById('user-answer'),
             dialPad: document.getElementById('dial-pad'),
             // Only select numeric dial buttons that provide a data-value attribute
@@ -68,6 +72,9 @@ function createElements() {
         scoreElement: { textContent: '' },
         currentLevelElement: { textContent: '' },
         problemElement: { textContent: '' },
+        problemNum1Element: { textContent: '' },
+        problemOperatorElement: { textContent: '' },
+        problemNum2Element: { textContent: '' },
         userAnswerElement: { textContent: '' },
         dialPad: { classList: { remove: () => {} } },
         dialButtons: [],
@@ -97,7 +104,6 @@ let gameState = {
     timerEndAt: null,
     score: 0,
     totalProblems: 0,
-    problems: [],
     highscore: 0,
     timer: null,
     currentProblem: null
@@ -244,16 +250,15 @@ function startGame(level) {
 
     gameState.currentLevel = level;
     // Initialize highscore for this level from saved highscores map (if available)
-    if (window.__SCHNECHEN_HIGHSCORES && window.__SCHNECHEN_HIGHSCORES[level] !== undefined) {
-        gameState.highscore = window.__SCHNECHEN_HIGHSCORES[level];
+    if (window.__SCHNECHNEN_HIGHSCORES && window.__SCHNECHNEN_HIGHSCORES[level] !== undefined) {
+        gameState.highscore = window.__SCHNECHNEN_HIGHSCORES[level];
     } else {
         gameState.highscore = 0;
     }
     gameState.timeLeft = 60;
     gameState.score = 0;
     gameState.totalProblems = 0;
-    gameState.problems = [];
-    
+
     // Spielbildschirm anzeigen
     showScreen('game');
     
@@ -264,7 +269,7 @@ function startGame(level) {
     generateProblem();
 
     // Ensure dial-pad is visible when a game starts
-    try { const dp = document.getElementById('dial-pad'); if (dp) dp.classList.remove('hidden'); } catch (_) {}
+    try { const dp = document.getElementById('dial-pad'); if (dp) dp.classList.remove('hidden'); } catch (_e) { /* ignore, dial-pad is optional in some test DOMs */ }
     
     // Do not focus the input by default to avoid opening the mobile keyboard; keep it readonly by default
     // elements.answerInput.focus();
@@ -331,12 +336,14 @@ function generateProblem() {
         wrongCount: 0
     };
     
-    // Aufgabe anzeigen (use printable operator symbols)
-    elements.problemElement.innerHTML = `${num1} ${GameLogic.displayOperator(operation)} ${num2} = <span id="user-answer" class="user-answer">?</span>`;
-    
-    // User-Answer Element neu holen (weil innerHTML neu gesetzt wurde)
-    elements.userAnswerElement = document.getElementById('user-answer');
-    
+    // Aufgabe anzeigen (use printable operator symbols). Die Operanden werden in
+    // eigene Spans geschrieben statt das komplette problemElement.innerHTML neu
+    // zu setzen, damit der Antwort-Span (userAnswerElement) stabil bleibt und
+    // nicht bei jeder Aufgabe neu aus dem DOM geholt werden muss.
+    elements.problemNum1Element.textContent = num1;
+    elements.problemOperatorElement.textContent = GameLogic.displayOperator(operation);
+    elements.problemNum2Element.textContent = num2;
+
     // Eingabe zurücksetzen
     elements.userAnswerElement.textContent = '?';
     
@@ -444,10 +451,7 @@ function checkAnswer() {
         gameState.currentProblem.answered = true;
         // WICHTIG: wrongCount wird NICHT hier inkrementiert!
         // Es wird durch addMistake() in weighting.js verwaltet
-        
-        // Falsche Aufgaben in Liste speichern
-        gameState.problems.push(gameState.currentProblem);
-        
+
         // Füge Problem zur Weighting-Liste hinzu für adaptives Lernen
         if (window.Weighting) {
             window.Weighting.addMistake(gameState.currentLevel, gameState.currentProblem);
@@ -590,10 +594,10 @@ function saveHighscore() {
         localStorage.setItem('schnechnen-highscores', JSON.stringify(highscores));
         
         // Aktualisiere auch das globale Highscore-Objekt
-        if (!window.__SCHNECHEN_HIGHSCORES) {
-            window.__SCHNECHEN_HIGHSCORES = {};
+        if (!window.__SCHNECHNEN_HIGHSCORES) {
+            window.__SCHNECHNEN_HIGHSCORES = {};
         }
-        window.__SCHNECHEN_HIGHSCORES[gameState.currentLevel] = gameState.highscore;
+        window.__SCHNECHNEN_HIGHSCORES[gameState.currentLevel] = gameState.highscore;
     } catch (e) {
         console.error('Fehler beim Speichern des Highscores:', e);
     }
@@ -603,7 +607,7 @@ function saveHighscore() {
 function loadHighscores() {
     try {
         // Load the highscores map for later use. We'll set per-level highscore when a level starts.
-        window.__SCHNECHEN_HIGHSCORES = JSON.parse(localStorage.getItem('schnechnen-highscores')) || {};
+        window.__SCHNECHNEN_HIGHSCORES = JSON.parse(localStorage.getItem('schnechnen-highscores')) || {};
     } catch (e) {
         console.error('Fehler beim Laden des Highscores:', e);
         gameState.highscore = 0;
@@ -624,11 +628,11 @@ function resetAllStatistics() {
         localStorage.removeItem('schnechnen-mistakes');
         
         // Lösche globale Objekte
-        window.__SCHNECHEN_HIGHSCORES = {};
+        window.__SCHNECHNEN_HIGHSCORES = {};
         
         // Lösche Weighting-Daten
         if (window.Weighting) {
-            window.Weighting.resetAll();
+            window.Weighting.clear();
         }
         
         // Aktualisiere Stats-Anzeige
@@ -709,12 +713,11 @@ function resetGame() {
         timerEndAt: null,
         score: 0,
         totalProblems: 0,
-        problems: [],
         highscore: 0,
         timer: null,
         currentProblem: null
     };
-    
+
     // Anzeige zurücksetzen
     if (elements.userAnswerElement) {
         elements.userAnswerElement.textContent = '?';
@@ -853,7 +856,7 @@ function showStatsScreen(level) {
 // Update Statistiken für ein Level
 function updateStatsForLevel(level) {
     const history = getGameHistory(level);
-    const highscore = window.__SCHNECHEN_HIGHSCORES[level] || 0;
+    const highscore = window.__SCHNECHNEN_HIGHSCORES[level] || 0;
     
     // Statistik-Karten aktualisieren
     elements.statHighscore.textContent = highscore;
@@ -979,18 +982,6 @@ function renderChart(level, history) {
     });
 }
 
-// Exportiere Funktionen für Tests
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        CONFIG: GameLogic.CONFIG,
-        generateProblem,
-        checkAnswer,
-        startGame,
-        endGame,
-        resetGame
-    };
-}
-
 // Expose a small test API on the window for Playwright/e2e tests
 try {
     if (typeof window !== 'undefined') {
@@ -1018,7 +1009,7 @@ try {
                     const ua = document.getElementById('user-answer');
                     if (ua) ua.textContent = String(answer);
                     // refresh the cached element reference so checkAnswer reads the current span
-                    try { if (typeof elements !== 'undefined') elements.userAnswerElement = document.getElementById('user-answer'); } catch (e) {}
+                    try { if (typeof elements !== 'undefined') elements.userAnswerElement = document.getElementById('user-answer'); } catch (_e) { /* ignore, element reference refresh is best-effort */ }
                     // call the checkAnswer function to process the answer
                     if (typeof checkAnswer === 'function') checkAnswer();
                 } catch (e) {
@@ -1037,7 +1028,7 @@ try {
             };
         }
     }
-} catch (e) {
+} catch (_e) {
     // ignore in non-browser contexts
 }
 
@@ -1079,7 +1070,6 @@ if (typeof module !== 'undefined' && module.exports) {
             gameState.timerEndAt = null;
             gameState.score = 0;
             gameState.totalProblems = 0;
-            gameState.problems = [];
             gameState.currentProblem = null;
             if (gameState.timer) clearInterval(gameState.timer);
         }

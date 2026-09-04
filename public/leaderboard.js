@@ -50,7 +50,7 @@ const Leaderboard = (() => {
                 localStorage.setItem(STORAGE_KEY, username);
             }
             return username;
-        } catch (e) {
+        } catch (_e) {
             console.warn('localStorage not available, generating temporary username');
             return generateRandomName();
         }
@@ -79,7 +79,7 @@ const Leaderboard = (() => {
     function getCurrentUsername() {
         try {
             return localStorage.getItem(STORAGE_KEY);
-        } catch (e) {
+        } catch (_e) {
             return null;
         }
     }

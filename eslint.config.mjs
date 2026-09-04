@@ -34,6 +34,7 @@ export default [
         alert: 'readonly',
         AbortController: 'readonly',
         Storage: 'readonly',
+        URLSearchParams: 'readonly',
         // Leaderboard/Stats globals
         Chart: 'readonly',
         LeaderboardScreen: 'readonly',
@@ -58,10 +59,10 @@ export default [
     },
     rules: {
       ...js.configs.recommended.rules,
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
       'no-console': 'off',
       'no-constant-condition': 'warn',
-      'no-empty': 'warn'
+      'no-empty': 'error'
     }
   },
   {

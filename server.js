@@ -141,7 +141,7 @@ function parseJsonBody(req, maxSize) {
             }
             try {
                 resolve(JSON.parse(body));
-            } catch (e) {
+            } catch (_e) {
                 const err = new Error('Invalid JSON');
                 err.statusCode = 400;
                 reject(err);
@@ -179,7 +179,7 @@ function resolveStaticPath(pathname) {
     let decoded;
     try {
         decoded = decodeURIComponent(pathname);
-    } catch (e) {
+    } catch (_e) {
         return null;
     }
     const requested = path.resolve(publicRoot, '.' + decoded);
@@ -226,7 +226,7 @@ function createRequestListener(db) {
         let pathname;
         try {
             pathname = new URL(req.url, 'http://localhost').pathname;
-        } catch (e) {
+        } catch (_e) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: 'Ungültige URL' }));
             return;

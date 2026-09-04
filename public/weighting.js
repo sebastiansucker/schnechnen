@@ -4,13 +4,15 @@ const KEY = 'schnechnen-mistakes';
 function _getStorage() {
     try {
         if (typeof localStorage !== 'undefined' && localStorage) return localStorage;
-    } catch (e) {}
+    } catch (_e) {
+        // localStorage not available (e.g. private mode or Node.js); fall back to in-memory store
+    }
     // fallback in-memory
     // Use globalThis for a safe cross-environment in-memory store
-    if (typeof globalThis.__SCHNECHEN_MEM_STORE === 'undefined') globalThis.__SCHNECHEN_MEM_STORE = {};
+    if (typeof globalThis.__SCHNECHNEN_MEM_STORE === 'undefined') globalThis.__SCHNECHNEN_MEM_STORE = {};
     return {
-        getItem: (k) => globalThis.__SCHNECHEN_MEM_STORE[k] || null,
-        setItem: (k, v) => { globalThis.__SCHNECHEN_MEM_STORE[k] = v; }
+        getItem: (k) => globalThis.__SCHNECHNEN_MEM_STORE[k] || null,
+        setItem: (k, v) => { globalThis.__SCHNECHNEN_MEM_STORE[k] = v; }
     };
 }
 
@@ -18,7 +20,7 @@ function _loadAll() {
     const storage = _getStorage();
     try {
         return JSON.parse(storage.getItem(KEY)) || {};
-    } catch (e) {
+    } catch (_e) {
         return {};
     }
 }
@@ -29,11 +31,6 @@ function _saveAll(obj) {
 }
 
 function clear() {
-    const storage = _getStorage();
-    storage.setItem(KEY, JSON.stringify({}));
-}
-
-function resetAll() {
     const storage = _getStorage();
     storage.setItem(KEY, JSON.stringify({}));
 }
@@ -84,8 +81,7 @@ if (typeof module !== 'undefined' && module.exports) {
         getMistakes,
         peekMistake,
         removeMistake,
-        clear,
-        resetAll
+        clear
     };
 }
 
@@ -96,7 +92,6 @@ if (typeof window !== 'undefined') {
         getMistakes,
         peekMistake,
         removeMistake,
-        clear,
-        resetAll
+        clear
     };
 }
