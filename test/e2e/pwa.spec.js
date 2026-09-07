@@ -17,7 +17,18 @@ test.describe('PWA: Offline-Betrieb', () => {
     expect(swResponse.ok()).toBeTruthy();
   });
 
-  test('Spiel bleibt nach Reload offline spielbar', async ({ browser }) => {
+  test('Spiel bleibt nach Reload offline spielbar', async ({ browser, browserName }) => {
+    // WebKit (Desktop Safari und die iOS-Profile) kooperiert bei Playwright nicht
+    // zuverlässig zwischen der Request-Interception (page.route) und einer
+    // Service-Worker-kontrollierten Navigation: Der abgebrochene Reload scheitert
+    // dort mit "Blocked by Web Inspector", statt die Antwort aus dem
+    // Service-Worker-Cache zu bekommen - ein bekanntes Playwright/WebKit-Verhalten
+    // bei der Interception von Requests, die eigentlich ein Service Worker bedient
+    // (siehe https://playwright.dev/docs/service-workers), keine echte Regression
+    // im echten Safari. Die Verlinkung von Manifest und Service Worker wird oben
+    // bereits browserübergreifend getestet.
+    test.skip(browserName === 'webkit', 'Playwright: page.route()-Interception kooperiert in WebKit nicht zuverlässig mit einer Service-Worker-kontrollierten Navigation (siehe Kommentar oben).');
+
     // Eigener Context mit erlaubten Service Workern (global per Playwright-Config
     // geblockt, damit sie die übrigen Tests nicht beeinflussen).
     const context = await browser.newContext({ serviceWorkers: 'allow' });
