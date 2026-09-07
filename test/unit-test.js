@@ -605,6 +605,7 @@ function runTests() {
         ['Gewichtung / Fehlerwiederholung', testWeighting],
         ['Adaptive Problemgenerierung', testAdaptiveProblemGeneration],
         ['Reset Statistiken', testResetStatistics],
+        ['Einmaleins-Heatmap (Facts)', testTimesTableHeatmap],
         ['Input-Handling (Dial-Pad)', testInputHandling],
         ['Answer-Checking Logic', testAnswerChecking],
         ['Timer Logic', testTimerLogic],
@@ -1015,6 +1016,99 @@ function testResetStatistics() {
         return true;
     } catch (error) {
         console.error('Fehler beim Testen des Zurücksetzen von Statistiken:', error);
+        return false;
+    }
+}
+
+// Test: Einmaleins-Heatmap - recordAttempt, Normalisierung und Klassifizierung (Issue #49)
+function testTimesTableHeatmap() {
+    console.log('Teste Einmaleins-Heatmap (recordAttempt/Klassifizierung)...');
+    try {
+        const weighting = require('../public/weighting');
+        weighting.clear();
+
+        const level = 3;
+
+        // 1. Noch nie abgefragt -> grau
+        if (weighting.getMultiplicationFact(level, 7, 8) !== null) {
+            console.error('Fehler: Vor der ersten Abfrage sollte kein Fakt existieren.');
+            return false;
+        }
+        if (weighting.classifyFact(null) !== 'gray') {
+            console.error('Fehler: Ohne Daten sollte die Klassifizierung "gray" sein.');
+            return false;
+        }
+
+        // 2. Kommutative Normalisierung: 7 × 8 und 8 × 7 landen auf derselben Zelle
+        weighting.recordAttempt(level, { num1: 7, num2: 8, operation: '*', result: 56 }, true);
+        weighting.recordAttempt(level, { num1: 8, num2: 7, operation: '*', result: 56 }, true);
+
+        const factAB = weighting.getMultiplicationFact(level, 7, 8);
+        const factBA = weighting.getMultiplicationFact(level, 8, 7);
+        if (!factAB || factAB.correct !== 2) {
+            console.error(`Fehler: 7×8 sollte 2 richtige Versuche haben, hat aber ${factAB && factAB.correct}.`);
+            return false;
+        }
+        if (factAB !== factBA && JSON.stringify(factAB) !== JSON.stringify(factBA)) {
+            console.error('Fehler: 7×8 und 8×7 sollten dieselbe Zelle sein.');
+            return false;
+        }
+
+        // 3. Division wird auf die Multiplikationsaufgabe abgebildet: 56 ÷ 7 = 8
+        //    zählt für die Zelle 7 × 8.
+        weighting.recordAttempt(level, { num1: 56, num2: 7, operation: '/', result: 8 }, false);
+        const factAfterDivision = weighting.getMultiplicationFact(level, 7, 8);
+        if (factAfterDivision.correct !== 2 || factAfterDivision.wrong !== 1) {
+            console.error(`Fehler: Nach 56÷7 sollte die 7×8-Zelle 2 richtig/1 falsch haben, hat aber ${factAfterDivision.correct} richtig/${factAfterDivision.wrong} falsch.`);
+            return false;
+        }
+        // Zuletzt war die Division falsch -> lastResult false
+        if (factAfterDivision.lastResult !== false) {
+            console.error('Fehler: lastResult sollte nach der falschen Division false sein.');
+            return false;
+        }
+
+        // 4. Klassifizierung: mehr falsch als richtig oder zuletzt falsch -> rot
+        if (weighting.classifyFact(factAfterDivision) !== 'red') {
+            console.error(`Fehler: Erwartete Klassifizierung "red", erhalten "${weighting.classifyFact(factAfterDivision)}".`);
+            return false;
+        }
+
+        // 5. Sicher (grün): mindestens 3 richtig, zuletzt richtig
+        weighting.clear();
+        const provenProblem = { num1: 6, num2: 9, operation: '*', result: 54 };
+        weighting.recordAttempt(level, provenProblem, true);
+        weighting.recordAttempt(level, provenProblem, true);
+        weighting.recordAttempt(level, provenProblem, true);
+        const provenFact = weighting.getMultiplicationFact(level, 6, 9);
+        if (weighting.classifyFact(provenFact) !== 'green') {
+            console.error(`Fehler: Erwartete Klassifizierung "green", erhalten "${weighting.classifyFact(provenFact)}".`);
+            return false;
+        }
+
+        // 6. Gemischt (gelb): mindestens 1 falsch und 1 richtig, aber weder rot
+        //    noch grün (zuletzt richtig, aber weniger als 3 Treffer, wrong <= correct)
+        weighting.clear();
+        const mixedProblem = { num1: 4, num2: 5, operation: '*', result: 20 };
+        weighting.recordAttempt(level, mixedProblem, false);
+        weighting.recordAttempt(level, mixedProblem, true);
+        const mixedFact = weighting.getMultiplicationFact(level, 4, 5);
+        if (weighting.classifyFact(mixedFact) !== 'yellow') {
+            console.error(`Fehler: Erwartete Klassifizierung "yellow", erhalten "${weighting.classifyFact(mixedFact)}".`);
+            return false;
+        }
+
+        // 7. clear() löscht auch den Facts-Store
+        weighting.clear();
+        if (weighting.getMultiplicationFact(level, 6, 9) !== null) {
+            console.error('Fehler: Nach clear() sollten keine Fakten mehr vorhanden sein.');
+            return false;
+        }
+
+        console.log('✓ Einmaleins-Heatmap erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen der Einmaleins-Heatmap:', error);
         return false;
     }
 }

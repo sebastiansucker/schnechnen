@@ -15,8 +15,9 @@ Ein kleines, responsives Mathe-Lernspiel (JavaScript) mit modernem Design.
 - 🧠 **Adaptives Lernen**: Häufige Fehler werden automatisch wiederholt (30% Chance)
 - ❌ **Fehleranalyse**: Anzeige häufig falsch gelöster Aufgaben
 - 📈 **Statistik-Seite**: Verlaufsdiagramm der letzten 50 Zeitrennen-Spiele mit Chart.js
+- 🧮 **Einmaleins-Tafel**: 10×10-Heatmap auf der Statistik-Seite (Level 3-5), zeigt auf einen Blick, welche Aufgaben sicher sitzen und welche noch Übung brauchen
 - 🏆 **Anonymes Leaderboard**: Selbst gehostet mit SQLite (kein Cloud-Dienst), Top 10 pro Level
-- ✅ **Umfassend getestet**: 26 Unit Tests + 600 E2E Tests (Playwright, 6 Browser-Engines)
+- ✅ **Umfassend getestet**: 27 Unit Tests + 672 E2E Tests (Playwright, 6 Browser-Engines)
 
 ## Projektstruktur
 
@@ -100,7 +101,7 @@ Nach einem Deployment holt sich die App beim nächsten Start automatisch die neu
 npm run test:unit
 ```
 
-**26 Unit Tests** (`test/unit-test.js`) für:
+**27 Unit Tests** (`test/unit-test.js`) für:
 - CONFIG-Struktur-Validierung
 - Problem-Generierung und Constraints
 - Highscore-Persistierung
@@ -109,6 +110,7 @@ npm run test:unit
 - Adaptive Learning mit wrongCount-Prioritisierung
 - Leaderboard-Integration
 - Übungsmodus- und Fehler-Modus-Logik (feste Aufgabenzahl, Zwei-Treffer-in-Folge-Regel)
+- Einmaleins-Heatmap: `recordAttempt`, kommutative Normalisierung, Division-auf-Multiplikation-Mapping, Klassifizierung (grau/rot/gelb/grün)
 
 Dazu **10 weitere Tests** (`test/server-test.js`) für den Server: JSON-Body-Parsing, Rate-Limiting und Path-Traversal-Schutz.
 
@@ -121,12 +123,13 @@ npm run test:e2e         # Headless run
 npm run test:e2e:ui      # Interaktive UI
 ```
 
-**600 E2E Tests** über 6 Browser-Engines (Chromium, Firefox, WebKit, Mobile Chrome, Mobile Safari, iPhone 13 Mini):
+**672 E2E Tests** über 6 Browser-Engines (Chromium, Firefox, WebKit, Mobile Chrome, Mobile Safari, iPhone 13 Mini):
 - **Level 0-4 Tests**: Kompletter Spielablauf pro Level, Timer, Backspace, Multi-Digit-Eingabe, Persistierung
 - **Allgemeine Tests** (`schnechnen-tests.spec.js`): Navigation, Level-Wechsel, Highscores
 - **Zurück-Navigation** (`back-navigation.spec.js`): Zurück-Button-Verhalten
 - **Browser-Sonderfälle** (`browser-edge-cases.spec.js`): z.B. Tab-Wechsel, Reload
 - **Statistik-Tests**: Verlauf, Charts, Level-Filter, Reset
+- **Einmaleins-Tafel Tests** (`times-table.spec.js`): Sichtbarkeit je Level, Farbklassifizierung, kommutative Zusammenfassung, Division-Mapping, Detailtext, Reset
 - **Adaptive Learning Tests**: Fehlertracking, wrongCount-Inkrementierung
 - **Übungsmodus/Fehler üben Tests** (`practice-mode.spec.js`): Modus-Umschalter, Fortschrittsanzeige statt Timer, Rundenende nach fester Aufgabenzahl bzw. leerer Fehlerliste, kein Highscore-Update
 - **Leaderboard Tests**: Score-Submission, Top-10-Anzeige, Name-Generierung, Level-Filter
@@ -142,7 +145,7 @@ npx playwright show-report
 ### Alle Tests
 
 ```bash
-npm test  # Führt Unit + E2E Tests aus (636 Tests gesamt)
+npm test  # Führt Unit + E2E Tests aus (709 Tests gesamt)
 ```
 
 **WICHTIG**: Vor dem Commit müssen alle Tests bestanden haben!

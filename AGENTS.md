@@ -8,7 +8,7 @@ Schnechnen is a mobile-first math learning game built with vanilla JavaScript, H
 ### Core Components
 - **`public/game-logic.js`**: Pure game logic with no DOM dependencies (`CONFIG`, problem generation). Imported directly by unit tests and by `script.js`.
 - **`public/script.js`**: DOM/game-state layer built on top of `game-logic.js` - screen navigation, timer, highscores, game history.
-- **`public/weighting.js`**: Standalone mistake tracking (localStorage with in-memory fallback).
+- **`public/weighting.js`**: Standalone mistake tracking (localStorage with in-memory fallback). Also tracks per-fact hit/miss history (`schnechnen-facts`) for the Einmaleins heatmap on the stats page (see below).
 - **`public/leaderboard.js`** / **`public/leaderboard-screen.js`**: Anonymous username generation and leaderboard UI/data loading.
 - **`public/leaderboard-config.js`**: `LEADERBOARD_ENABLED` flag (turned off for the GitHub Pages build).
 - **`public/index.html`**: Five-screen flow (start → game → result / stats / leaderboard).
@@ -77,14 +77,14 @@ npm run start             # Start server.js (game + leaderboard API) on :8080
 ### Testing Strategy
 **CRITICAL**: Always run `npm test` before committing! All tests must pass before pushing changes.
 
-**Unit tests** (`test/unit-test.js`, 26 tests): Run in Node.js against the real `game-logic.js` / `weighting.js` modules (problem generation, scoring, CONFIG validation, adaptive learning, practice/mistakes mode logic).
+**Unit tests** (`test/unit-test.js`, 27 tests): Run in Node.js against the real `game-logic.js` / `weighting.js` modules (problem generation, scoring, CONFIG validation, adaptive learning, practice/mistakes mode logic, Einmaleins-heatmap fact tracking/classification).
 ```bash
 npm run test:unit   # runs test/unit-test.js and test/server-test.js
 ```
 
 `test/server-test.js` (10 tests) covers the server directly: JSON body parsing, rate limiting, and path-traversal protection.
 
-**E2E tests** (`test/e2e/`, 600 tests across 6 Playwright browser projects): require the local server running.
+**E2E tests** (`test/e2e/`, 672 tests across 6 Playwright browser projects): require the local server running.
 ```bash
 npm run test:e2e         # Headless run
 npm run test:e2e:ui      # Interactive UI mode
@@ -92,7 +92,7 @@ npm run test:e2e:ui      # Interactive UI mode
 
 **Run all tests** before committing:
 ```bash
-npm test                 # Runs unit + server + E2E tests (636 tests total)
+npm test                 # Runs unit + server + E2E tests (709 tests total)
 ```
 
 **Important**: `playwright.config.mjs` starts the server itself (`webServer`) against a throwaway SQLite file, so E2E runs never touch real leaderboard data. `baseURL` is `http://localhost:8080`.
@@ -137,6 +137,7 @@ Always use `displayOperator()` when showing math problems to users.
 ### LocalStorage Keys
 - `schnechnen-highscores`: JSON object `{ "0": 12, "1": 8, ... }` (level → highscore, i.e. number of correct answers)
 - `schnechnen-mistakes`: JSON object managed by `weighting.js`
+- `schnechnen-facts`: JSON object managed by `weighting.js`, per-level hit/miss history per (commutatively normalized) task, feeding the Einmaleins heatmap
 - `schnechnen-keyboard-mode`: boolean, dial-pad vs. native keyboard
 - `schnechnen-username`: anonymous leaderboard display name
 
@@ -167,6 +168,9 @@ Mistakes are tracked per level in `weighting.js`:
 addMistake(level, { num1, num2, operation, result, wrongCount })
 ```
 Called from `checkAnswer()` only on wrong answers. The `wrongCount` field is incremented for duplicate problems.
+
+### Einmaleins Heatmap (Stats Page, Level 3/4/5)
+`weighting.js` also records every attempt (right or wrong) as a "fact" via `recordAttempt(level, problem, isCorrect)`, called from `checkAnswer()` for both branches. Facts are keyed by `normalizeFactKey()`, which commutatively normalizes `+`/`*` (`7 × 8` and `8 × 7` share a cell) and maps division onto its multiplication fact (`56 ÷ 7` counts for the `7 × 8` cell, since the divisor and quotient are the two factors). `classifyFact()` turns a fact into `'gray'` (never attempted) / `'red'` (last wrong, or more wrong than right) / `'yellow'` (mixed) / `'green'` (≥3 correct, last correct) — this classification logic is DOM-free and unit-tested directly. `script.js`'s `renderTimesTable(level)` renders a 10×10 CSS grid of `<button>` cells (only for levels 3-5) into `#times-table-grid`, called from `updateStatsForLevel()` *before* `renderChart()` so it doesn't depend on the Chart.js CDN script having loaded successfully.
 
 ## Testing Notes
 

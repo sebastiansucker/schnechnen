@@ -1184,6 +1184,152 @@ button.btn-primary:hover {
     border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 
+/* Einmaleins-Heatmap (Issue #49) */
+.times-table {
+    width: 100%;
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.times-table::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-bg);
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.times-table h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 1.3rem;
+    text-align: center;
+}
+
+.times-table-subtitle {
+    margin: 0 0 16px 0;
+    color: #666;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.times-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.times-table-grid {
+    display: grid;
+    grid-template-columns: repeat(11, minmax(28px, 1fr));
+    gap: 3px;
+    min-width: 340px;
+    width: 100%;
+}
+
+.times-table-cell {
+    aspect-ratio: 1 / 1;
+    min-width: 28px;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.times-table-corner {
+    background: transparent;
+}
+
+.times-table-header {
+    background: transparent;
+    color: #333;
+    font-size: 0.8rem;
+}
+
+.times-table-fact {
+    position: relative;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease;
+}
+
+.times-table-fact:hover,
+.times-table-fact:focus-visible {
+    transform: scale(1.08);
+    z-index: 1;
+}
+
+.times-table-value {
+    pointer-events: none;
+}
+
+.times-table-icon {
+    position: absolute;
+    top: 1px;
+    right: 2px;
+    font-size: 0.55em;
+    line-height: 1;
+    pointer-events: none;
+}
+
+/* Status-Farben: Farbe ist nie die einzige Information (siehe Icon-Overlay
+   oben und der unterschiedliche Zeichensatz je Status). */
+.times-table-fact.status-gray {
+    background: #dadde1;
+    color: #4a4a4a;
+    border-color: #b7bcc4;
+}
+
+.times-table-fact.status-red {
+    background: linear-gradient(135deg, #FF4757, #FF3838);
+    color: #ffffff;
+    border-color: #c62b39;
+}
+
+.times-table-fact.status-yellow {
+    background: #FFC93C;
+    color: #4a3300;
+    border-color: #e0a500;
+}
+
+.times-table-fact.status-green {
+    background: var(--primary-teal);
+    color: #ffffff;
+    border-color: #045c46;
+}
+
+.times-table-detail {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba(0, 180, 216, 0.1) 0%, rgba(157, 78, 221, 0.1) 100%);
+    border-left: 4px solid var(--primary-turquoise);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+@media (max-width: 480px) {
+    .times-table-grid {
+        min-width: 310px;
+    }
+
+    .times-table-cell {
+        font-size: 0.65rem;
+    }
+}
+
 /* Statistics mistakes section */
 .stats-mistakes {
     width: 100%;

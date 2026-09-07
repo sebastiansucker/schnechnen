@@ -65,7 +65,10 @@ function createElements() {
             statTotalGames: document.getElementById('stat-total-games'),
             statAvgScore: document.getElementById('stat-avg-score'),
             chartCanvas: document.getElementById('highscore-chart'),
-            statsMistakeList: document.getElementById('stats-mistake-list')
+            statsMistakeList: document.getElementById('stats-mistake-list'),
+            timesTableSection: document.getElementById('times-table-section'),
+            timesTableGrid: document.getElementById('times-table-grid'),
+            timesTableDetail: document.getElementById('times-table-detail')
         };
     }
 
@@ -101,7 +104,10 @@ function createElements() {
         restartButton: { addEventListener: () => {} },
         backButton: { addEventListener: () => {} },
         statsPracticeMistakesButton: { addEventListener: () => {}, disabled: false, title: '' },
-        statsMistakeList: { innerHTML: '' }
+        statsMistakeList: { innerHTML: '' },
+        timesTableSection: { classList: { add: () => {}, remove: () => {} } },
+        timesTableGrid: { innerHTML: '', appendChild: () => {} },
+        timesTableDetail: { textContent: '', classList: { add: () => {}, remove: () => {} } }
     };
 }
 
@@ -607,6 +613,11 @@ function checkAnswer() {
             window.Weighting.removeMistake(gameState.currentLevel, gameState.currentProblem);
         }
 
+        // Treffer für die Einmaleins-Heatmap aufzeichnen (Issue #49)
+        if (window.Weighting) {
+            window.Weighting.recordAttempt(gameState.currentLevel, gameState.currentProblem, true);
+        }
+
         // Feedback-Animation für richtige Antwort
         showFeedback(true);
     } else {
@@ -624,6 +635,11 @@ function checkAnswer() {
         // Füge Problem zur Weighting-Liste hinzu für adaptives Lernen
         if (window.Weighting) {
             window.Weighting.addMistake(gameState.currentLevel, gameState.currentProblem);
+        }
+
+        // Treffer für die Einmaleins-Heatmap aufzeichnen (Issue #49)
+        if (window.Weighting) {
+            window.Weighting.recordAttempt(gameState.currentLevel, gameState.currentProblem, false);
         }
 
         // Feedback-Animation für falsche Antwort
@@ -823,6 +839,7 @@ function resetAllStatistics() {
         localStorage.removeItem('schnechnen-highscores');
         localStorage.removeItem('schnechnen-history');
         localStorage.removeItem('schnechnen-mistakes');
+        localStorage.removeItem('schnechnen-facts');
         
         // Lösche globale Objekte
         window.__SCHNECHNEN_HIGHSCORES = {};
@@ -1073,12 +1090,126 @@ function updateStatsForLevel(level) {
     // "Fehler üben"-Button für dieses Level (de)aktivieren
     updatePracticeMistakesButton(elements.statsPracticeMistakesButton, level);
 
+    // Einmaleins-Heatmap: nur für die Level mit Multiplikation/Division
+    // relevant (Issue #49). Bewusst vor renderChart(): die Heatmap braucht
+    // kein Chart.js und soll auch dann erscheinen, wenn das CDN-Skript nicht
+    // geladen werden konnte.
+    renderTimesTable(level);
+
     // Chart rendern: nur Zeitrennen-Runden, da Score/Prozentsätze aus Übungs-
     // und Fehler-Runden (andere Aufgabenzahl, kein Timer) nicht vergleichbar
     // mit den 60-Sekunden-Runden sind. Einträge ohne mode-Feld (vor Issue #47
     // gespeichert) gelten als 'timed'.
     const timedHistory = history.filter(entry => (entry.mode || 'timed') === 'timed');
     renderChart(level, timedHistory);
+}
+
+// Level, für die die Einmaleins-Tafel angezeigt wird (Multiplikation kommt
+// dort vor: Level 3 Multiplikation, Level 4 Multiplikation & Division,
+// Level 5 Chaos-Modus).
+const TIMES_TABLE_LEVELS = [3, 4, 5];
+
+// Übersetzt einen Zeitstempel in eine kurze relative Zeitangabe ("vor 3 Tagen").
+function formatRelativeTime(timestamp) {
+    const diffMs = Date.now() - timestamp;
+    const diffMinutes = Math.floor(diffMs / 60000);
+    if (diffMinutes < 1) return 'gerade eben';
+    if (diffMinutes < 60) return `vor ${diffMinutes} Minute${diffMinutes === 1 ? '' : 'n'}`;
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `vor ${diffHours} Stunde${diffHours === 1 ? '' : 'n'}`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `vor ${diffDays} Tag${diffDays === 1 ? '' : 'en'}`;
+}
+
+// Kleines, nicht nur farbliches Symbol je Status (Barrierefreiheit: Farbe
+// allein ist keine ausreichende Information).
+const TIMES_TABLE_STATUS_ICON = {
+    gray: '·',
+    red: '!',
+    yellow: '~',
+    green: '✓'
+};
+
+const TIMES_TABLE_STATUS_TEXT = {
+    gray: 'noch nie abgefragt',
+    red: 'übungsbedürftig',
+    yellow: 'gemischt',
+    green: 'sicher'
+};
+
+// Baut den aria-label/Detail-Text für eine Zelle der Einmaleins-Tafel.
+function buildTimesTableLabel(row, col, result, fact, status) {
+    const statusText = TIMES_TABLE_STATUS_TEXT[status];
+    if (!fact) {
+        return `${row} × ${col} = ${result}, ${statusText}`;
+    }
+    const lastSeenText = fact.lastSeen ? `, zuletzt ${formatRelativeTime(fact.lastSeen)}` : '';
+    const lastResultText = fact.lastResult ? 'richtig' : 'falsch';
+    return `${row} × ${col} = ${result}, ${fact.correct}× richtig, ${fact.wrong}× falsch, zuletzt ${lastResultText}${lastSeenText}`;
+}
+
+// Zeigt den Detailtext einer angetippten Zelle unterhalb der Tafel an.
+function showTimesTableDetail(text) {
+    if (!elements.timesTableDetail) return;
+    elements.timesTableDetail.textContent = text;
+    elements.timesTableDetail.classList.remove('hidden');
+}
+
+// Rendert die 10×10 Einmaleins-Tafel für ein Level. Reines HTML/CSS-Grid
+// (kein Chart.js), Zellen als <button> für Tastatur-/Screenreader-Zugriff.
+function renderTimesTable(level) {
+    if (!elements.timesTableSection || !elements.timesTableGrid) return;
+
+    if (!TIMES_TABLE_LEVELS.includes(level)) {
+        elements.timesTableSection.classList.add('hidden');
+        return;
+    }
+    elements.timesTableSection.classList.remove('hidden');
+
+    const grid = elements.timesTableGrid;
+    grid.innerHTML = '';
+
+    // Ecke oben links (leer, dekorativ)
+    const corner = document.createElement('div');
+    corner.className = 'times-table-cell times-table-corner';
+    corner.setAttribute('aria-hidden', 'true');
+    grid.appendChild(corner);
+
+    // Spaltenköpfe
+    for (let col = 1; col <= 10; col++) {
+        const colHeader = document.createElement('div');
+        colHeader.className = 'times-table-cell times-table-header';
+        colHeader.textContent = String(col);
+        colHeader.setAttribute('role', 'columnheader');
+        grid.appendChild(colHeader);
+    }
+
+    for (let row = 1; row <= 10; row++) {
+        const rowHeader = document.createElement('div');
+        rowHeader.className = 'times-table-cell times-table-header';
+        rowHeader.textContent = String(row);
+        rowHeader.setAttribute('role', 'rowheader');
+        grid.appendChild(rowHeader);
+
+        for (let col = 1; col <= 10; col++) {
+            const result = row * col;
+            const fact = window.Weighting ? window.Weighting.getMultiplicationFact(level, row, col) : null;
+            const status = window.Weighting ? window.Weighting.classifyFact(fact) : 'gray';
+            const label = buildTimesTableLabel(row, col, result, fact, status);
+
+            const cell = document.createElement('button');
+            cell.type = 'button';
+            cell.className = `times-table-cell times-table-fact status-${status}`;
+            cell.dataset.row = String(row);
+            cell.dataset.col = String(col);
+            cell.dataset.status = status;
+            cell.setAttribute('role', 'gridcell');
+            cell.setAttribute('aria-label', label);
+            cell.innerHTML = `<span class="times-table-value">${result}</span><span class="times-table-icon" aria-hidden="true">${TIMES_TABLE_STATUS_ICON[status]}</span>`;
+            cell.addEventListener('click', () => showTimesTableDetail(label));
+            grid.appendChild(cell);
+        }
+    }
 }
 
 // Rendere Chart mit Chart.js
