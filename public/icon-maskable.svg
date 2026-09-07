@@ -1,0 +1,16 @@
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF6B35;stop-opacity:1" />
+      <stop offset="25%" style="stop-color:#00B4D8;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#9D4EDD;stop-opacity:1" />
+      <stop offset="75%" style="stop-color:#FF006E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06A77D;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Full-bleed background so the OS mask (circle/squircle) never clips to the edge -->
+  <rect width="512" height="512" fill="url(#grad)"/>
+  <!-- Content kept within the safe zone (inner ~80%) required for maskable icons -->
+  <circle cx="256" cy="256" r="180" fill="white"/>
+  <text x="256" y="300" font-size="220" text-anchor="middle" font-family="Arial, sans-serif">🐌</text>
+</svg>

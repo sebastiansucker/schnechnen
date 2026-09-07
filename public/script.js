@@ -1032,6 +1032,67 @@ try {
     // ignore in non-browser contexts
 }
 
+/**
+ * Service Worker registrieren (Offline-Betrieb / PWA).
+ * Wird im Test-Modus (Unit- und E2E-Tests) übersprungen, damit Tests nicht
+ * durch gecachte Antworten oder einen aktiven Controller beeinflusst werden.
+ */
+function registerServiceWorker() {
+    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
+    if (typeof window !== 'undefined' && window.__TEST_MODE__) return;
+
+    navigator.serviceWorker.register('./sw.js').then((registration) => {
+        registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (!newWorker) return;
+            newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    showUpdateAvailableNotice(newWorker);
+                }
+            });
+        });
+    }).catch((err) => {
+        console.warn('Service Worker Registrierung fehlgeschlagen:', err);
+    });
+}
+
+/** Zeigt einen Hinweis "Neue Version verfügbar, neu laden" an. */
+function showUpdateAvailableNotice(waitingWorker) {
+    if (typeof document === 'undefined') return;
+    if (document.getElementById('sw-update-notice')) return;
+
+    const notice = document.createElement('div');
+    notice.id = 'sw-update-notice';
+    notice.setAttribute('role', 'status');
+    notice.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);'
+        + 'background:#9D4EDD;color:#fff;padding:12px 20px;border-radius:12px;'
+        + 'box-shadow:0 8px 32px rgba(0,0,0,0.2);z-index:9999;display:flex;gap:12px;'
+        + 'align-items:center;font-family:inherit;';
+    notice.innerHTML = '<span>Neue Version verfügbar</span>';
+
+    const reloadBtn = document.createElement('button');
+    reloadBtn.textContent = 'Neu laden';
+    reloadBtn.style.cssText = 'background:#fff;color:#9D4EDD;border:none;border-radius:8px;'
+        + 'padding:6px 12px;font-weight:bold;cursor:pointer;';
+    reloadBtn.addEventListener('click', () => {
+        waitingWorker.postMessage('SKIP_WAITING');
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            window.location.reload();
+        });
+    });
+
+    notice.appendChild(reloadBtn);
+    document.body.appendChild(notice);
+}
+
+try {
+    if (typeof window !== 'undefined') {
+        window.addEventListener('load', registerServiceWorker);
+    }
+} catch (_e) {
+    // ignore in non-browser contexts
+}
+
 // Export Funktionen für Unit-Tests (Node.js Umgebung)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {

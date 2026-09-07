@@ -28,7 +28,9 @@ schnechnen/
 │   ├── weighting.js     # Fehlertracking
 │   ├── leaderboard.js   # Anonyme Benutzernamen-Verwaltung
 │   ├── leaderboard-screen.js # Leaderboard-UI und Datenladung
-│   └── leaderboard-config.js # Flag LEADERBOARD_ENABLED (aus für GitHub Pages)
+│   ├── leaderboard-config.js # Flag LEADERBOARD_ENABLED (aus für GitHub Pages)
+│   ├── manifest.webmanifest # PWA-Manifest (Name, Icons, Theme-Farbe, Standalone-Modus)
+│   └── sw.js             # Service Worker: Cache-First App-Shell, Network-Only für /api/*
 ├── server.js            # Backend: Static-File-Server + Leaderboard-API (node:sqlite)
 ├── Dockerfile           # Container-Image (node:24-alpine)
 ├── docker-compose.yml   # Referenz-Compose-Datei für Unraid
@@ -77,6 +79,16 @@ Alternativ ohne Leaderboard-API, nur als statischer Server:
 ```bash
 npm run start:simple
 ```
+
+## Als App installieren
+
+Schnechnen ist eine Progressive Web App (PWA) und lässt sich auf dem Homescreen installieren. Danach startet sie im Vollbild (ohne Browserleiste) und funktioniert auch offline - Spiel, Statistik und Fehlerliste liegen ohnehin im localStorage. Ist kein Netz da oder das eigene NAS gerade aus, zeigt das Leaderboard einfach die Meldung "Rekord-Server nicht erreichbar".
+
+**Android (Chrome)**: Seite öffnen → Menü (⋮) → "App installieren" bzw. der Installations-Hinweis am unteren Bildschirmrand.
+
+**iOS (Safari)**: Seite öffnen → Teilen-Symbol → "Zum Home-Bildschirm".
+
+Nach einem Deployment holt sich die App beim nächsten Start automatisch die neue Version; falls eine bereits geöffnete Instanz eine neue Version erkennt, erscheint unten ein Hinweis "Neue Version verfügbar" mit einem Button zum Neuladen.
 
 ## Tests
 
@@ -389,7 +401,7 @@ Keine persönlichen Daten werden verarbeitet. Die App ist datenschutzfreundlich!
 - [x] Weitere Level mit gemischten Operationen
 - [ ] Dark Mode Support
 - [ ] Internationalisierung (i18n) für mehrere Sprachen
-- [ ] PWA-Funktionalität (Offline-Nutzung, Install-Prompt)
+- [x] PWA-Funktionalität (Offline-Nutzung, Install-Prompt)
 - [ ] ...
 
 ## License

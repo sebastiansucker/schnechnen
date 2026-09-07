@@ -66,6 +66,19 @@ export default [
     }
   },
   {
+    files: ['public/sw.js'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      sourceType: 'script',
+      globals: {
+        self: 'readonly',
+        caches: 'readonly',
+        fetch: 'readonly',
+        console: 'readonly'
+      }
+    }
+  },
+  {
     files: ['test/e2e/**/*.spec.js'],
     languageOptions: {
       sourceType: 'module',
