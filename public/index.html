@@ -133,6 +133,15 @@
                 <canvas id="highscore-chart" role="img" aria-label="Highscore Chart"></canvas>
             </div>
 
+            <div id="times-table-section" class="times-table hidden" role="region" aria-labelledby="times-table-heading">
+                <h3 id="times-table-heading">🧮 Einmaleins-Tafel</h3>
+                <p class="times-table-subtitle">Tipp auf eine Zelle für Details. 🟩 sicher · 🟨 gemischt · 🟥 übungsbedürftig · ⬜ noch nicht abgefragt</p>
+                <div class="times-table-scroll">
+                    <div id="times-table-grid" class="times-table-grid" role="grid" aria-label="Einmaleins von 1×1 bis 10×10"></div>
+                </div>
+                <p id="times-table-detail" class="times-table-detail hidden" role="status" aria-live="polite"></p>
+            </div>
+
             <div class="stats-mistakes" role="region" aria-labelledby="stats-mistakes-heading">
                 <h3 id="stats-mistakes-heading">Häufigste Fehler</h3>
                 <p class="stats-mistakes-subtitle">Die 5 am häufigsten falsch beantworteten Aufgaben:</p>

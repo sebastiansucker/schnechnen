@@ -1,5 +1,7 @@
 // Simple weighting store for mistakes. Uses localStorage when available, otherwise an in-memory store.
 const KEY = 'schnechnen-mistakes';
+// Store für Treffer/Fehler pro Aufgabe (Einmaleins-Heatmap, Issue #49).
+const FACTS_KEY = 'schnechnen-facts';
 
 function _getStorage() {
     try {
@@ -33,6 +35,7 @@ function _saveAll(obj) {
 function clear() {
     const storage = _getStorage();
     storage.setItem(KEY, JSON.stringify({}));
+    storage.setItem(FACTS_KEY, JSON.stringify({}));
 }
 
 function addMistake(level, problem) {
@@ -74,6 +77,103 @@ function removeMistake(level, problem) {
     _saveAll(all);
 }
 
+function _loadAllFacts() {
+    const storage = _getStorage();
+    try {
+        return JSON.parse(storage.getItem(FACTS_KEY)) || {};
+    } catch (_e) {
+        return {};
+    }
+}
+
+function _saveAllFacts(obj) {
+    const storage = _getStorage();
+    storage.setItem(FACTS_KEY, JSON.stringify(obj));
+}
+
+// Baut einen kommutativ normalisierten Schlüssel für eine Aufgabe. Addition
+// und Multiplikation sind kommutativ, daher werden die Operanden sortiert
+// (7 × 8 und 8 × 7 landen auf demselben Schlüssel). Division wird auf die
+// zugehörige Multiplikationsaufgabe abgebildet: 56 ÷ 7 = 8 gehört zur
+// gleichen Zelle wie 7 × 8, da num2 (Divisor) und result (Quotient) die
+// beiden Faktoren sind. Subtraktion ist nicht kommutativ und bleibt
+// unverändert.
+function normalizeFactKey(problem) {
+    const { num1, num2, operation, result } = problem;
+    if (operation === '+' || operation === '*') {
+        const a = Math.min(num1, num2);
+        const b = Math.max(num1, num2);
+        return `${a}|${operation}|${b}`;
+    }
+    if (operation === '/') {
+        const a = Math.min(num2, result);
+        const b = Math.max(num2, result);
+        return `${a}|*|${b}`;
+    }
+    return `${num1}|${operation}|${num2}`;
+}
+
+// Zeichnet einen Lösungsversuch (richtig oder falsch) für die Einmaleins-
+// Heatmap auf. Wird für jede beantwortete Aufgabe aufgerufen, unabhängig vom
+// Ergebnis (siehe checkAnswer() in script.js).
+function recordAttempt(level, problem, isCorrect) {
+    const all = _loadAllFacts();
+    const lvl = String(level);
+    all[lvl] = all[lvl] || {};
+
+    const key = normalizeFactKey(problem);
+    const [numA, operation, numB] = key.split('|');
+    const fact = all[lvl][key] || {
+        num1: Number(numA),
+        operation,
+        num2: Number(numB),
+        correct: 0,
+        wrong: 0,
+        lastResult: null,
+        lastSeen: null
+    };
+
+    if (isCorrect) {
+        fact.correct += 1;
+    } else {
+        fact.wrong += 1;
+    }
+    fact.lastResult = !!isCorrect;
+    fact.lastSeen = Date.now();
+
+    all[lvl][key] = fact;
+    _saveAllFacts(all);
+}
+
+// Liefert alle aufgezeichneten Aufgaben-Fakten für ein Level als Objekt,
+// geschlüsselt über normalizeFactKey().
+function getFacts(level) {
+    const all = _loadAllFacts();
+    return all[String(level)] || {};
+}
+
+// Liefert den Fakt für eine bestimmte Multiplikationszelle (a × b), egal in
+// welcher Reihenfolge a und b übergeben werden. null, wenn die Aufgabe noch
+// nie abgefragt wurde.
+function getMultiplicationFact(level, a, b) {
+    const facts = getFacts(level);
+    const lo = Math.min(a, b);
+    const hi = Math.max(a, b);
+    return facts[`${lo}|*|${hi}`] || null;
+}
+
+// Klassifiziert einen Fakt für die Heatmap-Einfärbung:
+// - 'gray': noch nie abgefragt
+// - 'red': zuletzt falsch beantwortet oder mehr falsch als richtig
+// - 'green': sicher (mindestens 3 richtig, zuletzt richtig)
+// - 'yellow': alles andere (gemischtes Bild)
+function classifyFact(fact) {
+    if (!fact || (fact.correct === 0 && fact.wrong === 0)) return 'gray';
+    if (fact.lastResult === false || fact.wrong > fact.correct) return 'red';
+    if (fact.correct >= 3 && fact.lastResult === true) return 'green';
+    return 'yellow';
+}
+
 // Export für Node.js (Unit Tests)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -81,7 +181,12 @@ if (typeof module !== 'undefined' && module.exports) {
         getMistakes,
         peekMistake,
         removeMistake,
-        clear
+        clear,
+        recordAttempt,
+        getFacts,
+        getMultiplicationFact,
+        classifyFact,
+        normalizeFactKey
     };
 }
 
@@ -92,6 +197,11 @@ if (typeof window !== 'undefined') {
         getMistakes,
         peekMistake,
         removeMistake,
-        clear
+        clear,
+        recordAttempt,
+        getFacts,
+        getMultiplicationFact,
+        classifyFact,
+        normalizeFactKey
     };
 }

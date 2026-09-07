@@ -6,7 +6,7 @@
  * werden beim `activate`-Event automatisch gelöscht, damit iOS/Chrome nicht auf einer
  * alten Version hängen bleiben.
  */
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `schnechnen-${CACHE_VERSION}`;
 
 // Alle Pfade sind relativ, damit der Service Worker sowohl auf GitHub Pages
