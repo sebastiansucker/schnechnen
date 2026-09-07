@@ -33,6 +33,10 @@
         
         <div id="start-screen" class="screen">
             <h1>Schnechnen</h1>
+            <div class="mode-switch" role="group" aria-label="Spielmodus Auswahl">
+                <button class="mode-btn active" data-mode="timed" aria-pressed="true">⏱️ Zeitrennen</button>
+                <button class="mode-btn" data-mode="practice" aria-pressed="false">🧘 Üben</button>
+            </div>
             <div class="level-buttons" role="group" aria-label="Level Auswahl">
                 <button class="level-btn" data-level="0" aria-pressed="false" aria-label="Level 0: Addition bis 10">Level 0: Addition bis 10</button>
                 <button class="level-btn" data-level="1" aria-pressed="false" aria-label="Level 1: Addition und Subtraktion bis 10">Level 1: Addition & Subtraktion bis 10</button>
@@ -47,7 +51,13 @@
 
         <div id="game-screen" class="screen hidden">
             <div class="game-header">
-                <div class="timer">Zeit: <span id="time">60</span>s</div>
+                <div id="timer-display" class="timer">Zeit: <span id="time">60</span>s</div>
+                <div id="progress-display" class="progress-display hidden" aria-live="polite">
+                    <span id="progress-text">Aufgabe 1 / 20</span>
+                    <div class="progress-bar-track">
+                        <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                    </div>
+                </div>
                 <div class="game-controls">
                     <button id="back-btn" class="btn-primary" aria-label="Zum Start zurückkehren">Zurück</button>
                 </div>
@@ -92,6 +102,7 @@
                 <p class="mistakes-subtitle">Diese Aufgaben wurden in allen Sessions am häufigsten falsch beantwortet:</p>
                 <ul id="mistake-list" aria-labelledby="mistakes-heading"></ul>
             </div>
+                        <button id="practice-mistakes-btn" class="btn-mistakes" aria-label="Fehler üben">❌ Fehler üben</button>
                         <button id="restart-btn">Neues Spiel</button>
         </div>
 
@@ -129,6 +140,7 @@
             </div>
             
             <div class="stats-buttons">
+                <button id="stats-practice-mistakes-btn" class="btn-mistakes" aria-label="Fehler üben">❌ Fehler üben</button>
                 <button id="stats-reset-btn" class="btn-danger" aria-label="Alle Statistiken löschen">🗑️ Statistiken löschen</button>
                 <button id="stats-back-btn" class="btn-primary" aria-label="Zur Statistikübersicht zurück">Zurück</button>
             </div>

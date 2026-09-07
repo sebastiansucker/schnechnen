@@ -4,7 +4,14 @@
 // bewusst nicht geladen: es enthält nur noch DOM- und Zustands-Code und
 // bezieht CONFIG/generateProblemFor/displayOperator seinerseits aus diesem
 // Modul, sodass die Tests immer gegen dieselbe Logik laufen wie das Spiel.
-const { CONFIG, generateProblemFor, displayOperator } = require('../public/game-logic.js');
+const {
+    CONFIG,
+    generateProblemFor,
+    displayOperator,
+    isPracticeRoundComplete,
+    mistakeKey,
+    isMistakeMastered
+} = require('../public/game-logic.js');
 
 // Wir benötigen eine einfache Mock-Umgebung für die Tests
 // Da wir keine echte DOM-Umgebung haben, simulieren wir einige Funktionen
@@ -528,6 +535,61 @@ function testProblemRandomness() {
     }
 }
 
+// Test: Übungs- und Fehler-Modus Logik (Issue #47)
+function testPracticeAndMistakesModeLogic() {
+    console.log('Teste Übungsmodus- und Fehler-Modus-Logik...');
+    try {
+        // CONFIG.practiceProblemCount: feste Aufgabenzahl für den Übungsmodus
+        if (typeof CONFIG.practiceProblemCount !== 'number' || CONFIG.practiceProblemCount <= 0) {
+            console.error('Fehler: CONFIG.practiceProblemCount fehlt oder ist ungültig');
+            return false;
+        }
+
+        // isPracticeRoundComplete: Runde endet erst NACH Erreichen der Zielzahl
+        if (isPracticeRoundComplete(19, 20)) {
+            console.error('Fehler: Übungsrunde sollte bei 19/20 noch nicht enden');
+            return false;
+        }
+        if (!isPracticeRoundComplete(20, 20)) {
+            console.error('Fehler: Übungsrunde sollte bei 20/20 enden');
+            return false;
+        }
+        if (!isPracticeRoundComplete(21, 20)) {
+            console.error('Fehler: Übungsrunde sollte auch über der Zielzahl als beendet gelten');
+            return false;
+        }
+
+        // mistakeKey: gleiche Aufgabe -> gleicher Schlüssel, unterschiedliche Aufgabe -> anderer Schlüssel
+        const problemA = { num1: 3, num2: 4, operation: '+', result: 7 };
+        const problemASame = { num1: 3, num2: 4, operation: '+', result: 7 };
+        const problemB = { num1: 4, num2: 3, operation: '+', result: 7 };
+        if (mistakeKey(problemA) !== mistakeKey(problemASame)) {
+            console.error('Fehler: mistakeKey sollte für identische Aufgaben gleich sein');
+            return false;
+        }
+        if (mistakeKey(problemA) === mistakeKey(problemB)) {
+            console.error('Fehler: mistakeKey sollte für unterschiedliche Aufgaben unterschiedlich sein');
+            return false;
+        }
+
+        // isMistakeMastered: erst nach zwei richtigen Antworten in Folge geschafft
+        if (isMistakeMastered(0) || isMistakeMastered(1)) {
+            console.error('Fehler: Eine Aufgabe sollte erst ab 2 richtigen Antworten in Folge als geschafft gelten');
+            return false;
+        }
+        if (!isMistakeMastered(2) || !isMistakeMastered(3)) {
+            console.error('Fehler: Ab 2 richtigen Antworten in Folge sollte eine Aufgabe als geschafft gelten');
+            return false;
+        }
+
+        console.log('✓ Übungsmodus- und Fehler-Modus-Logik erfolgreich');
+        return true;
+    } catch (error) {
+        console.error('Fehler beim Testen der Übungs-/Fehler-Modus-Logik:', error);
+        return false;
+    }
+}
+
 function runTests() {
     console.log('Starte Unit Tests für Schnechnen Spiel...');
 
@@ -560,7 +622,8 @@ function runTests() {
         ['Zero Handling in Operands', testZeroHandlingInOperands],
         ['Large Number Constraints', testLargeNumberConstraints],
         ['LocalStorage Persistence', testLocalStoragePersistence],
-        ['JSON Serialization Robustness', testJSONSerializationRobustness]
+        ['JSON Serialization Robustness', testJSONSerializationRobustness],
+        ['Übungsmodus- und Fehler-Modus-Logik', testPracticeAndMistakesModeLogic]
     ];
 
     const failed = [];

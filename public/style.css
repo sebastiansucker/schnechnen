@@ -290,6 +290,34 @@ h3 {
     transform: translateY(-2px);
 }
 
+.mode-switch {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+}
+
+.mode-btn {
+    background: #fff;
+    color: #666;
+    border: 2px solid rgba(0, 0, 0, 0.08);
+    padding: 10px;
+    font-size: 0.95rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mode-btn.active {
+    background: var(--gradient-bg);
+    color: white;
+    border-color: transparent;
+    box-shadow: var(--card-shadow);
+}
+
 .game-header {
     display: flex;
     justify-content: space-between;
@@ -309,6 +337,37 @@ h3 {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+}
+
+.progress-display {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    flex: 1;
+    margin-right: 12px;
+}
+
+.progress-display #progress-text {
+    font-weight: bold;
+    font-size: 1rem;
+    color: var(--primary-purple);
+}
+
+.progress-bar-track {
+    width: 100%;
+    height: 10px;
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--gradient-bg);
+    border-radius: 999px;
+    transition: width 0.3s ease;
 }
 
 .game-controls {
@@ -417,6 +476,35 @@ button.btn-primary:hover {
 .btn-danger:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(255, 71, 87, 0.4);
+}
+
+.btn-mistakes {
+    padding: 14px 18px;
+    font-size: 1.05rem;
+    background: linear-gradient(135deg, var(--primary-pink), var(--primary-purple));
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(255, 0, 110, 0.3);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    margin-bottom: 12px;
+}
+
+.btn-mistakes:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 0, 110, 0.4);
+}
+
+.btn-mistakes:disabled {
+    background: #ccc;
+    color: #888;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 .stats-buttons {

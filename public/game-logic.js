@@ -9,6 +9,8 @@
 
 // Spielkonfiguration
 const CONFIG = {
+    // Übungsmodus (kein Timer): feste Anzahl Aufgaben pro Runde
+    practiceProblemCount: 20,
     levels: {
         0: {
             name: "Addition bis 10",
@@ -154,12 +156,41 @@ function generateProblemFor(levelConfig, rng = Math.random) {
     return { num1, num2, operation, result };
 }
 
+/**
+ * Übungsmodus ('practice'): prüft, ob die Runde nach der aktuellen Aufgabe
+ * endet (feste Aufgabenzahl statt Timer).
+ */
+function isPracticeRoundComplete(totalProblems, practiceProblemCount) {
+    return totalProblems >= practiceProblemCount;
+}
+
+/**
+ * Eindeutiger Schlüssel für eine Aufgabe (num1/num2/operation/result), um im
+ * Fehler-Modus zu verfolgen, wie oft eine Aufgabe in Folge richtig
+ * beantwortet wurde.
+ */
+function mistakeKey(problem) {
+    return `${problem.num1}|${problem.num2}|${problem.operation}|${problem.result}`;
+}
+
+// Fehler-Modus: Anzahl richtiger Antworten in Folge, ab der eine Aufgabe als
+// geschafft gilt und aus der Fehlerliste entfernt wird.
+const MISTAKE_MASTERY_STREAK = 2;
+
+function isMistakeMastered(streakCount) {
+    return streakCount >= MISTAKE_MASTERY_STREAK;
+}
+
 // Export für Node.js (Unit Tests)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         CONFIG,
         generateProblemFor,
-        displayOperator
+        displayOperator,
+        isPracticeRoundComplete,
+        mistakeKey,
+        isMistakeMastered,
+        MISTAKE_MASTERY_STREAK
     };
 }
 
@@ -168,6 +199,10 @@ if (typeof window !== 'undefined') {
     window.GameLogic = {
         CONFIG,
         generateProblemFor,
-        displayOperator
+        displayOperator,
+        isPracticeRoundComplete,
+        mistakeKey,
+        isMistakeMastered,
+        MISTAKE_MASTERY_STREAK
     };
 }
