@@ -29,8 +29,13 @@ function createElements() {
             gameScreen: document.getElementById('game-screen'),
             resultScreen: document.getElementById('result-screen'),
             statsScreen: document.getElementById('stats-screen'),
+            modeButtons: document.querySelectorAll('.mode-btn'),
             levelButtons: document.querySelectorAll('.level-btn'),
+            timerDisplay: document.getElementById('timer-display'),
             timeElement: document.getElementById('time'),
+            progressDisplay: document.getElementById('progress-display'),
+            progressText: document.getElementById('progress-text'),
+            progressBarFill: document.getElementById('progress-bar-fill'),
             scoreElement: document.getElementById('score'),
             currentLevelElement: document.getElementById('current-level'),
             problemElement: document.getElementById('problem'),
@@ -48,11 +53,13 @@ function createElements() {
             totalProblemsElement: document.getElementById('total-problems'),
             highscoreElement: document.getElementById('highscore'),
             mistakeList: document.getElementById('mistake-list'),
+            practiceMistakesButton: document.getElementById('practice-mistakes-btn'),
             restartButton: document.getElementById('restart-btn'),
             backButton: document.getElementById('back-btn'),
             statsButton: document.getElementById('stats-btn'),
             statsBackButton: document.getElementById('stats-back-btn'),
             statsResetButton: document.getElementById('stats-reset-btn'),
+            statsPracticeMistakesButton: document.getElementById('stats-practice-mistakes-btn'),
             statsLevelButtons: document.querySelectorAll('#stats-screen .stats-level-btn'),
             statHighscore: document.getElementById('stat-highscore'),
             statTotalGames: document.getElementById('stat-total-games'),
@@ -67,8 +74,13 @@ function createElements() {
         startScreen: { classList: { add: () => {}, remove: () => {} } },
         gameScreen: { classList: { add: () => {}, remove: () => {} } },
         resultScreen: { classList: { add: () => {}, remove: () => {} } },
+        modeButtons: [],
         levelButtons: [],
+        timerDisplay: { classList: { add: () => {}, remove: () => {}, toggle: () => {} } },
         timeElement: { textContent: '' },
+        progressDisplay: { classList: { add: () => {}, remove: () => {}, toggle: () => {} } },
+        progressText: { textContent: '' },
+        progressBarFill: { style: {} },
         scoreElement: { textContent: '' },
         currentLevelElement: { textContent: '' },
         problemElement: { textContent: '' },
@@ -85,8 +97,10 @@ function createElements() {
         totalProblemsElement: { textContent: '' },
         highscoreElement: { textContent: '' },
         mistakeList: { innerHTML: '' },
+        practiceMistakesButton: { addEventListener: () => {}, disabled: false, title: '' },
         restartButton: { addEventListener: () => {} },
         backButton: { addEventListener: () => {} },
+        statsPracticeMistakesButton: { addEventListener: () => {}, disabled: false, title: '' },
         statsMistakeList: { innerHTML: '' }
     };
 }
@@ -100,14 +114,30 @@ elements.highscoreAnimation = document.getElementById('highscore-animation');
 // Spielzustand
 let gameState = {
     currentLevel: null,
+    // 'timed' (Zeitrennen, bisheriges Verhalten), 'practice' (Üben ohne Timer,
+    // feste Aufgabenzahl) oder 'mistakes' (Fehler üben, siehe Issue #47)
+    mode: 'timed',
     timeLeft: 60,
     timerEndAt: null,
     score: 0,
     totalProblems: 0,
     highscore: 0,
     timer: null,
-    currentProblem: null
+    currentProblem: null,
+    // Fehler-Modus: Anzahl richtiger Antworten in Folge je Aufgabe (Schlüssel
+    // via GameLogic.mistakeKey), um zu erkennen, wann eine Aufgabe geschafft ist
+    mistakeStreaks: {},
+    // Fehler-Modus: Anzahl Fehler zu Rundenbeginn, für die Fortschrittsanzeige
+    mistakesInitialCount: 0
 };
+
+// Auf dem Start-Bildschirm gewählter Modus (Zeitrennen/Üben-Umschalter).
+// Bleibt über Runden hinweg bestehen, bis die Nutzerin/der Nutzer ihn ändert.
+let selectedMode = 'timed';
+
+// Zuletzt auf der Statistik-Seite angezeigtes Level, damit der "Fehler üben"-
+// Button dort weiß, für welches Level er die Fehlerrunde starten soll.
+let currentStatsLevel = 1;
 
 // DOM elements are initialized via createElements() at the top of the file
 
@@ -135,11 +165,18 @@ function initEventListeners() {
         }
     });
 
+    // Modus-Umschalter (⏱️ Zeitrennen / 🧘 Üben)
+    elements.modeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            setSelectedMode(button.dataset.mode);
+        });
+    });
+
     // Level-Auswahl
     elements.levelButtons.forEach(button => {
         button.addEventListener('click', () => {
             markActiveLevelButton(parseInt(button.dataset.level));
-            startGame(parseInt(button.dataset.level));
+            startGame(parseInt(button.dataset.level), selectedMode);
         });
     });
 
@@ -209,6 +246,25 @@ function initEventListeners() {
     // Restart current level button
     // (restart-level button removed; use Zurück to leave and re-enter a level)
 
+    // "Fehler üben"-Button auf dem Ergebnisbildschirm: startet den Fehler-Modus
+    // für das zuletzt gespielte Level
+    if (elements.practiceMistakesButton) {
+        elements.practiceMistakesButton.addEventListener('click', () => {
+            if (elements.practiceMistakesButton.disabled) return;
+            startGame(gameState.currentLevel, 'mistakes');
+        });
+    }
+
+    // "Fehler üben"-Button auf der Statistik-Seite: startet den Fehler-Modus
+    // für das dort gerade ausgewählte Level
+    if (elements.statsPracticeMistakesButton) {
+        elements.statsPracticeMistakesButton.addEventListener('click', () => {
+            if (elements.statsPracticeMistakesButton.disabled) return;
+            markActiveLevelButton(null);
+            startGame(currentStatsLevel, 'mistakes');
+        });
+    }
+
     // Back button: leave current level and go back to level selection
     if (elements.backButton) {
         elements.backButton.addEventListener('click', () => {
@@ -233,6 +289,16 @@ function initEventListeners() {
     }
 }
 
+// Gewählten Modus (Zeitrennen/Üben) merken und Umschalter-Buttons aktualisieren
+function setSelectedMode(mode) {
+    selectedMode = mode;
+    elements.modeButtons.forEach(btn => {
+        const isActive = btn.dataset.mode === mode;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
+    });
+}
+
 // aria-pressed der Level-Buttons auf den gewählten Level setzen (oder alle
 // zurücksetzen, wenn level null ist)
 function markActiveLevelButton(level) {
@@ -242,13 +308,25 @@ function markActiveLevelButton(level) {
 }
 
 // Spiel starten
-function startGame(level) {
+// mode: 'timed' (Standard, bisheriges Verhalten), 'practice' (Üben ohne
+// Timer) oder 'mistakes' (nur Aufgaben aus der Fehlerliste, siehe Issue #47)
+function startGame(level, mode = 'timed') {
     if (!GameLogic.CONFIG.levels[level]) {
         console.error('Ungültiges Level:', level);
         return;
     }
 
+    // Fehler-Modus ohne Fehler zum Üben: Button ist eigentlich deaktiviert,
+    // dies ist nur ein Sicherheitsnetz für programmatische Aufrufe (Tests).
+    if (mode === 'mistakes' && (!window.Weighting || window.Weighting.getMistakes(level).length === 0)) {
+        console.warn('Keine Fehler zum Üben für Level', level);
+        return;
+    }
+
     gameState.currentLevel = level;
+    gameState.mode = mode;
+    gameState.mistakeStreaks = {};
+    gameState.mistakesInitialCount = mode === 'mistakes' ? window.Weighting.getMistakes(level).length : 0;
     // Initialize highscore for this level from saved highscores map (if available)
     if (window.__SCHNECHNEN_HIGHSCORES && window.__SCHNECHNEN_HIGHSCORES[level] !== undefined) {
         gameState.highscore = window.__SCHNECHNEN_HIGHSCORES[level];
@@ -261,18 +339,75 @@ function startGame(level) {
 
     // Spielbildschirm anzeigen
     showScreen('game');
-    
-    // Timer starten
-    startTimer();
-    
+    updateGameHeaderForMode();
+
+    // Timer nur im Zeitrennen-Modus starten
+    if (mode === 'timed') {
+        startTimer();
+    } else if (gameState.timer) {
+        clearInterval(gameState.timer);
+        gameState.timer = null;
+    }
+
     // Erste Aufgabe generieren
     generateProblem();
 
     // Ensure dial-pad is visible when a game starts
     try { const dp = document.getElementById('dial-pad'); if (dp) dp.classList.remove('hidden'); } catch (_e) { /* ignore, dial-pad is optional in some test DOMs */ }
-    
+
     // Do not focus the input by default to avoid opening the mobile keyboard; keep it readonly by default
     // elements.answerInput.focus();
+}
+
+// Blendet je nach Modus die Timer-Anzeige oder die Fortschrittsanzeige
+// ("Aufgabe X / Y" bzw. "Noch N Fehler") im Spiel-Header ein.
+function updateGameHeaderForMode() {
+    const isTimed = gameState.mode === 'timed';
+    if (elements.timerDisplay && elements.timerDisplay.classList) {
+        elements.timerDisplay.classList.toggle('hidden', !isTimed);
+    }
+    if (elements.progressDisplay && elements.progressDisplay.classList) {
+        elements.progressDisplay.classList.toggle('hidden', isTimed);
+    }
+    if (!isTimed) {
+        updateProgressDisplay();
+    }
+}
+
+// Aktualisiert Fortschrittstext und -balken für Übungs- und Fehler-Modus
+function updateProgressDisplay() {
+    if (gameState.mode === 'timed' || !elements.progressText) return;
+
+    if (gameState.mode === 'practice') {
+        const total = GameLogic.CONFIG.practiceProblemCount;
+        const current = Math.min(gameState.totalProblems + 1, total);
+        elements.progressText.textContent = `Aufgabe ${current} / ${total}`;
+        if (elements.progressBarFill && elements.progressBarFill.style) {
+            elements.progressBarFill.style.width = `${Math.min(100, (gameState.totalProblems / total) * 100)}%`;
+        }
+    } else if (gameState.mode === 'mistakes') {
+        const remaining = window.Weighting ? window.Weighting.getMistakes(gameState.currentLevel).length : 0;
+        elements.progressText.textContent = remaining === 1 ? 'Noch 1 Fehler' : `Noch ${remaining} Fehler`;
+        if (elements.progressBarFill && elements.progressBarFill.style && gameState.mistakesInitialCount > 0) {
+            const solved = gameState.mistakesInitialCount - remaining;
+            elements.progressBarFill.style.width = `${Math.min(100, (solved / gameState.mistakesInitialCount) * 100)}%`;
+        }
+    }
+}
+
+// Aktiviert/deaktiviert einen "Fehler üben"-Button je nachdem, ob für das
+// angegebene Level Fehler in der Fehlerliste stehen (siehe Issue #47)
+function updatePracticeMistakesButton(buttonEl, level) {
+    if (!buttonEl) return;
+    const count = window.Weighting ? window.Weighting.getMistakes(level).length : 0;
+    buttonEl.disabled = count === 0;
+    if (count === 0) {
+        buttonEl.textContent = 'Keine Fehler zum Üben 🎉';
+        buttonEl.title = 'Keine Fehler zum Üben 🎉';
+    } else {
+        buttonEl.textContent = '❌ Fehler üben';
+        buttonEl.title = '';
+    }
 }
 
 // Timer-Anzeige aus dem Zielzeitpunkt neu berechnen (statt herunterzuzählen),
@@ -310,20 +445,35 @@ function generateProblem() {
 
     let num1, num2, operation, result;
 
-    // Adaptive Problemgenerierung: 30% Chance, ein häufiges Fehlerproblem zu wiederholen
-    const MISTAKE_REPEAT_CHANCE = 0.3;
-    const shouldRepeatMistake = Math.random() < MISTAKE_REPEAT_CHANCE;
-    const mistakeProblem = window.Weighting ? window.Weighting.peekMistake(gameState.currentLevel) : null;
-
-    if (shouldRepeatMistake && mistakeProblem) {
-        // Wiederverwende ein Problem aus der Fehlerliste
+    if (gameState.mode === 'mistakes') {
+        // Fehler-Modus: ausschließlich aus der Fehlerliste ziehen (höchster
+        // wrongCount zuerst), nie eine neue zufällige Aufgabe generieren
+        const mistakeProblem = window.Weighting ? window.Weighting.peekMistake(gameState.currentLevel) : null;
+        if (!mistakeProblem) {
+            // Liste wurde gerade leer (letzte Aufgabe wurde geschafft) -> Runde beenden
+            endGame();
+            return;
+        }
         num1 = mistakeProblem.num1;
         num2 = mistakeProblem.num2;
         operation = mistakeProblem.operation;
         result = mistakeProblem.result;
     } else {
-        // Generiere ein neues zufälliges Problem über die geteilte Spiellogik
-        ({ num1, num2, operation, result } = GameLogic.generateProblemFor(levelConfig));
+        // Adaptive Problemgenerierung: 30% Chance, ein häufiges Fehlerproblem zu wiederholen
+        const MISTAKE_REPEAT_CHANCE = 0.3;
+        const shouldRepeatMistake = Math.random() < MISTAKE_REPEAT_CHANCE;
+        const mistakeProblem = window.Weighting ? window.Weighting.peekMistake(gameState.currentLevel) : null;
+
+        if (shouldRepeatMistake && mistakeProblem) {
+            // Wiederverwende ein Problem aus der Fehlerliste
+            num1 = mistakeProblem.num1;
+            num2 = mistakeProblem.num2;
+            operation = mistakeProblem.operation;
+            result = mistakeProblem.result;
+        } else {
+            // Generiere ein neues zufälliges Problem über die geteilte Spiellogik
+            ({ num1, num2, operation, result } = GameLogic.generateProblemFor(levelConfig));
+        }
     }
 
     // Aufgabe speichern
@@ -346,9 +496,12 @@ function generateProblem() {
 
     // Eingabe zurücksetzen
     elements.userAnswerElement.textContent = '?';
-    
+
     // Dial-Pad anzeigen
     elements.dialPad.classList.remove('hidden');
+
+    // Fortschrittsanzeige (Übungs-/Fehler-Modus) aktualisieren
+    updateProgressDisplay();
 }
 
 // Eingabefeld verarbeiten
@@ -429,7 +582,8 @@ function checkAnswer() {
     // If the input is empty or not a number, ignore the submit
     if (Number.isNaN(userAnswer) || userAnswerText === '?') return;
     const correctAnswer = gameState.currentProblem.result;
-    
+    const key = GameLogic.mistakeKey(gameState.currentProblem);
+
     // Antwort prüfen
     if (userAnswer === correctAnswer) {
     // correct answer detected
@@ -437,12 +591,22 @@ function checkAnswer() {
         gameState.score++;
         gameState.currentProblem.answered = true;
         gameState.currentProblem.wrongCount = 0; // Reset wrong count on correct answer
-        
-        // Wenn das Problem aus der Fehlerliste war, entferne es
-        if (window.Weighting) {
+
+        if (gameState.mode === 'mistakes') {
+            // Fehler-Modus: eine Aufgabe gilt erst als geschafft, wenn sie
+            // zweimal in Folge richtig beantwortet wurde
+            gameState.mistakeStreaks[key] = (gameState.mistakeStreaks[key] || 0) + 1;
+            if (GameLogic.isMistakeMastered(gameState.mistakeStreaks[key])) {
+                if (window.Weighting) {
+                    window.Weighting.removeMistake(gameState.currentLevel, gameState.currentProblem);
+                }
+                delete gameState.mistakeStreaks[key];
+            }
+        } else if (window.Weighting) {
+            // Wenn das Problem aus der Fehlerliste war, entferne es
             window.Weighting.removeMistake(gameState.currentLevel, gameState.currentProblem);
         }
-        
+
         // Feedback-Animation für richtige Antwort
         showFeedback(true);
     } else {
@@ -452,17 +616,40 @@ function checkAnswer() {
         // WICHTIG: wrongCount wird NICHT hier inkrementiert!
         // Es wird durch addMistake() in weighting.js verwaltet
 
+        if (gameState.mode === 'mistakes') {
+            // Falsche Antwort unterbricht die Richtig-in-Folge-Serie
+            gameState.mistakeStreaks[key] = 0;
+        }
+
         // Füge Problem zur Weighting-Liste hinzu für adaptives Lernen
         if (window.Weighting) {
             window.Weighting.addMistake(gameState.currentLevel, gameState.currentProblem);
         }
-        
+
         // Feedback-Animation für falsche Antwort
         showFeedback(false);
     }
-    
+
     gameState.totalProblems++;
-    
+
+    // Rundenende prüfen: Übungsmodus nach fester Aufgabenzahl, Fehler-Modus
+    // wenn die Fehlerliste leer geworden ist (siehe Issue #47)
+    if (gameState.mode === 'practice' && GameLogic.isPracticeRoundComplete(gameState.totalProblems, GameLogic.CONFIG.practiceProblemCount)) {
+        setTimeout(() => {
+            endGame();
+        }, 600);
+        return;
+    }
+    if (gameState.mode === 'mistakes') {
+        const remaining = window.Weighting ? window.Weighting.getMistakes(gameState.currentLevel).length : 0;
+        if (remaining === 0) {
+            setTimeout(() => {
+                endGame();
+            }, 600);
+            return;
+        }
+    }
+
     // Nächste Aufgabe generieren
     setTimeout(() => {
         generateProblem();
@@ -506,31 +693,41 @@ function endGame() {
     
     // Alten Highscore speichern (für Animation)
     const oldHighscore = gameState.highscore;
-    
-    // Highscore aktualisieren (Anzahl richtiger Antworten)
-    updateHighscore(gameState.score);
-    
-    // Spiel-History speichern
-    saveGameHistory(gameState.currentLevel, gameState.score, gameState.totalProblems);
-    
+
+    // Highscore, Leaderboard-Übermittlung und Highscore-Animation gelten nur
+    // im Zeitrennen-Modus: Übungs- und Fehler-Runden haben eine andere
+    // Aufgabenzahl/-dauer und sind daher nicht vergleichbar (siehe Issue #47)
+    const countsTowardHighscore = gameState.mode === 'timed';
+
+    if (countsTowardHighscore) {
+        // Highscore aktualisieren (Anzahl richtiger Antworten)
+        updateHighscore(gameState.score);
+    }
+
+    // Spiel-History speichern (inkl. Modus, für die Statistik-Filterung)
+    saveGameHistory(gameState.currentLevel, gameState.score, gameState.totalProblems, gameState.mode);
+
     // Score zu Leaderboard übermitteln (nur wenn nicht im Test-Modus)
-    if (!window.__TEST_MODE__ && window.Leaderboard && gameState.score > 0) {
+    if (countsTowardHighscore && !window.__TEST_MODE__ && window.Leaderboard && gameState.score > 0) {
         submitScoreToLeaderboard(gameState.currentLevel, gameState.score);
     }
-    
+
     // Aktuelles Ergebnis (Anzahl richtiger Antworten) anzeigen
     elements.highscoreElement.textContent = gameState.score;
-    
+
     // Highscore-Animation anzeigen, wenn neuer Highscore erreicht
-    if (gameState.score > oldHighscore) {
+    if (countsTowardHighscore && gameState.score > oldHighscore) {
         // Animationen mit kleiner Verzögerung für bessere UX
         setTimeout(() => {
             showHighscoreAnimation();
         }, 500);
     }
-    
+
     // Häufig falsch gelöste Aufgaben aus weighting.js anzeigen
     displayMistakes();
+
+    // "Fehler üben"-Button je nach verbleibenden Fehlern für dieses Level (de)aktivieren
+    updatePracticeMistakesButton(elements.practiceMistakesButton, gameState.currentLevel);
 }
 
 // Zeigt die Highscore-Animation am Ende des Spiels an
@@ -709,13 +906,16 @@ function resetGame() {
     
     gameState = {
         currentLevel: null,
+        mode: 'timed',
         timeLeft: 60,
         timerEndAt: null,
         score: 0,
         totalProblems: 0,
         highscore: 0,
         timer: null,
-        currentProblem: null
+        currentProblem: null,
+        mistakeStreaks: {},
+        mistakesInitialCount: 0
     };
 
     // Anzeige zurücksetzen
@@ -796,18 +996,19 @@ window.addEventListener('popstate', (event) => {
 // ==================== Statistik-Funktionen ====================
 
 // Spiel-History speichern
-function saveGameHistory(level, score, totalProblems) {
+function saveGameHistory(level, score, totalProblems, mode = 'timed') {
     try {
         const history = JSON.parse(localStorage.getItem('schnechnen-history')) || {};
         history[level] = history[level] || [];
-        
+
         const percentage = totalProblems > 0 ? Math.round((score / totalProblems) * 100) : 0;
-        
+
         history[level].push({
             timestamp: Date.now(),
             score: score,
             totalProblems: totalProblems,
-            percentage: percentage
+            percentage: percentage,
+            mode: mode
         });
         
         // Behalte nur die letzten 50 Spiele pro Level
@@ -855,18 +1056,29 @@ function showStatsScreen(level) {
 
 // Update Statistiken für ein Level
 function updateStatsForLevel(level) {
+    // Merken, für welches Level der "Fehler üben"-Button auf dieser Seite gilt
+    currentStatsLevel = level;
+
     const history = getGameHistory(level);
     const highscore = window.__SCHNECHNEN_HIGHSCORES[level] || 0;
-    
-    // Statistik-Karten aktualisieren
+
+    // Statistik-Karten aktualisieren (Gespielte Runden zählt alle Modi mit,
+    // siehe Issue #47: Übungsrunden zählen in die Spiel-History)
     elements.statHighscore.textContent = highscore;
     elements.statTotalGames.textContent = history.length;
-    
+
     // Fehler anzeigen
     displayStatsMistakes(level);
-    
-    // Chart rendern
-    renderChart(level, history);
+
+    // "Fehler üben"-Button für dieses Level (de)aktivieren
+    updatePracticeMistakesButton(elements.statsPracticeMistakesButton, level);
+
+    // Chart rendern: nur Zeitrennen-Runden, da Score/Prozentsätze aus Übungs-
+    // und Fehler-Runden (andere Aufgabenzahl, kein Timer) nicht vergleichbar
+    // mit den 60-Sekunden-Runden sind. Einträge ohne mode-Feld (vor Issue #47
+    // gespeichert) gelten als 'timed'.
+    const timedHistory = history.filter(entry => (entry.mode || 'timed') === 'timed');
+    renderChart(level, timedHistory);
 }
 
 // Rendere Chart mit Chart.js
@@ -997,6 +1209,7 @@ try {
             window.__TEST__.getState = function() {
                 return {
                     currentLevel: gameState.currentLevel,
+                    mode: gameState.mode,
                     score: gameState.score,
                     totalProblems: gameState.totalProblems,
                     timeLeft: gameState.timeLeft,

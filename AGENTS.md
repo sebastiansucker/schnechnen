@@ -44,6 +44,16 @@ Level logic is centralized in `generateProblemFor()` in `game-logic.js` - modify
 ### State Management
 Global `gameState` object (in `script.js`) holds runtime state. Reset via `resetGame()` (clears everything) or the back button handler (preserves highscores).
 
+### Game Modes
+`gameState.mode` is one of:
+- `'timed'` (default, "⏱️ Zeitrennen"): 60-second timer, counts toward highscore/leaderboard.
+- `'practice'` ("🧘 Üben"): no timer, ends after `CONFIG.practiceProblemCount` (default 20) problems (`GameLogic.isPracticeRoundComplete()`). Does **not** update highscore/leaderboard, but is still saved to `schnechnen-history` (with `mode: 'practice'`) and feeds the mistake list like normal play.
+- `'mistakes'` ("❌ Fehler üben", started via a dedicated button on the result/stats screens, not the mode switcher): pulls exclusively from `Weighting.getMistakes(level)` (highest `wrongCount` first, via `peekMistake()`), never generates a new random problem. A problem is only removed once it has been answered correctly twice in a row (`gameState.mistakeStreaks`, keyed by `GameLogic.mistakeKey()`; a wrong answer resets the streak to 0). The round ends when the mistake list is empty.
+
+The mode switcher on `#start-screen` only chooses between `'timed'` and `'practice'`; `'mistakes'` is always started explicitly via `startGame(level, 'mistakes')` from the "❌ Fehler üben" button, which is disabled (with a "Keine Fehler zum Üben 🎉" label) when there are no mistakes for that level.
+
+The game header shows either the timer (`#timer-display`) or a progress indicator (`#progress-display`, "Aufgabe X / Y" or "Noch N Fehler") depending on the mode — see `updateGameHeaderForMode()` / `updateProgressDisplay()`.
+
 ### Highscores
 `gameState.score` / the persisted highscore is the **number of correctly answered problems** within the 60-second round, not a percentage.
 
@@ -67,14 +77,14 @@ npm run start             # Start server.js (game + leaderboard API) on :8080
 ### Testing Strategy
 **CRITICAL**: Always run `npm test` before committing! All tests must pass before pushing changes.
 
-**Unit tests** (`test/unit-test.js`, 25 tests): Run in Node.js against the real `game-logic.js` / `weighting.js` modules (problem generation, scoring, CONFIG validation, adaptive learning).
+**Unit tests** (`test/unit-test.js`, 26 tests): Run in Node.js against the real `game-logic.js` / `weighting.js` modules (problem generation, scoring, CONFIG validation, adaptive learning, practice/mistakes mode logic).
 ```bash
 npm run test:unit   # runs test/unit-test.js and test/server-test.js
 ```
 
 `test/server-test.js` (10 tests) covers the server directly: JSON body parsing, rate limiting, and path-traversal protection.
 
-**E2E tests** (`test/e2e/`, 546 tests across 6 Playwright browser projects): require the local server running.
+**E2E tests** (`test/e2e/`, 600 tests across 6 Playwright browser projects): require the local server running.
 ```bash
 npm run test:e2e         # Headless run
 npm run test:e2e:ui      # Interactive UI mode
@@ -82,7 +92,7 @@ npm run test:e2e:ui      # Interactive UI mode
 
 **Run all tests** before committing:
 ```bash
-npm test                 # Runs unit + server + E2E tests (581 tests total)
+npm test                 # Runs unit + server + E2E tests (636 tests total)
 ```
 
 **Important**: `playwright.config.mjs` starts the server itself (`webServer`) against a throwaway SQLite file, so E2E runs never touch real leaderboard data. `baseURL` is `http://localhost:8080`.
