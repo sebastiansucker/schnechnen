@@ -65,18 +65,23 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // App-Shell: Cache-First mit Netzwerk-Fallback (und Auffrischen des Caches).
+    // App-Shell: Cache-First, nur bei einem Cache-Miss ins Netzwerk. Ein Treffer
+    // wird direkt zurückgegeben, ohne im Hintergrund trotzdem noch einen Netzwerk-
+    // Request zu starten - sonst greift beim simulierten Offline-Reload in Tests
+    // (und potenziell auch im echten Offline-Betrieb) unnötig ein weiterer Request
+    // auf dieselbe URL, der z.B. in WebKit mit dem eigentlichen Navigations-Request
+    // kollidiert. Aktualisierungen kommen stattdessen über CACHE_VERSION.
     event.respondWith(
         caches.match(request).then((cached) => {
-            const networkFetch = fetch(request).then((response) => {
+            if (cached) return cached;
+
+            return fetch(request).then((response) => {
                 if (response && response.ok) {
                     const responseClone = response.clone();
                     caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
                 }
                 return response;
-            }).catch(() => cached);
-
-            return cached || networkFetch;
+            });
         })
     );
 });
